@@ -1,0 +1,133 @@
+/*
+.fig-container {
+  display: flex;
+  overflow-x: scroll;	
+  flex: auto;  
+  width: 100%;
+  flex-wrap: wrap;
+  flex-flow: row wrap;
+}
+.fig-container > div {
+  flex: 1;
+}
+*/
+#toc {
+    background: #f9f9f9 none repeat scroll 0 0;
+    border: 1px solid #aaa;
+    display: table;
+    font-size: 83%;
+    padding: 5px;
+    width: auto;
+}
+.toc_title {
+    font-weight: 700;
+    text-align: center;
+}
+#toc li, #toc ul, #toc ul li{
+    list-style: outside none none !important;
+}
+#toc a {
+	color: #3A4145;
+	text-decoration: none;
+}
+#toc a:hover {
+	text-decoration: underline;
+}
+#author {
+        font-size: 110%;
+}
+body {
+        font-family: "Merriweather", serif;
+        font-size: 100%;
+        letter-spacing: 0.01rem;
+        line-height: 1.5em;
+        color: #3A4145;
+        background: #FFFFFF;
+        max-width: 800px;
+		margin-left: 2%;
+        -webkit-text-size-adjust: 100%;
+}
+p {
+        margin: 15px 5px 15px 0px;
+}
+.caption {
+	font-size: 80%;
+}
+@media (max-width: 415px) {
+        /* iphone 6+ 414x628 browser window, iphone 6 is 375 x 559 in browser */
+        body {
+                font-size: 100%;
+        }
+}
+@media (max-width: 736px) {
+        /* iphone7+ 736 wide */
+        body {
+                font-size: 100%;
+        }
+}
+h1 {
+        line-height: 1.2em;
+}
+.inlinecode {
+    font-family: Monaco;
+    font-size: 80%;	
+}
+.codeblk {
+    font-family: Monaco;
+    font-size: 80%;
+    box-sizing: border-box;
+    margin: 0 0 1em 0;
+    border: #E3EDF3 1px solid;
+    width: 100%;
+    padding: 2px;
+    background: #F7FAFB;
+    border-radius: 2px;
+	line-height: 1.3em;
+	white-space: pre-wrap;
+}
+table {
+	border-spacing: 15px 0px
+}
+table th {
+	line-height: 1em;
+}
+.scrollbar_wrapper {
+	overflow: auto;
+}
+table.figure {
+	border: 0;
+	width: 100%;
+}
+table.figure td {
+	width: 50%;
+	vertical-align: top;
+	line-height: 1.1em;
+	font-size: 80%;
+}
+table.dataframe {
+        max-width: none;
+        padding: 0.5em 0.5em;
+        border: none;
+        display: table; 
+        border-spacing: 0px 0px;
+        border-collapse:separate;
+}       
+table.dataframe td {
+		font-family: "Helvetica", sans-serif;
+        font-size: 80%;
+        text-align: right;
+        text-size-adjust: 100%;
+        vertical-align: top;
+        padding: 2px 5px;
+		border-bottom: 0px;
+        line-height: 1.1em;
+}
+table.dataframe th {
+		font-family: "Helvetica", sans-serif;
+        font-size: 80%;
+        text-align: right;
+		line-height: 1em;
+        text-size-adjust: 100%;
+        vertical-align: bottom;
+        padding: 0px 5px;
+}
