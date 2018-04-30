@@ -1,0 +1,7 @@
+{
+	"type":"article",
+	"title":"",
+	"author":"[Terence Parr](http://parrt.cs.usfca.edu)",
+        "chapters":["index.md"],
+	"data":"/Users/parrt/github/ml-articles/data"
+}
