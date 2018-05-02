@@ -71,7 +71,7 @@ It might be helpful to think of this boosting approach as a golfer initially wha
 
 \sidenote[clipart]{Golfer clipart from http://etc.usf.edu/clipart/}
 
-<img src="images/golf-dir-vector.png" width="80%">
+<img src="images/golf-dir-vector.png" width="70%">
 
 If we choose as weak models $\Delta_i (\vec x) = sign(y - \hat y) = sign(y - F_{i-1}(\vec x))$, then boosting moves the overall $F_i(\vec x)$ approximation closer and closer to $y$ because $\hat y$ moves in the direction of $y$.  If the initial whack, $f_0(\vec x)$, shoots past $y$, then $\Delta_1 (\vec x)$ would be -1 to indicate boosting needs to move in the negative direction. Each tweak is scaled by a $w_i$ to increase the jump size. (An overall learning rate variable is also typically used to speed up or slow down the overall approach of $\hat y$ to $y$.) As an example, let $f_0(\vec x)=70$, $w_i=10$, and $\Delta_i (\vec x)=1$, then $\hat y = F_3(\vec x) = 70 + 30 + 30 + 30 = 100$.
 
@@ -96,6 +96,8 @@ There are several things to reinforce before moving on:
 </ul>
 
 This boosting approach makes sense and our intuition says that it should work.  It would be nice, however, to show that this boosting yields a correct model and that it converges towards a better model as we add weak learners. We'll get there, but first, let's look at a concrete example to see what gradient boosting on more than one data point (golf ball).
+
+\todo{ choosing a model. If your base model is linear regression then your ending composite model will be a fit line. If your base model is a decision tree, you will end up with a  feature space and decision curve split up like a decision tree would.}
  
 ### Boosting example 
 
