@@ -171,24 +171,21 @@ def stub_predict(x_train, y_train, split):
     return [lmean if x<split else rmean for x in x_train]
 
 eta = 0.75
-splits = [None,850, 850, 925, 725]
+splits = [None,850, 850, 925] # manually pick them
 stages = 4
 
 def boost(df, xcol, ycol, splits, eta, stages):
+    """
+    Update df to have direction_i, delta_i, F_i.
+    Return MSE, MAE
+    """
     f0 = df[ycol].mean()
     df['F0'] = f0
 
-    df['dir1'] = df[ycol] - df.F0
-    df['delta1'] = stub_predict(df[xcol], df.dir1, splits[1])
-    df['F1'] = df.F0 + eta * df.delta1
-
-    df['dir2'] = df[ycol] - df.F1
-    df['delta2'] = stub_predict(df[xcol], df.dir2, splits[2])
-    df['F2'] = df.F1 + eta * df.delta2
-
-    df['dir3'] = df[ycol] - df.F2
-    df['delta3'] = stub_predict(df[xcol], df.dir3, splits[3])
-    df['F3'] = df.F2 + eta * df.delta3
+    for s in range(1,stages):
+        df[f'dir{s}'] = df[ycol] - df[f'F{s-1}']
+        df[f'delta{s}'] = stub_predict(df[xcol], df[f'dir{s}'], splits[s])
+        df[f'F{s}'] = df[f'F{s-1}'] + eta * df[f'delta{s}']
 
     mse = [mean_squared_error(df[ycol], df['F'+str(s)]) for s in range(stages)]
     mae = [mean_absolute_error(df[ycol], df['F'+str(s)]) for s in range(stages)]
@@ -270,7 +267,7 @@ plt.show()
 <pyfig label=examples hide=true width="100%">
 def draw_stub(ax, x_train, y_train, y_pred, split, stage):
     line1, = ax.plot(x_train, y_train, 'o',
-                     linewidth=.8, markersize=4,
+                     markersize=4,
                      label=f"$y-\\hat F_{stage-1}$")
     label = r"$\Delta_"+str(stage)+r"({\bf x})$"
     left = y_pred[x_train<split]
@@ -376,7 +373,111 @@ ax.set_xticks(range(0,stages))
 plt.tight_layout()
 plt.show()
 </pyfig>
-  
+
+<pyeval label=examples hide=true>
+eta = 0.7
+df = data()
+mse,mae = boost(df, 'sqfeet', 'rent', splits, eta, stages)
+df['deltas'] = eta * df[['delta1','delta2','delta3']].sum(axis=1) # sum deltas
+df[['sqfeet','rent','F0','delta1','delta2','delta3','deltas']]
+</pyeval>
+
+<pyfig label=examples hide=true width="45%">
+# Hideous manual computation of composite graph but...
+
+fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(6.1, 3))
+
+# plot deltas
+line1, = ax.plot(df.sqfeet,df.dir1, 'o', label=r'$y-f_0$')
+
+prevx = np.min(df.sqfeet)
+prevy = 0
+splitys = []
+for s in splits[1:]:
+    if s>prevx: # ignore splits at same spot for plotting
+        y = np.mean(df.deltas[(df.sqfeet>prevx)&(df.sqfeet<=s)]) # all same, get as one
+        splitys.append(y)
+        #print(prevx,s,"=>",y)
+        ax.plot([prevx,s], [y,y], linewidth=.8, linestyle='--', c='k')
+    # draw verticals
+    prevx = s
+    prevy = y
+
+last = np.max(df.sqfeet)
+y = np.mean(df.deltas[(df.sqfeet>prevx)&(df.sqfeet<=last)]) # all same, get as one
+#print(prev,last,"=>",y)
+splitys.append(y)
+line2, = ax.plot([prevx,last], [y,y], linewidth=.8, linestyle='--', c='k',
+                label=r"$\eta (\Delta_1+\Delta_2+\Delta_3)$")
+
+ax.plot([splits[1],splits[1]], [splitys[0], splitys[1]], linewidth=.8, linestyle='--', c='k')
+ax.plot([splits[3],splits[3]], [splitys[1], splitys[2]], linewidth=.8, linestyle='--', c='k')
+ax.plot([s,s], [prevy,y], linewidth=.8, linestyle='--', c='k')
+
+ax.set_ylabel(r"Sum $\Delta_i$ models", fontsize=16)
+ax.set_xlabel(r"${\bf x}$", fontsize=20)
+
+ax.set_yticks([-100,-50,0,50,100,150])
+
+ax.legend(handles=[line1,line2], fontsize=16,
+          loc='upper left', 
+          labelspacing=.1,
+          handletextpad=.2,
+          handlelength=.7,
+          frameon=True)
+
+plt.tight_layout()
+plt.show()
+</pyfig>
+	
+<pyfig label=examples hide=true width="45%">
+# Hideous manual computation of composite graph but...
+
+fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(6.1, 3))
+
+# plot deltas
+line1, = ax.plot(df.sqfeet,df.rent, 'o', label=r'$y$')
+
+prevx = np.min(df.sqfeet)
+prevy = df.F0
+splitys = []
+for s in splits[1:]:
+    if s>prevx: # ignore splits at same spot for plotting
+        y = np.mean(df.F0+df.deltas[(df.sqfeet>prevx)&(df.sqfeet<=s)]) # all same, get as one
+        splitys.append(y)
+        #print(prevx,s,"=>",y)
+        ax.plot([prevx,s], [y,y], linewidth=.8, linestyle='--', c='k')
+    # draw verticals
+    prevx = s
+    prevy = y
+
+last = np.max(df.sqfeet)
+y = np.mean(df.F0+df.deltas[(df.sqfeet>prevx)&(df.sqfeet<=last)]) # all same, get as one
+#print(prev,last,"=>",y)
+splitys.append(y)
+line2, = ax.plot([prevx,last], [y,y], linewidth=.8, linestyle='--', c='k',
+                label=r"$f_0 + \eta (\Delta_1+\Delta_2+\Delta_3)$")
+
+ax.plot([splits[1],splits[1]], [splitys[0], splitys[1]], linewidth=.8, linestyle='--', c='k')
+ax.plot([splits[3],splits[3]], [splitys[1], splitys[2]], linewidth=.8, linestyle='--', c='k')
+ax.plot([s,s], [prevy,y], linewidth=.8, linestyle='--', c='k')
+
+ax.set_ylabel(r"Rent", fontsize=16)
+ax.set_xlabel(r"${\bf x}$", fontsize=20)
+
+ax.set_yticks(np.arange(1150,1351,50))
+
+ax.legend(handles=[line1,line2], fontsize=16,
+          loc='upper left', 
+          labelspacing=.1,
+          handletextpad=.2,
+          handlelength=.7,
+          frameon=True)
+
+plt.tight_layout()
+plt.show()
+</pyfig>
+	
 Now show MSE, MAE
 
 Now show addition of all terms, dsashed lines, visually.
