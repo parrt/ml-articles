@@ -131,6 +131,8 @@ import matplotlib.pyplot as plt
 from matplotlib import rc
 import matplotlib
 import numpy as np
+from scipy.optimize import minimize_scalar
+from sklearn.metrics import mean_squared_error, mean_absolute_error
 #rc('text', usetex=True)
 matplotlib.rcParams['mathtext.fontset'] = 'cm'
 matplotlib.rcParams['mathtext.rm'] = 'serif'
@@ -146,7 +148,7 @@ bookcolors = {'crimson': '#a50026', 'red': '#d73027', 'redorange': '#f46d43',
 
 <pyeval label="examples" output="df" hide=true>
 df = pd.DataFrame(data={"sqfeet":[700,950,800,900,750]})
-df["rent"] = pd.Series([1050,1350,1100,1300,1200])
+df["rent"] = pd.Series([1125,1350,1135,1300,1150])
 df = df.sort_values('sqfeet')
 </pyeval>
 
@@ -154,103 +156,154 @@ where row $i$ is an observation with feature vector $\vec x_i$ (bold $\vec x$) a
 
 From this data, we'd like to build a GBM to predict rent price given square footage. Let's use the mean (average) of the rent prices as the initial model: $F_0(\vec x)$ = $f_0(\vec x)$ = 1200.
 
-\latex{{
-\begin{tabular}[t]{rrrr}
-700 & 1050 & 1200 \\
-\end{tabular}
-}}
+My $\eta$ is .75.
 
-<pyeval label="examples" output="df" hide=true>
-f0 = df.rent.median()
-df['f0'] = f0
-df['delta1'] = np.sign(df.rent - df.f0)
-df['scaled1'] = df.delta1 * 50
-df['delta2'] = np.sign(df.rent - (df.f0 + df.scaled1))
-df['scaled2'] = df.delta2 * 50
-df['delta3'] = np.sign(df.rent - (df.f0 + df.scaled1 + df.scaled2))
-df['scaled3'] = df.delta3 * 50
-df['delta4'] = np.sign(df.rent - (df.f0 + df.scaled1 + df.scaled2 + df.scaled3))
-df = df.astype(int)
+<pyeval label="examples" hide=true>
+f0 = df.rent.mean()
+df['F0'] = f0
+
+eta = 0.75
+splits = [None,850, 850, 925, 725]
+
+def stub_predict(x_train, y_train, split):
+    left = y_train[x_train<split]
+    right = y_train[x_train>split]
+    lmean = np.mean(left)
+    rmean = np.mean(right)    
+    return [lmean if x<split else rmean for x in x_train]
+
+df['dir1'] = df.rent - df.F0
+df['delta1'] = stub_predict(df.sqfeet, df.dir1, splits[1])
+df['F1'] = df.F0 + eta * df.delta1
+
+df['dir2'] = df.rent - df.F1
+df['delta2'] = stub_predict(df.sqfeet, df.dir2, splits[2])
+df['F2'] = df.F1 + eta * df.delta2
+
+df['dir3'] = df.rent - df.F2
+df['delta3'] = stub_predict(df.sqfeet, df.dir3, splits[3])
+df['F3'] = df.F2 + eta * df.delta3
 </pyeval>
 
-<pyfig label=examples hide=true width="50%">
-plt.plot(df.sqfeet,df.rent,'-o', linewidth=.8, markersize=3.5)
-f0 = df.rent.median()
-plt.plot([df.sqfeet.min()-10,df.sqfeet.max()+10], [f0,f0],
+<pyeval label="examples" hide=true>
+# manually print table in python
+# for small phone, make 2 tables
+for i in range(len(df)):
+    print( " & ".join([f"{int(v)}" for v in df.iloc[i,0:4]]), r"\\")
+
+print
+for i in range(len(df)):
+    print( " & ".join([f"{int(v)}" for v in df.iloc[i,4:]]), r"\\")
+	
+print("F0 MSE", mean_squared_error(df.rent, df.F0), "MAE", mean_absolute_error(df.rent, df.F0))
+print("F1 MSE", mean_squared_error(df.rent, df.F1), "MAE", mean_absolute_error(df.rent, df.F1))
+print("F2 MSE", mean_squared_error(df.rent, df.F2), "MAE", mean_absolute_error(df.rent, df.F2))
+print("F3 MSE", mean_squared_error(df.rent, df.F3), "MAE", mean_absolute_error(df.rent, df.F3))
+</pyeval>
+
+\latex{{
+{\small
+\begin{tabular}[t]{rrrr}
+{\bf sqfeet} & {\bf rent} & $F_0$ & $y-F_0$ \\
+\hline
+700 & 1125 & 1212 & -87 \\
+750 & 1150 & 1212 & -62 \\
+800 & 1135 & 1212 & -77 \\
+900 & 1300 & 1212 & 88 \\
+950 & 1350 & 1212 & 138 \\
+\end{tabular}
+}
+}}
+
+\latex{{
+{\small
+\begin{tabular}[t]{rrrrrrrr}
+$\Delta_1$ & $F_1$ & $y-F_1$ & $\Delta_2$ & $F_2$ & $y - F_2$ & $\Delta_3$ & $F_3$\\
+\hline
+-75 & 1155 & -30 & -18 & 1141 & -16 & -8 & 1135 \\
+-75 & 1155 & -5 & -18 & 1141 & 8 & -8 & 1135 \\
+-75 & 1155 & -20 & -18 & 1141 & -6 & -8 & 1135 \\
+113 & 1296 & 3 & 28 & 1317 & -17 & -8 & 1311 \\
+113 & 1296 & 53 & 28 & 1317 & 32 & 32 & 1341 \\
+\end{tabular}
+}
+}}
+
+<pyfig label=examples hide=true width="35%">
+f0 = df.rent.mean()
+fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(4, 2.5), sharex=True)
+plt.tight_layout()
+axes.plot(df.sqfeet,df.rent,'o', linewidth=.8, markersize=4)
+axes.plot([df.sqfeet.min()-10,df.sqfeet.max()+10], [f0,f0],
          linewidth=.8, linestyle='--', c='k')
-plt.xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
-plt.text(df.sqfeet.min()+5, f0+15, r"$f_0({\bf x})$",
-         fontsize=20)
-plt.xticks(fontsize=13)
-plt.yticks(fontsize=13)
-dir = np.sign(df.rent - f0) * 50
-stage = 1
-y_hat = np.array
-for x,y_hat in zip(df.sqfeet,df.scaled1):
-    if y_hat!=0:
-        plt.arrow(x, f0, 0, y_hat, fc='r', ec='r',
+axes.set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
+axes.text(815, f0+15, r"$f_0({\bf x})$", fontsize=20)
+# draw arrows
+for x,y,yhat in zip(df.sqfeet,df.rent,df.F0):
+    if y-yhat!=0:
+        axes.arrow(x, yhat, 0, y-yhat,
+                  length_includes_head=True,
+                  fc='r', ec='r',
                   linewidth=0.8,
-                 head_width=4, head_length=8,
-                  length_includes_head=True)
-
-for x,y_hat in zip(df.sqfeet,df.scaled1+df.scaled2):
-    if y_hat!=0:
-        plt.arrow(x, f0, 0, y_hat, fc='r', ec='r',
-                  linewidth=.8,
-                 head_width=4, head_length=8,
-                  length_includes_head=True)
-
-for x,y_hat in zip(df.sqfeet,df.scaled1+df.scaled2+df.scaled3):
-    if y_hat!=0:
-        plt.arrow(x, f0, 0, y_hat, fc='r', ec='r',
-                  linewidth=.8,
-                 head_width=4, head_length=8,
-                  length_includes_head=True)
+                  head_width=4, head_length=15,
+                 )
 plt.show()
 </pyfig>
 
-<pyfig label=examples hide=true width="80%">
-f0 = df.rent.median()
+<pyfig label=examples hide=true width="100%">
+def draw_stub(ax, x_train, y_train, y_pred, split, stage):
+    line1, = ax.plot(x_train, y_train, 'o',
+                     linewidth=.8, markersize=4,
+                     label=f"$y-\\hat F_{stage-1}$")
+    label = r"$\Delta_"+str(stage)+r"({\bf x})$"
+    left = y_pred[x_train<split]
+    right = y_pred[x_train>split]
+    lmean = np.mean(left)
+    rmean = np.mean(right)
+    line2, = ax.plot([x_train.min()-10,split], [lmean,lmean],
+             linewidth=.8, linestyle='--', c='k', label=label)
+    ax.plot([split,x_train.max()+10], [rmean,rmean],
+             linewidth=.8, linestyle='--', c='k')
+    ax.plot([split,split], [lmean,rmean],
+             linewidth=.8, linestyle='--', c='k')
+    ax.legend(handles=[line1,line2], fontsize=16,
+              loc='upper left', 
+              labelspacing=.1,
+              handletextpad=.2,
+              handlelength=.7,
+              frameon=True)
 
-red = bookcolors['redorange']
-blue = bookcolors['blue']
+def draw_residual(ax, x_train, y_train, y_hat):
+    for x,y,yhat in zip(x_train, y_train, y_hat):
+        if y-yhat!=0:
+            ax.arrow(x, yhat, 0, y-yhat,
+                      length_includes_head=True,
+                      fc='r', ec='r',
+                      linewidth=0.8,
+                     )
 
-fig, axes = plt.subplots(nrows=1, ncols=4, figsize=(10, 2.5), sharey=True)
-#plt.tight_layout()
+fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(10, 3.5), sharey=True)
 
-#axes[0][0].plot(df.sqfeet,df.rent,'-o', linewidth=.8, markersize=4)
+axes[0].set_ylabel(r"$y-\hat y$", fontsize=20)
+for a in range(3):
+    axes[a].set_xlabel(r"${\bf x}$", fontsize=20)
+    
+draw_stub(axes[0], df.sqfeet, df.dir1, df.delta1, splits[1], stage=1)
+draw_residual(axes[0], df.sqfeet,df.dir1,df.delta1)
 
-axes[0].plot(df.sqfeet,df.rent,'o', linewidth=.8, markersize=4)
-axes[0].plot([df.sqfeet.min()-10,df.sqfeet.max()+10], [f0,f0],
-         linewidth=.8, linestyle='--', c=red)
+draw_stub(axes[1], df.sqfeet, df.dir2, df.delta2, splits[2], stage=2)
+draw_residual(axes[1], df.sqfeet,df.dir2,df.delta2)
 
-# plt.xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
-# plt.text(df.sqfeet.min()+5, f0+15, r"$f_0({\bf x})$",
-#          fontsize=20)
-axes[0].set
-dir = np.sign(df.rent - f0) * 50
-stage = 1
-y_hat = np.array
+draw_stub(axes[2], df.sqfeet, df.dir3, df.delta3, splits[3], stage=3)
+draw_residual(axes[2], df.sqfeet,df.dir3,df.delta3)
 
-axes[1].plot(df.sqfeet,df.rent,'o', linewidth=.8, markersize=4)
-axes[1].plot(df.sqfeet, f0+df.scaled1,
-         linewidth=.8, linestyle='--', c=red)
-
-axes[2].plot(df.sqfeet,df.rent,'o', linewidth=.8, markersize=4)
-axes[2].plot(df.sqfeet, f0+df.scaled1+df.scaled2,
-         linewidth=.8, linestyle='--', c=red)
-
-axes[3].plot(df.sqfeet,df.rent,'o', linewidth=.8, markersize=4)
-axes[3].plot(df.sqfeet, f0+df.scaled1+df.scaled2+df.scaled3,
-         linewidth=.8, linestyle='--', c=blue)
-#axes[0].text(700, 1325, r"$f_0({\bf x})$")
-axes[0].set_title(r"$F_0({\bf x}) = f_0({\bf x})$", fontsize=18)
-axes[1].set_title(r"$F_1({\bf x})$", fontsize=18)
-axes[2].set_title(r"$F_2({\bf x})$", fontsize=18)
-axes[3].set_title(r"$F_3({\bf x})$", fontsize=18)
-plt.savefig('/tmp/t.svg')
+plt.tight_layout()
 plt.show()
 </pyfig>
+
+Now show MSE, MAE
+
+Now show addition of all terms, dsashed lines, visually.
 
 $\hat y = f_0(\vec x) + \Delta_1(\vec x) + \Delta_2(\vec x) + ...  + \Delta_M(\vec x)$
 
