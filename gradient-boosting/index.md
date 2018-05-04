@@ -147,9 +147,13 @@ bookcolors = {'crimson': '#a50026', 'red': '#d73027', 'redorange': '#f46d43',
 </pyeval>
 
 <pyeval label="examples" output="df" hide=true>
-df = pd.DataFrame(data={"sqfeet":[700,950,800,900,750]})
-df["rent"] = pd.Series([1125,1350,1135,1300,1150])
-df = df.sort_values('sqfeet')
+def data():
+    df = pd.DataFrame(data={"sqfeet":[700,950,800,900,750]})
+    df["rent"] = pd.Series([1125,1350,1135,1300,1150])
+    df = df.sort_values('sqfeet')
+    return df
+
+df = data()
 </pyeval>
 
 where row $i$ is an observation with feature vector $\vec x_i$ (bold $\vec x$) and target value $y_i$; vector $\vec y$ (bold $\vec y$) is the entire `rent` column.
@@ -159,12 +163,6 @@ From this data, we'd like to build a GBM to predict rent price given square foot
 My $\eta$ is .75.
 
 <pyeval label="examples" hide=true>
-f0 = df.rent.mean()
-df['F0'] = f0
-
-eta = 0.75
-splits = [None,850, 850, 925, 725]
-
 def stub_predict(x_train, y_train, split):
     left = y_train[x_train<split]
     right = y_train[x_train>split]
@@ -172,17 +170,31 @@ def stub_predict(x_train, y_train, split):
     rmean = np.mean(right)    
     return [lmean if x<split else rmean for x in x_train]
 
-df['dir1'] = df.rent - df.F0
-df['delta1'] = stub_predict(df.sqfeet, df.dir1, splits[1])
-df['F1'] = df.F0 + eta * df.delta1
+eta = 0.75
+splits = [None,850, 850, 925, 725]
+stages = 4
 
-df['dir2'] = df.rent - df.F1
-df['delta2'] = stub_predict(df.sqfeet, df.dir2, splits[2])
-df['F2'] = df.F1 + eta * df.delta2
+def boost(df, xcol, ycol, splits, eta, stages):
+    f0 = df[ycol].mean()
+    df['F0'] = f0
 
-df['dir3'] = df.rent - df.F2
-df['delta3'] = stub_predict(df.sqfeet, df.dir3, splits[3])
-df['F3'] = df.F2 + eta * df.delta3
+    df['dir1'] = df[ycol] - df.F0
+    df['delta1'] = stub_predict(df[xcol], df.dir1, splits[1])
+    df['F1'] = df.F0 + eta * df.delta1
+
+    df['dir2'] = df[ycol] - df.F1
+    df['delta2'] = stub_predict(df[xcol], df.dir2, splits[2])
+    df['F2'] = df.F1 + eta * df.delta2
+
+    df['dir3'] = df[ycol] - df.F2
+    df['delta3'] = stub_predict(df[xcol], df.dir3, splits[3])
+    df['F3'] = df.F2 + eta * df.delta3
+
+    mse = [mean_squared_error(df[ycol], df['F'+str(s)]) for s in range(stages)]
+    mae = [mean_absolute_error(df[ycol], df['F'+str(s)]) for s in range(stages)]
+    return mse, mae
+
+mse,mae = boost(df, 'sqfeet', 'rent', splits, eta, stages)
 </pyeval>
 
 <pyeval label="examples" hide=true>
@@ -231,22 +243,27 @@ $\Delta_1$ & $F_1$ & $y-F_1$ & $\Delta_2$ & $F_2$ & $y - F_2$ & $\Delta_3$ & $F_
 
 <pyfig label=examples hide=true width="35%">
 f0 = df.rent.mean()
-fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(4, 2.5), sharex=True)
+fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(4, 2.5), sharex=True)
 plt.tight_layout()
-axes.plot(df.sqfeet,df.rent,'o', linewidth=.8, markersize=4)
-axes.plot([df.sqfeet.min()-10,df.sqfeet.max()+10], [f0,f0],
+ax.plot(df.sqfeet,df.rent,'o', linewidth=.8, markersize=4)
+ax.plot([df.sqfeet.min()-10,df.sqfeet.max()+10], [f0,f0],
          linewidth=.8, linestyle='--', c='k')
-axes.set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
-axes.text(815, f0+15, r"$f_0({\bf x})$", fontsize=20)
+ax.set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
+ax.text(815, f0+15, r"$f_0({\bf x})$", fontsize=20)
+
+ax.set_ylabel(r"Rent $y$", fontsize=20)
+ax.set_xlabel(r"${\bf x}$", fontsize=20)
+
 # draw arrows
 for x,y,yhat in zip(df.sqfeet,df.rent,df.F0):
     if y-yhat!=0:
-        axes.arrow(x, yhat, 0, y-yhat,
+        ax.arrow(x, yhat, 0, y-yhat,
                   length_includes_head=True,
                   fc='r', ec='r',
                   linewidth=0.8,
-                  head_width=4, head_length=15,
+                  head_width=4, head_length=15,  
                  )
+
 plt.show()
 </pyfig>
 
@@ -301,6 +318,65 @@ plt.tight_layout()
 plt.show()
 </pyfig>
 
+<pyeval label="examples" hide=true>
+# Compute MSE
+stages = 4
+df = data() # fresh data
+
+df_mse = pd.DataFrame(data={"stage":range(stages)})
+
+for eta in np.arange(.5, 1, .1):
+    mse,mae = boost(df, 'sqfeet', 'rent', splits, eta, stages)
+    df_mse[f'mse_{eta:.2f}'] = mse
+
+mse = [mean_squared_error(df.rent, df[f'F{s}']) for s in range(4)]
+df_mse
+</pyeval>
+
+<pyfig label=examples hide=true width="45%">
+fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(6, 4), sharex=True)
+
+maxy = 1500
+
+mins = []
+for eta in np.arange(.5, 1, .1):
+    mins.append( np.min(df_mse[f'mse_{eta:.2f}']) )
+
+min_eta_index = np.argmin(mins)
+
+i = 0
+for eta in np.arange(.5, 1, .1):
+    color = 'grey'
+    lw = .8
+    ls = ':'
+    if i==min_eta_index:
+        color = bookcolors['blue']
+        lw = 1.7
+        ls = '-'
+    ax.plot(df_mse.stage,df_mse[f'mse_{eta:.2f}'],
+            linewidth=lw,
+            linestyle=ls,
+            c=color)
+    xloc = 1.2
+    yloc = (df_mse[f'mse_{eta:.2f}'].values[1] + df_mse[f'mse_{eta:.2f}'].values[2])/2
+    if yloc>maxy:
+        yloc = maxy-100
+        xloc +=  .5
+    ax.text(xloc, yloc, f"$\\eta={eta:.1f}$",
+            fontsize=16)
+    i += 1
+
+plt.axis([0,stages-1,0,maxy])
+
+ax.set_ylabel(r"$\frac{1}{n}(y-\hat y)^2$", fontsize=20)
+ax.set_xlabel(r"Number of stages $M$", fontsize=16)
+ax.set_title(r'Effect of learning rate $\eta$ on MSE of $F_M({\bf x})$', fontsize=16)
+ax.set_xticks(range(0,stages))
+
+plt.tight_layout()
+plt.show()
+</pyfig>
+  
 Now show MSE, MAE
 
 Now show addition of all terms, dsashed lines, visually.
