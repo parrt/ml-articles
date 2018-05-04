@@ -330,6 +330,8 @@ mse = [mean_squared_error(df.rent, df[f'F{s}']) for s in range(4)]
 df_mse
 </pyeval>
 
+<img src="images/stubs.svg" width="100%">
+
 <pyfig label=examples hide=true width="45%">
 fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(6, 4), sharex=True)
 
@@ -365,7 +367,7 @@ for eta in np.arange(.5, 1, .1):
 
 plt.axis([0,stages-1,0,maxy])
 
-ax.set_ylabel(r"$\frac{1}{n}(y-\hat y)^2$", fontsize=20)
+ax.set_ylabel(r"Mean Squared Error", fontsize=16)
 ax.set_xlabel(r"Number of stages $M$", fontsize=16)
 ax.set_title(r'Effect of learning rate $\eta$ on MSE of $F_M({\bf x})$', fontsize=16)
 ax.set_xticks(range(0,stages))
