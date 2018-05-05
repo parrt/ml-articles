@@ -268,7 +268,7 @@ plt.show()
 def draw_stub(ax, x_train, y_train, y_pred, split, stage):
     line1, = ax.plot(x_train, y_train, 'o',
                      markersize=4,
-                     label=f"$y-\\hat F_{stage-1}$")
+                     label=f"$y-F_{stage-1}$")
     label = r"$\Delta_"+str(stage)+r"({\bf x})$"
     left = y_pred[x_train<split]
     right = y_pred[x_train>split]
@@ -480,7 +480,7 @@ plt.tight_layout()
 plt.show()
 </pyfig>
 	
-Now show MSE, MAE
+Wow. leaves have diff weights for CARTs. only seem to need for MAE version. so the usual math eqn isn't what's done in practice. weak models don't repro dir vector well enough I guess.
 
 Now show addition of all terms, dsashed lines, visually.
 
