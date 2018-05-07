@@ -75,9 +75,9 @@ F_i(\vec x) &=& F_{i-1}(\vec x) + w_i \Delta_i(\vec x)\\
 \end{eqnarray*}
 }}
 
-It might be helpful to think of this boosting approach as a golfer initially whacking a golf ball towards the hole at $y$ but only getting as far as $f_0(\vec x)$. The golfer[clipart] then repeatedly taps the ball more softly, working the ball towards the hole, after reassessing direction and distance to the hole at each stage. The following diagram illustrates 5 strokes getting to  the hole, $y$, including two strokes, $\Delta_2$ and $\Delta_3$, that overshoot the hole. (Golfer clipart from `http://etc.usf.edu/clipart/`)
+It might be helpful to think of this boosting approach as a golfer initially whacking a golf ball towards the hole at $y$ but only getting as far as $f_0(\vec x)$. The golfer then repeatedly taps the ball more softly, working the ball towards the hole, after reassessing direction and distance to the hole at each stage. The following diagram illustrates 5 strokes getting to  the hole, $y$, including two strokes, $\Delta_2$ and $\Delta_3$, that overshoot the hole. (Golfer clipart from `http://etc.usf.edu/clipart/`)
 
-<img src="images/golf-dir-vector.png" width="90%">
+<img src="images/golf-dir-vector.png" width="70%">
 
 After the initial stroke, the golfer determines the appropriate nudge by computing the  difference between $y$ and the first approximation, $y - F_0(\vec x)$. (We can let $\vec x$ be the hole number 1-18, but it doesn't really matter since we're only working with one observation for illustration purposes.) This difference is often called the *residual*, but it's more general for gradient boosting to think of this as the *direction vector* from the current $\hat y$, $F_i(\vec x)$, to the true $y$.   Using the direction vector as our nudge, means training $\Delta_i (\vec x)$ on value $y - F_{i-1}(\vec x)$ for our base weak models.  As with any machine learning model, our $\Delta_i$ models will not have perfect recall and precision, so we should expect $\Delta_i$ to give a noisy prediction instead of exactly $y - F_{i-1}(\vec x)$. 
 
@@ -117,7 +117,7 @@ There are several things to reinforce before moving on:
 
 Let's walk through a concrete example to see what gradient boosting looks like on more than one observation.
 
-## Applying gradient boosting to sample data
+## Gradient boosting regression by example
 
 Imagine that we have square footage data on five apartments and their rent prices in dollars per month as our training data:
 
@@ -152,13 +152,13 @@ def data():
 df = data()
 </pyeval>
 
-where row $i$ is an observation with feature vector $\vec x_i$ (bold $\vec x$) and target value $y_i$; vector $\vec y$ (bold $\vec y$) is the entire `rent` column.
+where row $i$ is an observation with one-dimensional feature vector $\vec x_i$ (bold $\vec x$) and target value $y_i$. Matrix $X = [\vec x_1, \vec x_2, ..., \vec x_n]$ holds all  feature vectors and $\vec y$ (bold $\vec y$) is the entire `rent` column $\vec y = [y_1, y_2, ..., y_n]$. $F_{i-1}(\vec x_i)$ yields a predicted value but $F_{i-1}(X)$ yields a predicted target vector, one value for each $\vec x_i$.
 
-From this data, we'd like to build a GBM to predict rent price given square footage. Let's use the mean (average) of the rent prices as the initial model: $F_0(\vec x)$ = $f_0(\vec x)$ = 1200.
+From this data, we'd like to build a GBM to predict rent price given square footage. To move towards $\vec y$ from any $\hat {\vec y}$, we can use any direction vector we want, but let's start with $\vec y-F_{i-1}(X)$ and then, in the next section, show how it works for $sign(\vec y-F_{i-1}(X))$.
 
-### Stepping by distance to target
+### Hopping by distance-to-target
 
-My $\eta$ is .75.
+Let's use the mean (average) of the rent prices as our initial model: $F_0(\vec x_i)$ = $f_0(\vec x_i)$ = 1200 for all $i$. Once we have $F_0$, we compute $F_1$ by subtracting the previous estimate from the target, $y - F_0$:
 
 <pyeval label="examples" hide=true>
 def stub_predict(x_train, y_train, split):
@@ -168,7 +168,7 @@ def stub_predict(x_train, y_train, split):
     rmean = np.mean(right)    
     return [lmean if x<split else rmean for x in x_train]
 
-eta = 0.75
+eta = 0.70
 splits = [None,850, 850, 925] # manually pick them
 stages = 4
 
@@ -192,6 +192,7 @@ def boost(df, xcol, ycol, splits, eta, stages):
 mse,mae = boost(df, 'sqfeet', 'rent', splits, eta, stages)
 </pyeval>
 
+<!--
 <pyeval label="examples" hide=true>
 # manually print table in python
 # for small phone, make 2 tables
@@ -207,6 +208,7 @@ print("F1 MSE", mean_squared_error(df.rent, df.F1), "MAE", mean_absolute_error(d
 print("F2 MSE", mean_squared_error(df.rent, df.F2), "MAE", mean_absolute_error(df.rent, df.F2))
 print("F3 MSE", mean_squared_error(df.rent, df.F3), "MAE", mean_absolute_error(df.rent, df.F3))
 </pyeval>
+-->
 
 \latex{{
 {\small
@@ -222,19 +224,7 @@ print("F3 MSE", mean_squared_error(df.rent, df.F3), "MAE", mean_absolute_error(d
 }
 }}
 
-\latex{{
-{\small
-\begin{tabular}[t]{rrrrrrrr}
-$\Delta_1$ & $F_1$ & $y-F_1$ & $\Delta_2$ & $F_2$ & $y - F_2$ & $\Delta_3$ & $F_3$\\
-\hline
--75 & 1155 & -30 & -18 & 1141 & -16 & -8 & 1135 \\
--75 & 1155 & -5 & -18 & 1141 & 8 & -8 & 1135 \\
--75 & 1155 & -20 & -18 & 1141 & -6 & -8 & 1135 \\
-113 & 1296 & 3 & 28 & 1317 & -17 & -8 & 1311 \\
-113 & 1296 & 53 & 28 & 1317 & 32 & 32 & 1341 \\
-\end{tabular}
-}
-}}
+The last column shows not only the direction but the magnitude of the difference between where we are, $F_0$, and where we want to go, $y$. The red vectors in the following diagram are a visualization of the  difference vectors from our initial model to the rent target values.
 
 <pyfig label=examples hide=true width="35%">
 f0 = df.rent.mean()
@@ -261,6 +251,30 @@ for x,y,yhat in zip(df.sqfeet,df.rent,df.F0):
 
 plt.show()
 </pyfig>
+
+Next we train a weak model, $\Delta_1$, to predict that  difference vector. A perfect model, $\Delta_1$, would yield exactly $y-F_0$, meaning that we'd be done after one step since $F_1$ would be $F_0 + y - F_0$, or just $y$. Because it imperfectly captures that difference, $F_1$ it still not quite $y$, so we need to keep going for a few stages. To keep things simple, we can use a weight of 1 everywhere so that our recurrence relation for a single feature vector looks like:
+
+\[
+F_i(\vec x) &=& F_{i-1}(\vec x) + \eta \Delta_i(\vec x)
+\]
+
+We use a learning rate of $\eta = 0.7$ because of an experiment shown below, but you can think of it as 1.0 for now to keep things simple. The following table summarizes the intermediate values of the various key "players":
+
+\latex{{
+{\small
+\begin{tabular}[t]{rrrrrrrr}
+$\Delta_1$ & $F_1$ & $y-F_1$ & $\Delta_2$ & $F_2$ & $y - F_2$ & $\Delta_3$ & $F_3$\\
+\hline
+-75 & 1159 & -34 & -22 & 1143 & -18 & -8 & 1137 \\
+-75 & 1159 & -9 & -22 & 1143 & 6 & -8 & 1137 \\
+-75 & 1159 & -24 & -22 & 1143 & -8 & -8 & 1137 \\
+113 & 1291 & 8 & 33 & 1314 & -14 & -8 & 1308 \\
+113 & 1291 & 58 & 33 & 1314 & 35 & 35 & 1339 \\
+\end{tabular}
+}
+}}
+
+It helps to keep in mind that we are always training on the direction vector $y - F_{i-1}$ but get imperfect model $\Delta_i$. The best way to visualize the learning of $y-F_{i-1}$ difference vectors by weak models, $\Delta_i$, is by looking at the difference vectors and model predictions horizontally on the same scale Y-axis:
 
 <pyfig label=examples hide=true width="90%">
 def draw_stub(ax, x_train, y_train, y_pred, split, stage):
@@ -313,70 +327,16 @@ plt.tight_layout()
 plt.show()
 </pyfig>
 
-<pyeval label="examples" hide=true>
-# Compute MSE
-stages = 4
-df = data() # fresh data
+The dashed lines indicate the actual predictions of $\Delta_i$ and the blue dots are the difference vectors. The predictions are step functions because we've used a *regression tree stub* as our base weak model with manually selected split points (850, 850, and 925).
 
-df_mse = pd.DataFrame(data={"stage":range(stages)})
-
-for eta in np.arange(.5, 1, .1):
-    mse,mae = boost(df, 'sqfeet', 'rent', splits, eta, stages)
-    df_mse[f'mse_{eta:.2f}'] = mse
-
-mse = [mean_squared_error(df.rent, df[f'F{s}']) for s in range(4)]
-df_mse
-</pyeval>
+<aside title="Regression tree stubs">
+A regression tree stub is a regression tree with a single root and two children that splits on a single variable, which is what we have here, at a single threshold. (If we had more than a single value in our feature vectors, we'd have to build a taller tree that tested more variables; to avoid over fitting, we don't want very tall trees, however.) If a test value is less than the threshold, the model yields the average of the training samples in the left leaf. If the test value is greater than or equal to the threshold, the model yields the average of the train examples in the right leaf. Here are the three stubs implementing our $\Delta_i$ weak models:
 
 <img src="images/stubs-mse.svg" width="90%">
 
-<pyfig label=examples hide=true width="45%">
-fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(6, 4), sharex=True)
+</aside>
 
-maxy = 1500
-
-max_eta = 1
-min_eta = .5
-mins = []
-for eta in np.arange(min_eta, max_eta, .1):
-    mins.append( np.min(df_mse[f'mse_{eta:.2f}']) )
-
-print (mins)
-min_eta_index = np.argmin(mins)
-print("Best index is ", min_eta_index, list(np.arange(min_eta, max_eta, .1))[min_eta_index])
-
-i = 0
-for eta in np.arange(min_eta, max_eta, .1):
-    color = 'grey'
-    lw = .8
-    ls = ':'
-    if i==min_eta_index:
-        color = bookcolors['blue']
-        lw = 1.7
-        ls = '-'
-    ax.plot(df_mse.stage,df_mse[f'mse_{eta:.2f}'],
-            linewidth=lw,
-            linestyle=ls,
-            c=color)
-    xloc = 1.2
-    yloc = (df_mse[f'mse_{eta:.2f}'].values[1] + df_mse[f'mse_{eta:.2f}'].values[2])/2
-    if yloc>maxy:
-        yloc = maxy-100
-        xloc +=  .5
-    ax.text(xloc, yloc, f"$\\eta={eta:.1f}$",
-            fontsize=16)
-    i += 1
-
-plt.axis([0,stages-1,0,maxy])
-
-ax.set_ylabel(r"Mean Squared Error", fontsize=16)
-ax.set_xlabel(r"Number of stages $M$", fontsize=16)
-ax.set_title(r'Effect of learning rate $\eta$ on MSE of $F_M({\bf x})$', fontsize=16)
-ax.set_xticks(range(0,stages))
-
-plt.tight_layout()
-plt.show()
-</pyfig>
+The composite model sums together all of the weak models so let's visualize the some of the weak models:
 
 <pyeval label=examples hide=true>
 eta = 0.7
@@ -431,7 +391,9 @@ ax.legend(handles=[line1,line2], fontsize=16,
 plt.tight_layout()
 plt.show()
 </pyfig>
-	
+
+If we add all of those weak models to the initial $f_0$ average model, we see that the full composite model is a very good predictor of the actual rent values:
+
 <pyfig label=examples hide=true width="45%">
 # Hideous manual computation of composite graph but...
 
@@ -479,7 +441,74 @@ ax.legend(handles=[line1,line2], fontsize=16,
 plt.tight_layout()
 plt.show()
 </pyfig>
-	
+
+Let's turn to the hyper parameters now.  We used $w_i = 1$ here, but a real implementation would choose the optimal weights so that each $w_m \Delta_i(\vec x)$ term minimizes the mean squared error, $\sum_i^n(y_i - F_m(\vec x_i))^2$, of model $F_m$ across all $n$ observations. 
+
+That minimization assumes a learning rate of $\eta = 1$ so that it drops out from the equation and it seems like a good value to use because then each hop of $\eta 
+
+<pyeval label="examples" hide=true>
+# Compute MSE
+stages = 4
+df = data() # fresh data
+
+df_mse = pd.DataFrame(data={"stage":range(stages)})
+
+for eta in np.arange(.5, 1, .1):
+    mse,mae = boost(df, 'sqfeet', 'rent', splits, eta, stages)
+    df_mse[f'mse_{eta:.2f}'] = mse
+
+mse = [mean_squared_error(df.rent, df[f'F{s}']) for s in range(4)]
+df_mse
+</pyeval>
+
+<pyfig label=examples hide=true width="45%">
+fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(6, 4), sharex=True)
+
+maxy = 1500
+
+max_eta = 1
+min_eta = .5
+mins = []
+for eta in np.arange(min_eta, max_eta, .1):
+    mins.append( np.min(df_mse[f'mse_{eta:.2f}']) )
+
+print (mins)
+min_eta_index = np.argmin(mins)
+print("Best index is ", min_eta_index, list(np.arange(min_eta, max_eta, .1))[min_eta_index])
+
+i = 0
+for eta in np.arange(min_eta, max_eta, .1):
+    color = 'grey'
+    lw = .8
+    ls = ':'
+    if i==min_eta_index:
+        color = bookcolors['blue']
+        lw = 1.7
+        ls = '-'
+    ax.plot(df_mse.stage,df_mse[f'mse_{eta:.2f}'],
+            linewidth=lw,
+            linestyle=ls,
+            c=color)
+    xloc = 1.2
+    yloc = (df_mse[f'mse_{eta:.2f}'].values[1] + df_mse[f'mse_{eta:.2f}'].values[2])/2
+    if yloc>maxy:
+        yloc = maxy-100
+        xloc +=  .5
+    ax.text(xloc, yloc, f"$\\eta={eta:.1f}$",
+            fontsize=16)
+    i += 1
+
+plt.axis([0,stages-1,0,maxy])
+
+ax.set_ylabel(r"Mean Squared Error", fontsize=16)
+ax.set_xlabel(r"Number of stages $M$", fontsize=16)
+ax.set_title(r'Effect of learning rate $\eta$ on MSE of $F_M({\bf x})$', fontsize=16)
+ax.set_xticks(range(0,stages))
+
+plt.tight_layout()
+plt.show()
+</pyfig>
+
 ### Heading in the right direction
 
 Wow. leaves have diff weights for CARTs. only seem to need for MAE version. so the usual math eqn isn't what's done in practice. weak models don't repro dir vector well enough I guess.
