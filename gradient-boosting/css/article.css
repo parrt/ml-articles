@@ -142,16 +142,14 @@ table {
 	border-spacing: 15px 0px
 }
 body {
-	margin-left: 3%;
-	margin-right: auto;
-	width: 67%;
+	width: 100%;
 	font-family: "Merriweather", serif;
     font-size: 14px;
 	letter-spacing: 0.01rem;
 	line-height: 1.5em;
 	color: #3A4145;
 	background: #FFFFFF;
-	max-width: 780px;
+	max-width: 800px;
 	-webkit-text-size-adjust: 100%;
 }
 .scrollbar_wrapper {
@@ -198,6 +196,7 @@ h1 {
         }
         body {
                 font-size: 100%;
+				margin-left: 2%;
         }
 }
 @media (max-width: 736px) {
@@ -208,5 +207,6 @@ h1 {
         }
         body {
                 font-size: 100%;
+				margin-left: 2%;
         }
 }

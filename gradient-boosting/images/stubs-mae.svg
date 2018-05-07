@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xl="http://www.w3.org/1999/xlink" version="1.1" viewBox="-82 1364 934 149" width="934pt" height="149pt" xmlns:dc="http://purl.org/dc/elements/1.1/">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xl="http://www.w3.org/1999/xlink" version="1.1" viewBox="-82 1364 893 149" width="893pt" height="149pt" xmlns:dc="http://purl.org/dc/elements/1.1/">
   <metadata> Produced by OmniGraffle 7.5 
-    <dc:date>2018-05-07 19:00:40 +0000</dc:date>
+    <dc:date>2018-05-07 19:04:27 +0000</dc:date>
   </metadata>
   <defs>
     <font-face font-family="Times New Roman" font-size="18" panose-1="2 2 5 3 5 4 5 9 3 4" units-per-em="1000" underline-position="-108.88672" underline-thickness="48.828125" slope="-907.3885" x-height="430.1758" cap-height="662.1094" ascent="891.1133" descent="-216.3086" font-style="italic" font-weight="500">
@@ -104,7 +104,7 @@
       <text transform="translate(432.87024 1440.5752)" fill="black">
         <tspan font-family="Times New Roman" font-size="20" font-weight="500" fill="black" x=".33984375" y="18" textLength="38.320312">[1,1]</tspan>
       </text>
-      <text transform="translate(262.0994 1466.2964)" fill="black">
+      <text transform="translate(253.54166 1466.2964)" fill="black">
         <tspan font-family="Times New Roman" font-size="19" font-weight="500" fill="black" x=".03125" y="17" textLength="81.9375">mean=-.33</tspan>
       </text>
       <text transform="translate(421.37024 1466.2964)" fill="black">
@@ -118,40 +118,40 @@
       <text transform="translate(370.3994 1370.5)" fill="black">
         <tspan font-family="STIXGeneral" font-size="20" font-weight="500" fill="black" x=".09" y="21" textLength="13.82">𝚫</tspan>
       </text>
-      <rect x="726.96965" y="1440.8631" width="124" height="71.13687" fill="#feffcd"/>
-      <rect x="726.96965" y="1440.8631" width="124" height="71.13687" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
-      <rect x="667.1988" y="1371.1323" width="86.60182" height="39" fill="#feffcd"/>
-      <rect x="667.1988" y="1371.1323" width="86.60182" height="39" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
-      <text transform="translate(610.6988 1408.1258)" fill="black">
+      <rect x="686.5869" y="1440.8631" width="124" height="71.13687" fill="#feffcd"/>
+      <rect x="686.5869" y="1440.8631" width="124" height="71.13687" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
+      <rect x="626.8161" y="1371.1323" width="86.60182" height="39" fill="#feffcd"/>
+      <rect x="626.8161" y="1371.1323" width="86.60182" height="39" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
+      <text transform="translate(570.3161 1408.1258)" fill="black">
         <tspan font-family="Times New Roman" font-size="18" font-style="italic" font-weight="500" fill="black" x="2.4296875" y="16" textLength="7.989258">x</tspan>
         <tspan font-family="Times New Roman" font-size="18" font-weight="500" fill="black" x="10.418945" y="16" textLength="37.151367">&lt;725</tspan>
         <tspan font-family="Times New Roman" font-size="18" font-style="italic" font-weight="500" fill="black" x="47.57031" y="16" textLength="4.5"> </tspan>
       </text>
-      <text transform="translate(765.7988 1408.0208)" fill="black">
+      <text transform="translate(725.4161 1408.0208)" fill="black">
         <tspan font-family="Times New Roman" font-size="18" font-style="italic" font-weight="500" fill="black" x="2.354004" y="16" textLength="7.989258">x</tspan>
         <tspan font-family="Times New Roman" font-size="18" font-weight="500" fill="black" x="10.343262" y="16" textLength="47.302734">&gt;=725</tspan>
         <tspan font-family="Times New Roman" font-size="18" font-style="italic" font-weight="500" fill="black" x="57.645996" y="16" textLength="4.5"> </tspan>
       </text>
-      <rect x="543.2661" y="1440.8631" width="165.2" height="70.13687" fill="#feffcd"/>
-      <rect x="543.2661" y="1440.8631" width="165.2" height="70.13687" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
-      <text transform="translate(610.9661 1440.5752)" fill="black">
+      <rect x="544.0833" y="1440.8631" width="124" height="70.13687" fill="#feffcd"/>
+      <rect x="544.0833" y="1440.8631" width="124" height="70.13687" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
+      <text transform="translate(592.0204 1439.5752)" fill="black">
         <tspan font-family="Times New Roman" font-size="20" font-weight="500" fill="black" x=".009765625" y="18" textLength="29.98047">[-1]</tspan>
       </text>
-      <text transform="translate(754.46965 1440.5752)" fill="black">
+      <text transform="translate(714.0869 1440.5752)" fill="black">
         <tspan font-family="Times New Roman" font-size="20" font-weight="500" fill="black" x=".33984375" y="18" textLength="68.32031">[1,0,1,1]</tspan>
       </text>
-      <text transform="translate(601.6988 1466.2964)" fill="black">
+      <text transform="translate(574.1192 1465.2964)" fill="black">
         <tspan font-family="Times New Roman" font-size="19" font-weight="500" fill="black" x=".15625" y="17" textLength="67.6875">mean=-1</tspan>
       </text>
-      <text transform="translate(750.96965 1466.2964)" fill="black">
+      <text transform="translate(710.5869 1466.2964)" fill="black">
         <tspan font-family="Times New Roman" font-size="19" font-weight="500" fill="black" x=".19482422" y="17" textLength="75.61035">mean=.75</tspan>
       </text>
-      <line x1="688.3031" y1="1396.6532" x2="650.30454" y2="1436.3947" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".5"/>
-      <line x1="736.5707" y1="1397.1532" x2="774.5783" y2="1437.096" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
-      <text transform="translate(717.5155 1382.8602)" fill="black">
+      <line x1="647.9204" y1="1396.6532" x2="609.9218" y2="1436.3947" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".5"/>
+      <line x1="696.1879" y1="1397.1532" x2="734.19555" y2="1437.096" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
+      <text transform="translate(677.13274 1382.8602)" fill="black">
         <tspan font-family="Times New Roman" font-size="16" font-weight="500" fill="black" x="0" y="14" textLength="8">3</tspan>
       </text>
-      <text transform="translate(704.9988 1370.5)" fill="black">
+      <text transform="translate(664.6161 1370.5)" fill="black">
         <tspan font-family="STIXGeneral" font-size="20" font-weight="500" fill="black" x=".09" y="21" textLength="13.82">𝚫</tspan>
       </text>
       <text transform="translate(-60 1485.0964)" fill="black">
@@ -160,16 +160,16 @@
       <text transform="translate(92.27083 1485.0964)" fill="black">
         <tspan font-family="Times New Roman" font-size="19" font-weight="500" fill="black" x=".28637695" y="17" textLength="81.42725">weight=20</tspan>
       </text>
-      <text transform="translate(266.5 1485.0964)" fill="black">
+      <text transform="translate(257.94225 1485.0964)" fill="black">
         <tspan font-family="Times New Roman" font-size="19" font-weight="500" fill="black" x=".036376953" y="17" textLength="71.92725">weight=5</tspan>
       </text>
       <text transform="translate(411.72917 1485.0964)" fill="black">
         <tspan font-family="Times New Roman" font-size="19" font-weight="500" fill="black" x=".28637695" y="17" textLength="81.42725">weight=30</tspan>
       </text>
-      <text transform="translate(598.5 1485.0964)" fill="black">
+      <text transform="translate(570.9204 1484.0964)" fill="black">
         <tspan font-family="Times New Roman" font-size="19" font-weight="500" fill="black" x=".036376953" y="17" textLength="71.92725">weight=5</tspan>
       </text>
-      <text transform="translate(748.5 1485.0964)" fill="black">
+      <text transform="translate(708.11725 1485.0964)" fill="black">
         <tspan font-family="Times New Roman" font-size="19" font-weight="500" fill="black" x=".28637695" y="17" textLength="81.42725">weight=20</tspan>
       </text>
     </g>
