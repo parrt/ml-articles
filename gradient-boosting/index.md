@@ -255,7 +255,7 @@ plt.show()
 Next we train a weak model, $\Delta_1$, to predict that  difference vector. A perfect model, $\Delta_1$, would yield exactly $y-F_0$, meaning that we'd be done after one step since $F_1$ would be $F_0 + y - F_0$, or just $y$. Because it imperfectly captures that difference, $F_1$ it still not quite $y$, so we need to keep going for a few stages. To keep things simple, we can use a weight of 1 everywhere so that our recurrence relation for a single feature vector looks like:
 
 \[
-F_i(\vec x) &=& F_{i-1}(\vec x) + \eta \Delta_i(\vec x)
+F_i(\vec x) = F_{i-1}(\vec x) + \eta \Delta_i(\vec x)
 \]
 
 We use a learning rate of $\eta = 0.7$ because of an experiment shown below, so $F_1 = F_0 + 0.7  \Delta_1$, $F_2 = F_1 + 0.7  \Delta_2$, and so on. The following table summarizes the intermediate values of the various key "players":
