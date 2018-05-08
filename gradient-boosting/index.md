@@ -258,7 +258,7 @@ Next we train a weak model, $\Delta_1$, to predict that  difference vector. A pe
 F_i(\vec x) &=& F_{i-1}(\vec x) + \eta \Delta_i(\vec x)
 \]
 
-We use a learning rate of $\eta = 0.7$ because of an experiment shown below, but you can think of it as 1.0 for now to keep things simple. The following table summarizes the intermediate values of the various key "players":
+We use a learning rate of $\eta = 0.7$ because of an experiment shown below, so $F_1 = F_0 + 0.7  \Delta_1$, $F_2 = F_1 + 0.7  \Delta_2$, and so on. The following table summarizes the intermediate values of the various key "players":
 
 \latex{{
 {\small
@@ -327,7 +327,7 @@ plt.tight_layout()
 plt.show()
 </pyfig>
 
-The dashed lines indicate the actual predictions of $\Delta_i$ and the blue dots are the difference vectors. The predictions are step functions because we've used a *regression tree stub* as our base weak model with manually selected split points (850, 850, and 925).
+The dashed lines indicate the actual predictions of $\Delta_i$ and the blue dots are the difference vectors. The predictions are step functions because we've used a *regression tree stub* as our base weak model with manually-selected split points (850, 850, and 925).
 
 <aside title="Regression tree stubs">
 A regression tree stub is a regression tree with a single root and two children that splits on a single variable, which is what we have here, at a single threshold. (If we had more than a single value in our feature vectors, we'd have to build a taller tree that tested more variables; to avoid over fitting, we don't want very tall trees, however.) If a test value is less than the threshold, the model yields the average of the training samples in the left leaf. If the test value is greater than or equal to the threshold, the model yields the average of the train examples in the right leaf. Here are the three stubs implementing our $\Delta_i$ weak models:
@@ -336,7 +336,7 @@ A regression tree stub is a regression tree with a single root and two children 
 
 </aside>
 
-The composite model sums together all of the weak models so let's visualize the some of the weak models:
+The composite model sums together all of the weak models so let's visualize the sum of the weak models:
 
 <pyeval label=examples hide=true>
 eta = 0.7
@@ -442,9 +442,9 @@ plt.tight_layout()
 plt.show()
 </pyfig>
 
-Let's turn to the hyper parameters now.  We used $w_i = 1$ here, but a real implementation would choose the optimal weights so that each $w_m \Delta_i(\vec x)$ term minimizes the mean squared error, $\sum_i^n(y_i - F_m(\vec x_i))^2$, of model $F_m$ across all $n$ observations. 
+Let's turn to the hyper parameters now.  We used weight $w_m = 1$ in this manually-computed example, but a real implementation would choose the optimal weights so that each $w_m \Delta_i(\vec x)$ term minimized the mean squared error, $\sum_i^n(y_i - F_m(\vec x_i))^2$, of model $F_m$ across all $n$ observations. 
 
-That minimization assumes a learning rate of $\eta = 1$ so that it drops out from the equation and it seems like a good value to use because then each hop of $\eta 
+The primary value of the learning rate, or "*shrinkage*" as some papers call it, is to reduce overfitting of the overall model. As Chen and Guestrin say in [XGBoost: A Scalable Tree Boosting System](https://arxiv.org/pdf/1603.02754.pdf), "*shrinkage reduces the influence of each individual tree and leaves space for future trees to improve the model.*"  There are a number of articles on the web about tuning the learning rate and other hyper-parameters, such as Jason Brownlee's [Tune Learning Rate for Gradient Boosting with XGBoost in Python](https://machinelearningmastery.com/tune-learning-rate-for-gradient-boosting-with-xgboost-in-python).  The following graph shows how the mean squared error changes as we add more weak models, illustrated with a few different learning rates.  
 
 <pyeval label="examples" hide=true>
 # Compute MSE
@@ -508,6 +508,10 @@ ax.set_xticks(range(0,stages))
 plt.tight_layout()
 plt.show()
 </pyfig>
+
+Ultimately, we picked $\eta=0.7$ as it looked like it reaches the minimum error at stage $M=3$.
+
+The idea of using a learning rate to reduce overfitting in models that optimize cost functions to learn, such as deep learning neural networks. Rather than using a constant learning rate, we can start the learning rate out energetically and gradually slow it down as the model approaches optimality; this proves very effective in practice.
 
 ### Heading in the right direction
 
