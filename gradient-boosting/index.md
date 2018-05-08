@@ -154,7 +154,7 @@ df = data()
 
 where row $i$ is an observation with one-dimensional feature vector $\vec x_i$ (bold $\vec x$) and target value $y_i$. Matrix $X = [\vec x_1, \vec x_2, ..., \vec x_n]$ holds all  feature vectors and $\vec y$ (bold $\vec y$) is the entire `rent` column $\vec y = [y_1, y_2, ..., y_n]$. $F_{i-1}(\vec x_i)$ yields a predicted value but $F_{i-1}(X)$ yields a predicted target vector, one value for each $\vec x_i$.
 
-From this data, we'd like to build a GBM to predict rent price given square footage. To move towards $\vec y$ from any $\hat {\vec y}$, we can use any direction vector we want, but let's start with $\vec y-F_{i-1}(X)$ and then, in the next section, show how it works for $sign(\vec y-F_{i-1}(X))$.
+From this data, we'd like to build a GBM to predict rent price given square footage. To move towards $\vec y$ from any $\hat {\vec y}$, we can use any direction vector we want, but let's start with $\vec y-\hat y$ and then, in the next section, show how it works for $sign(\vec y-\hat y)$.
 
 ### Hopping by distance-to-target
 
@@ -327,12 +327,12 @@ plt.tight_layout()
 plt.show()
 </pyfig>
 
-The dashed lines indicate the actual predictions of $\Delta_i$ and the blue dots are the difference vectors. The predictions are step functions because we've used a *regression tree stub* as our base weak model with manually-selected split points (850, 850, and 925).
-
-<aside title="Regression tree stubs">
-A regression tree stub is a regression tree with a single root and two children that splits on a single variable, which is what we have here, at a single threshold. (If we had more than a single value in our feature vectors, we'd have to build a taller tree that tested more variables; to avoid over fitting, we don't want very tall trees, however.) If a test value is less than the threshold, the model yields the average of the training samples in the left leaf. If the test value is greater than or equal to the threshold, the model yields the average of the train examples in the right leaf. Here are the three stubs implementing our $\Delta_i$ weak models:
+The dashed lines indicate the actual predictions of $\Delta_i$ and the blue dots are the difference vectors. The predictions are step functions because we've used a *regression tree stub* as our base weak model with manually-selected split points (850, 850, and 925).  Here are the three stubs implementing our $\Delta_i$ weak models:
 
 <img src="images/stubs-mse.svg" width="90%">
+
+<aside title="Regression tree stubs">
+A regression tree stub is a regression tree with a single root and two children that splits on a single variable, which is what we have here, at a single threshold. (If we had more than a single value in our feature vectors, we'd have to build a taller tree that tested more variables; to avoid over fitting, we don't want very tall trees, however.) If a test value is less than the threshold, the model yields the average of the training samples in the left leaf. If the test value is greater than or equal to the threshold, the model yields the average of the train examples in the right leaf. 
 
 </aside>
 
@@ -511,9 +511,27 @@ plt.show()
 
 Ultimately, we picked $\eta=0.7$ as it looked like it reaches the minimum error at stage $M=3$.
 
-The idea of using a learning rate to reduce overfitting in models that optimize cost functions to learn, such as deep learning neural networks. Rather than using a constant learning rate, we can start the learning rate out energetically and gradually slow it down as the model approaches optimality; this proves very effective in practice.
+The idea of using a learning rate to reduce overfitting in models that optimize cost functions to learn, such as deep learning neural networks, is very common. Rather than using a constant learning rate, though, we can start the learning rate out energetically and gradually slow it down as the model approaches optimality; this proves very effective in practice.
 
 ### Heading in the right direction
+
+Making steps based upon the magnitude of $y-F_i$ makes the $F_i$ composite models converge rapidly towards $y$.  The negative, of course, is that using the magnitude makes the composite model chase outliers, leading to overfitting.  For noisy target variables, it sometimes makes sense to move merely in the direction of $y$ from $F_i$ rather than the magnitude and direction. This brings us to the second common direction vector, $sign(y-F_i(\vec x_i))$, which is either -1, 0, or +1 for each observation $\vec x_i$.   Another difference is that we choose the median and not the mean for our initial model $f_0$ (though it would still converge no matter where we started $f_0$). The equation for $F_0$ is the same:
+
+\[
+F_0(\vec x) = f_0(\vec x)
+\]
+
+and we could use the equation used for $y-\hat y$ direction vectors for obtaining new composite models from the previous:
+
+\[
+F_i(\vec x) = F_{i-1}(\vec x) + w_i \Delta_i(\vec x)\\
+\]
+
+but we would need very small weights, $w_i$, or a very small learning rate to avoid oscillating around the solution instead of converging to it.
+
+\[
+F_i(\vec x) = F_{i-1}(\vec x) + \Delta_i(\vec x; \vec w_i)\\
+\]
 
 Wow. leaves have diff weights for CARTs. only seem to need for MAE version. so the usual math eqn isn't what's done in practice. weak models don't repro dir vector well enough I guess.
 
@@ -766,62 +784,6 @@ plt.show()
 </pyfig>
 
 <img src="images/stubs-mae.svg" width="90%">
-
-<pyfig label=mae hide=true width="45%">
-stages = 4
-
-df_mae = pd.DataFrame(data={"stage":range(stages)})
-
-for eta in np.arange(.5, 4, .1):
-    df = data() # fresh data
-    mse,mae = boost(df, 'sqfeet', 'rent', splits, eta, stages)
-    df_mae[f'mae_{eta:.2f}'] = mae
-
-fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(6, 4), sharex=True)
-
-maxy = 22
-max_eta = 2
-min_eta = 1.2
-mins = []
-for eta in np.arange(min_eta, max_eta, .2):
-    mins.append( np.min(df_mae[f'mae_{eta:.2f}']) )
-
-min_eta_index = np.argmin(mins)
-# print("Best index is ", min_eta_index, list(np.arange(min_eta, max_eta, .2))[min_eta_index])
-
-i = 0
-for eta in np.arange(min_eta, max_eta, .2):
-    color = 'grey'
-    lw = .8
-    ls = ':'
-    if i==min_eta_index:
-        color = bookcolors['blue']
-        lw = 1.7
-        ls = '-'
-    ax.plot(df_mae.stage,df_mae[f'mae_{eta:.2f}'],
-            linewidth=lw,
-            linestyle=ls,
-            c=color)
-    xloc = 1.2
-    yloc = (df_mae[f'mae_{eta:.2f}'].values[1] + df_mae[f'mae_{eta:.2f}'].values[2])/2
-    if yloc>maxy:
-        yloc = maxy-100
-        xloc +=  .5
-    ax.text(xloc, yloc, f"$\\eta={eta:.1f}$",
-            fontsize=16)
-    i += 1
-
-plt.axis([0,stages-1,12,maxy])
-
-ax.set_ylabel(r"Mean Absolute Error", fontsize=16)
-ax.set_xlabel(r"Number of stages $M$", fontsize=16)
-ax.set_title(r'Effect of learning rate $\eta$ on MAE of $F_M({\bf x})$', fontsize=16)
-ax.set_xticks(range(0,stages))
-
-plt.tight_layout()
-plt.show()
-</pyfig>
-
 
 Now show addition of all terms, dsashed lines, visually.
 
