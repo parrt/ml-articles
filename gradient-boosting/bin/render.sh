@@ -5,7 +5,7 @@ O="/tmp/gradient-boosting"
 
 while true
 do
-	if test $I/css/article.css -nt $O/index.html || \
+	if test $I/css/article.css -nt $O/L2-norm.html || \
            test $I/L2-norm.md -nt $O/L2-norm.html || \
            test $I/L1-norm.md -nt $O/L1-norm.html || \
            test $I/descent.md -nt $O/descent.html

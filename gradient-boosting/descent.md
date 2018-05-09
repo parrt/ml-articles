@@ -6,6 +6,18 @@
 (We teach in University of San Francisco's [MS in Data Science program](https://www.usfca.edu/arts-sciences/graduate-programs/data-science) and have other nefarious projects underway. You might know Terence as the creator of the [ANTLR parser generator](http://www.antlr.org). Jeremy is a founding researcher at [fast.ai](http://fast.ai), a research institute dedicated to making deep learning more accessible.)
 }
 
+Students ask the most natural but hard-to-answer questions:
+
+<ol>
+<li>Why is it called <i>gradient</i> boosting?		</li>
+<li>What is &ldquo;function space&rdquo;?</li>
+<li>Why is it called &ldquo;gradient descent in function space&rdquo;?</li>
+</ol>
+
+The third question is the hardest to explain. As Gorman points out, &ldquo;<i>This is the part that gets butchered by a lot of gradient boosting explanations</i>.&rdquo; (His blog post does a good job of explaining it, but I thought I would give my own perspective here.)
+
+
+
 ## The intuition behind gradient descent
 
 what's a gradient?
