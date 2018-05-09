@@ -2,29 +2,7 @@
 
 \author{[Terence Parr](http://parrt.cs.usfca.edu) and [Jeremy Howard](http://www.fast.ai/about/#jeremy)}
 
-\preabstract{
-(We teach in University of San Francisco's [MS in Data Science program](https://www.usfca.edu/arts-sciences/graduate-programs/data-science) and have other nefarious projects underway. You might know Terence as the creator of the [ANTLR parser generator](http://www.antlr.org). Jeremy is a founding researcher at [fast.ai](http://fast.ai), a research institute dedicated to making deep learning more accessible.)
-}
-
-[Gradient boosting machines](https://en.wikipedia.org/wiki/Gradient_boosting) (GBMs) are currently very popular and so it's a good idea for machine learning practitioners to understand how GBMs work. The problem is that understanding all of the mathematical machinery is tricky and, unfortunately, these details are needed to tune the hyper parameters. (Tuning the hyper parameters is needed to getting a decent GBM model unlike, say, Random Forests.)  
-
-To get started, those with very strong mathematical backgrounds can go directly to the super-tasty 1999 paper by Jerome Friedman called [Greedy Function Approximation: A Gradient Boosting Machine](https://statweb.stanford.edu/~jhf/ftp/trebst.pdf).  To get the practical and implementation perspective, though, I recommend Ben Gorman's excellent blog [A Kaggle Master Explains Gradient Boosting](http://blog.kaggle.com/2017/01/23/a-kaggle-master-explains-gradient-boosting/) and Prince Grover's [Gradient Boosting from scratch](https://medium.com/mlreview/gradient-boosting-from-scratch-1e317ae4587d) (written by a [data science](https://www.usfca.edu/arts-sciences/graduate-programs/data-science) graduate student at the University of San Francisco).
-
-Figuring out the details enough to effectively use GBM takes a bit of time but clicks after a few days of reading. Explaining it to somebody else is vastly more difficult.  Students ask the most natural but hard-to-answer questions:
-
-<ol>
-	<li>Why is it called *gradient* boosting?		
-	<li>What is "function space"?
-	<li>Why is it called "gradient descent in function space"?
-</ol>
-
-The third question is the hardest to explain. As Gorman points out, "*This is the part that gets butchered by a lot of gradient boosting explanations*." (His blog post does a good job of explaining it, but I thought I would give my own perspective here.)
-
-My goal in this article is not to explain how GBM works *per se*, but rather how to explain the tricky bits to students or other programmers.  I will assume readers are programmers, have a basic grasp of boosting already, can remember high school algebra, and have some minimal understanding of function derivatives as one might find in the first semester of calculus. (To brush up on your vectors and derivatives, you can check out [The Matrix Calculus You Need For Deep Learning](http://parrt.cs.usfca.edu/doc/matrix-calculus/index.html) also written by us.)
-
-GBM is based upon the notion of boosting so let's start by getting a feel for how assembling a bunch of weak learners can lead to a strong model.
-
-## A review of boosted regression
+## An introduction to boosted regression
 
 [Boosting](https://en.wikipedia.org/wiki/Boosting_\(meta-algorithm\)) is a loosely-defined strategy for combining the efforts of multiple weak models into a single, strong meta-model or composite model.   Mathematicians represent both the weak and composite models as functions. Given a single feature vector $\vec x$ and target value $y$ from a single observation, we can express a meta-model that predicts $\hat y$ as the addition of $M$ weak models, $f_i(\vec x)$:
 
@@ -98,11 +76,11 @@ $F_4 = F_3 + \Delta_4$ & 95+5=100 & &  \\
 }
 }}
 
-A GBM implementation would have to choose weights, $w_i$, appropriately to make sure $\hat y$ converges on $y$ instead of oscillating back and forth forever, among other things. An overall learning rate variable is also typically used to speed up or slow down the overall approach of $\hat y$ to $y$, which also helps to alleviate oscillation. (We want the jumps to shorten as we approach.)
+A GBM implementation would have to choose weights, $w_i$, appropriately to make sure $\hat y$ converges on $y$ instead of oscillating back and forth forever, among other things. An overall learning rate variable, $\eta$, is also typically used to speed up or slow down the overall approach of $\hat y$ to $y$, which also helps to alleviate oscillation. (Ideally, the jumps would shorten as we approach.)
 
 To show how flexible this technique is, consider training the weak models on just the direction of $y$, rather than the magnitude and direction of $y$. In other words, we would train the $\Delta_i (\vec x)$ on $sign(y - \hat y)$, not $y - \hat y$. The $sign(z)$ (or $sgn(z)$) function expresses the direction as one of $\{-1, 0, +1\}$. We'd have to change how we pick the weights, but both $sign(y - \hat y)$ and $y - \hat y$ point us in the right direction. 
 
-For the single observation case, both final $F_M$ models would converge to the same value, but that's not the case for multiple observations. In the general case, these two direction vector definitions lead the overall model to converge on different predicted target $\hat {\vec y}$ columns; naturally, their hops through the predicted values would also be different. Later, we'll show that these two direction vector definitions are optimizing different measures of model performance.
+For the single observation case, both final $F_M$ models would converge to the same value, but that's not the case for multiple observations. In the general case, these two direction vector definitions lead the overall model to converge on different predicted target $\hat {\vec y}$ columns; naturally, their hops through the predicted values would also be different. In <a href="descent.html">Gradient boosting performs gradient descent</a>, we'll show that these two direction vector definitions are optimizing different measures of model performance.
 
 If you understand this golfer example, then you understand the key intuition behind boosting for regression, at least for a single observation.  Yup, that's it. Of course, we don't have the tools yet to prove this model converges on a useful approximation $\hat y$ or even that it terminates, but we wanted to show that the GBM idea itself is not hard to grok.
 
@@ -154,11 +132,9 @@ df = data()
 
 where row $i$ is an observation with one-dimensional feature vector $\vec x_i$ (bold $\vec x$) and target value $y_i$. Matrix $X = [\vec x_1, \vec x_2, ..., \vec x_n]$ holds all  feature vectors and $\vec y$ (bold $\vec y$) is the entire `rent` column $\vec y = [y_1, y_2, ..., y_n]$. $F_{i-1}(\vec x_i)$ yields a predicted value but $F_{i-1}(X)$ yields a predicted target vector, one value for each $\vec x_i$.
 
-From this data, we'd like to build a GBM to predict rent price given square footage. To move towards $\vec y$ from any $\hat {\vec y}$, we can use any direction vector we want, but let's start with $\vec y-\hat y$ and then, in the next section, show how it works for $sign(\vec y-\hat y)$.
+From this data, we'd like to build a GBM to predict rent price given square footage. To move towards $\vec y$ from any $\hat {\vec y}$, we can use any direction vector we want, but let's start with $\vec y-\hat{\vec y}$. Then, in <a href="L1-norm.html">Heading in the right direction</a>, we'll see how it also works for $sign(\vec y-\hat{\vec y})$.
 
-### Hopping by distance-to-target
-
-Let's use the mean (average) of the rent prices as our initial model: $F_0(\vec x_i)$ = $f_0(\vec x_i)$ = 1200 for all $i$. Once we have $F_0$, we compute $F_1$ by subtracting the previous estimate from the target, $y - F_0$:
+Let's use the mean (average) of the rent prices as our initial model: $F_0(\vec x_i)$ = $f_0(\vec x_i)$ = 1200 for all $i$: $F_0(X) = 1200$. Once we have $F_0$, we compute $F_1$ by subtracting the previous estimate from the target, $\vec y - F_0$:
 
 <pyeval label="examples" hide=true>
 def stub_predict(x_train, y_train, split):
@@ -213,7 +189,7 @@ print("F3 MSE", mean_squared_error(df.rent, df.F3), "MAE", mean_absolute_error(d
 \latex{{
 {\small
 \begin{tabular}[t]{rrrr}
-{\bf sqfeet} & {\bf rent} & $F_0$ & $y-F_0$ \\
+{\bf sqfeet} & {\bf rent} & $F_0$ & $\vec y-F_0$ \\
 \hline
 700 & 1125 & 1212 & -87 \\
 750 & 1150 & 1212 & -62 \\
@@ -224,7 +200,7 @@ print("F3 MSE", mean_squared_error(df.rent, df.F3), "MAE", mean_absolute_error(d
 }
 }}
 
-The last column shows not only the direction but the magnitude of the difference between where we are, $F_0$, and where we want to go, $y$. The red vectors in the following diagram are a visualization of the  difference vectors from our initial model to the rent target values.
+The last column shows not only the direction but the magnitude of the difference between where we are, $F_0(X)$, and where we want to go, $\vec y$. The red vectors in the following diagram are a visualization of the difference vectors from our initial model to the rent target values.
 
 <pyfig label=examples hide=true width="35%">
 f0 = df.rent.mean()
@@ -252,10 +228,10 @@ for x,y,yhat in zip(df.sqfeet,df.rent,df.F0):
 plt.show()
 </pyfig>
 
-Next we train a weak model, $\Delta_1$, to predict that  difference vector. A perfect model, $\Delta_1$, would yield exactly $y-F_0$, meaning that we'd be done after one step since $F_1$ would be $F_0 + y - F_0$, or just $y$. Because it imperfectly captures that difference, $F_1$ it still not quite $y$, so we need to keep going for a few stages. To keep things simple, we can use a weight of 1 everywhere so that our recurrence relation for a single feature vector looks like:
+Next, we train a weak model, $\Delta_1$, to predict that  difference vector. A perfect model, $\Delta_1$, would yield exactly $\vec y-F_0(X)$, meaning that we'd be done after one step since $F_1(X)$ would be $F_1(X) = F_0(X) + \vec y - F_0(X)$, or just $\vec y$. Because it imperfectly captures that difference, $F_1(X)$ is still not quite $\vec y$, so we need to keep going for a few stages. To keep things simple, we can use a weight of $w_i$ = 1 everywhere so that our recurrence relation for all feature vectors looks like:
 
 \[
-F_i(\vec x) = F_{i-1}(\vec x) + \eta \Delta_i(\vec x)
+F_i(X) = F_{i-1}(X) + \eta \Delta_i(X)
 \]
 
 We use a learning rate of $\eta = 0.7$ because of an experiment shown below, so $F_1 = F_0 + 0.7  \Delta_1$, $F_2 = F_1 + 0.7  \Delta_2$, and so on. The following table summarizes the intermediate values of the various key "players":
@@ -263,7 +239,7 @@ We use a learning rate of $\eta = 0.7$ because of an experiment shown below, so 
 \latex{{
 {\small
 \begin{tabular}[t]{rrrrrrrr}
-$\Delta_1$ & $F_1$ & $y-F_1$ & $\Delta_2$ & $F_2$ & $y - F_2$ & $\Delta_3$ & $F_3$\\
+$\Delta_1$ & $F_1$ & $\vec y-F_1$ & $\Delta_2$ & $F_2$ & $\vec y - F_2$ & $\Delta_3$ & $F_3$\\
 \hline
 -75 & 1159 & -34 & -22 & 1143 & -18 & -8 & 1137 \\
 -75 & 1159 & -9 & -22 & 1143 & 6 & -8 & 1137 \\
@@ -274,7 +250,7 @@ $\Delta_1$ & $F_1$ & $y-F_1$ & $\Delta_2$ & $F_2$ & $y - F_2$ & $\Delta_3$ & $F_
 }
 }}
 
-It helps to keep in mind that we are always training on the direction vector $y - F_{i-1}$ but get imperfect model $\Delta_i$. The best way to visualize the learning of $y-F_{i-1}$ difference vectors by weak models, $\Delta_i$, is by looking at the difference vectors and model predictions horizontally on the same scale Y-axis:
+It helps to keep in mind that we are always training on the direction vector $\vec y - F_{i-1}$ but get imperfect model $\Delta_i$. The best way to visualize the learning of $\vec y-F_{i-1}$ difference vectors by weak models, $\Delta_i$, is by looking at the difference vectors and model predictions horizontally on the same scale Y-axis:
 
 <pyfig label=examples hide=true width="90%">
 def draw_stub(ax, x_train, y_train, y_pred, split, stage):
@@ -446,7 +422,7 @@ plt.tight_layout()
 plt.show()
 </pyfig>
 
-Let's turn to the hyper parameters now.  We used weight $w_m = 1$ in this manually-computed example, but a real implementation would choose the optimal weights so that each $w_m \Delta_i(\vec x)$ term minimized the mean squared error, $\sum_i^n(y_i - F_m(\vec x_i))^2$, of model $F_m$ across all $n$ observations. 
+Let's turn to the hyper parameters now.  We used weight $w_i = 1$ in this manually-computed example, but a real implementation would choose the optimal weights so that each $w_i \Delta_i(\vec x)$ term minimized the mean squared error, $\sum_j^n(y_j - F_i(\vec x_j))^2$, of model $F_i$ across all $n$ observations. 
 
 The primary value of the learning rate, or "*shrinkage*" as some papers call it, is to reduce overfitting of the overall model. As Chen and Guestrin say in [XGBoost: A Scalable Tree Boosting System](https://arxiv.org/pdf/1603.02754.pdf), "*shrinkage reduces the influence of each individual tree and leaves space for future trees to improve the model.*"  There are a number of articles on the web about tuning the learning rate and other hyper-parameters, such as Jason Brownlee's [Tune Learning Rate for Gradient Boosting with XGBoost in Python](https://machinelearningmastery.com/tune-learning-rate-for-gradient-boosting-with-xgboost-in-python).  The following graph shows how the mean squared error changes as we add more weak models, illustrated with a few different learning rates.  
 
