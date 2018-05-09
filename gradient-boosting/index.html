@@ -1,0 +1,43 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+<link rel="stylesheet" type="text/css" href="css/article.css"/>
+</head>
+<body>
+<h1>How to explain gradient boosting</h1>
+
+<p id="author">
+<p><a href="http://parrt.cs.usfca.edu">Terence Parr</a> and <a href="http://www.fast.ai/about/#jeremy">Jeremy Howard</a></p>
+</p>
+
+
+<p>
+<p>(We teach in University of San Francisco's <a href="https://www.usfca.edu/arts-sciences/graduate-programs/data-science">MS in Data Science program</a> and have other nefarious projects underway. You might know Terence as the creator of the <a href="http://www.antlr.org">ANTLR parser generator</a>. Jeremy is a founding researcher at <a href="http://fast.ai">fast.ai</a>, a research institute dedicated to making deep learning more accessible.)</p>
+</p>
+
+
+
+<div id="toc">
+<p class="toc_title">Contents</p>
+<ul>
+</ul>
+</div>
+
+<p><a href="https://en.wikipedia.org/wiki/Gradient_boosting">Gradient boosting machines</a> (GBMs) are currently very popular and so it's a good idea for machine learning practitioners to understand how GBMs work. The problem is that understanding all of the mathematical machinery is tricky and, unfortunately, these details are needed to tune the hyper parameters. (Tuning the hyper parameters is needed to getting a decent GBM model unlike, say, Random Forests.)  </p>
+<p>To get started, those with very strong mathematical backgrounds can go directly to the super-tasty 1999 paper by Jerome Friedman called <a href="https://statweb.stanford.edu/~jhf/ftp/trebst.pdf">Greedy Function Approximation: A Gradient Boosting Machine</a>.  To get the practical and implementation perspective, though, I recommend Ben Gorman's excellent blog <a href="http://blog.kaggle.com/2017/01/23/a-kaggle-master-explains-gradient-boosting/">A Kaggle Master Explains Gradient Boosting</a> and Prince Grover's <a href="https://medium.com/mlreview/gradient-boosting-from-scratch-1e317ae4587d">Gradient Boosting from scratch</a> (written by a <a href="https://www.usfca.edu/arts-sciences/graduate-programs/data-science">data science</a> graduate student at the University of San Francisco).</p>
+<p>Figuring out the details enough to effectively use GBM takes a bit of time but clicks after a few days of reading. Explaining it to somebody else is vastly more difficult.  Students ask the most natural but hard-to-answer questions:</p>
+<ol>
+<li>Why is it called <i>gradient</i> boosting?		</li>
+<li>What is &ldquo;function space&rdquo;?</li>
+<li>Why is it called &ldquo;gradient descent in function space&rdquo;?</li>
+</ol>
+<p>The third question is the hardest to explain. As Gorman points out, &ldquo;<i>This is the part that gets butchered by a lot of gradient boosting explanations</i>.&rdquo; (His blog post does a good job of explaining it, but I thought I would give my own perspective here.)</p>
+<p>My goal in this article is not to explain how GBM works <i>per se</i>, but rather how to explain the tricky bits to students or other programmers.  I will assume readers are programmers, have a basic grasp of boosting already, can remember high school algebra, and have some minimal understanding of function derivatives as one might find in the first semester of calculus. (To brush up on your vectors and derivatives, you can check out <a href="http://parrt.cs.usfca.edu/doc/matrix-calculus/index.html">The Matrix Calculus You Need For Deep Learning</a> also written by us.)</p>
+<p>GBM is based upon the notion of boosting so let's start by getting a feel for how assembling a bunch of weak learners can lead to a strong model.</p>
+
+
+
+</body>
+</html>
