@@ -1,4 +1,4 @@
-# How to understand gradient boosting
+# How to explain gradient boosting
 
 \author{[Terence Parr](http://parrt.cs.usfca.edu) and [Jeremy Howard](http://www.fast.ai/about/#jeremy)}
 
@@ -20,7 +20,7 @@ Figuring out the details enough to effectively use GBM takes a bit of time but c
 
 The third question is the hardest to explain. As Gorman points out, "*This is the part that gets butchered by a lot of gradient boosting explanations*." (His blog post does a good job of explaining it, but I thought I would give my own perspective here.)
 
-My goal in this article is not to explain how GBM works *per se*, but rather how to explain the tricky bits to students or other programmers.  I will assume readers are programmers, have a basic grasp of boosting already, can remember high school algebra, and have some minimal understanding of function derivatives as one might find in the first semester of calculus. (To brush up on your vectors and derivatives, you can check out [The Matrix Calculus You Need For Deep Learning](http://parrt.cs.usfca.edu/doc/matrix-calculus/index.html) written with [Jeremy Howard](http://www.fast.ai/about/#jeremy).)
+My goal in this article is not to explain how GBM works *per se*, but rather how to explain the tricky bits to students or other programmers.  I will assume readers are programmers, have a basic grasp of boosting already, can remember high school algebra, and have some minimal understanding of function derivatives as one might find in the first semester of calculus. (To brush up on your vectors and derivatives, you can check out [The Matrix Calculus You Need For Deep Learning](http://parrt.cs.usfca.edu/doc/matrix-calculus/index.html) also written by us.)
 
 GBM is based upon the notion of boosting so let's start by getting a feel for how assembling a bunch of weak learners can lead to a strong model.
 
@@ -100,7 +100,7 @@ $F_4 = F_3 + \Delta_4$ & 95+5=100 & &  \\
 
 A GBM implementation would have to choose weights, $w_i$, appropriately to make sure $\hat y$ converges on $y$ instead of oscillating back and forth forever, among other things. An overall learning rate variable is also typically used to speed up or slow down the overall approach of $\hat y$ to $y$, which also helps to alleviate oscillation. (We want the jumps to shorten as we approach.)
 
-To show how flexible this technique is, consider training the weak models on just the direction of $y$, rather than the magnitude and direction of $y$. In other words, we would train the $\Delta_i (\vec x)$ on $sign(y - \hat y)$, not $y - \hat y$. The $sign(z)$ function expresses the direction as one of $\{-1, 0, +1\}$. We'd have to change how we pick the weights, but both $sign(y - \hat y)$ and $y - \hat y$ point us in the right direction. 
+To show how flexible this technique is, consider training the weak models on just the direction of $y$, rather than the magnitude and direction of $y$. In other words, we would train the $\Delta_i (\vec x)$ on $sign(y - \hat y)$, not $y - \hat y$. The $sign(z)$ (or $sgn(z)$) function expresses the direction as one of $\{-1, 0, +1\}$. We'd have to change how we pick the weights, but both $sign(y - \hat y)$ and $y - \hat y$ point us in the right direction. 
 
 For the single observation case, both final $F_M$ models would converge to the same value, but that's not the case for multiple observations. In the general case, these two direction vector definitions lead the overall model to converge on different predicted target $\hat {\vec y}$ columns; naturally, their hops through the predicted values would also be different. Later, we'll show that these two direction vector definitions are optimizing different measures of model performance.
 
@@ -292,6 +292,8 @@ def draw_stub(ax, x_train, y_train, y_pred, split, stage):
              linewidth=.8, linestyle='--', c='k')
     ax.plot([split,split], [lmean,rmean],
              linewidth=.8, linestyle='--', c='k')
+    ax.plot([x_train.min()-10,x_train.max()+10], [0,0],
+             linewidth=.8, linestyle=':', c='k')
     ax.legend(handles=[line1,line2], fontsize=16,
               loc='upper left', 
               labelspacing=.1,
@@ -327,7 +329,7 @@ plt.tight_layout()
 plt.show()
 </pyfig>
 
-The dashed lines indicate the actual predictions of $\Delta_i$ and the blue dots are the difference vectors. The predictions are step functions because we've used a *regression tree stub* as our base weak model with manually-selected split points (850, 850, and 925).  Here are the three stubs implementing our $\Delta_i$ weak models:
+The dashed lines indicate the actual predictions of $\Delta_i$ and the blue dots are the difference vectors. The predictions are step functions because we've used a *regression tree stub* as our base weak model with manually-selected split points (850, 850, and 925). \todo{why those splits?} Here are the three stubs implementing our $\Delta_i$ weak models:
 
 <img src="images/stubs-mse.svg" width="90%">
 
@@ -337,6 +339,8 @@ A regression tree stub is a regression tree with a single root and two children 
 </aside>
 
 The composite model sums together all of the weak models so let's visualize the sum of the weak models:
+
+\todo{show  Delta one and Delta to then Delta two and Delta three}
 
 <pyeval label=examples hide=true>
 eta = 0.7
@@ -515,7 +519,13 @@ The idea of using a learning rate to reduce overfitting in models that optimize 
 
 ### Heading in the right direction
 
-Making steps based upon the magnitude of $y-F_i$ makes the $F_i$ composite models converge rapidly towards $y$.  The negative, of course, is that using the magnitude makes the composite model chase outliers, leading to overfitting.  For noisy target variables, it sometimes makes sense to move merely in the direction of $y$ from $F_i$ rather than the magnitude and direction. This brings us to the second common direction vector, $sign(y-F_i(\vec x_i))$, which is either -1, 0, or +1 for each observation $\vec x_i$.   Another difference is that we choose the median and not the mean for our initial model $f_0$ (though it would still converge no matter where we started $f_0$). The equation for $F_0$ is the same:
+Making steps based upon the magnitude of $y-F_i$ makes the $F_i$ composite models converge rapidly towards $y$.  The negative, of course, is that using the magnitude makes the composite model chase outliers.   This occurs because mean computations are easily skewed by outliers and our stubs yield predictions using the mean of all target values in a leaf.  For noisy target variables, it sometimes makes sense to move merely in the direction of $y$ from $F_i$ rather than the magnitude and direction. 
+
+This brings us to the second commonly-used direction vector with gradient boosting: $sign(y-F_i(\vec x_i))$, which is either -1, 0, or +1 for each observation $\vec x_i$.   No matter how distant the true target is from our current prediction, our direction vector is just the direction without the magnitude. If there are outliers in the target variable that we cannot remove, using just the direction is better than direction and magnitude. We'll show later that using $sign(y-F_i(\vec x_i))$ as our direction vector leads to a solution optimized according to the $L_1$  *cost function*: $\sum_{i=1}^{n} |y_i - F_M(\vec x_i)|$. This fact means we should start with the median, not the mean, as our initial model $f_0$ since the median is the best single value to minimize the $L_1$ norm
+
+Another difference is that we choose the median and not the mean for our initial model $f_0$ (though it would still converge no matter where we started $f_0$). The median is not sensitive to outliers and is a good choice, again because of the $L_1$  cost function.
+
+The equation for $F_0$ is the same:
 
 \[
 F_0(\vec x) = f_0(\vec x)
@@ -533,7 +543,13 @@ but we would need very small weights, $w_i$, or a very small learning rate to av
 F_i(\vec x) = F_{i-1}(\vec x) + \Delta_i(\vec x; \vec w_i)\\
 \]
 
-Wow. leaves have diff weights for CARTs. only seem to need for MAE version. so the usual math eqn isn't what's done in practice. weak models don't repro dir vector well enough I guess.
+Wow. leaves have diff weights for CARTs. only seem to need for MAE version. so the usual math eqn isn't what's done in practice. weak models don't repro dir vector well enough I guess. \todo{ can mention momentum instead of or in addition to leaf weights.  see accelerated gradient boosting paper recently.}
+
+\todo{short arrows look like markers on the first image}
+
+\todo{Fix axes so they say rent and square feet not X and Y}
+
+\todo{Use line not dot in legend for red lines}
 
 <pyeval label=mae hide=true>
 import pandas as pd
@@ -688,6 +704,8 @@ def draw_stub(ax, x_train, y_train, y_pred, split, stage, locs):
              linewidth=.8, linestyle='--', c='k')
     ax.plot([split,split], [lmean,rmean],
              linewidth=.8, linestyle='--', c='k')
+    ax.plot([x_train.min()-10,x_train.max()+10], [0,0],
+             linewidth=.8, linestyle=':', c='k')
     ax.legend(handles=[line1,line2], fontsize=16,
               loc=locs[stage-1], 
               labelspacing=.1,
@@ -728,6 +746,7 @@ plt.savefig('/tmp/t.svg')
 plt.show()
 </pyfig>
 
+\todo{show  Delta one and Delta to then Delta two and Delta three}
 
 <!-- composite model -->
 
@@ -807,11 +826,16 @@ Have you ever wondered why this technique is called *gradient* boosting? We're b
 
 what's a gradient?
 
+
+## Boosting as gradient descent in prediction space
+
 we would choose absolute value difference when we are worried about outliers.
 
 gradient descent does parameter optimization normally but we are now doing function space optimization. Gradient descent can't be doing parameter optimization because the different kinds of models would have different parameters.
 
- picking weights is also an optimization problem.
+## Common points of confusion
+
+picking weights is also an optimization problem.
 
 Conceptually, gradient boosting is pretty easy to explain
 
