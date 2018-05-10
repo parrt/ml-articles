@@ -4,42 +4,42 @@
 
 ## An introduction to boosted regression
 
-[Boosting](https://en.wikipedia.org/wiki/Boosting_\(meta-algorithm\)) is a loosely-defined strategy for combining the efforts of multiple weak models into a single, strong meta-model or composite model.   Mathematicians represent both the weak and composite models as functions. Given a single feature vector $\vec x$ and target value $y$ from a single observation, we can express a meta-model that predicts $\hat y$ as the addition of $M$ weak models, $f_i(\vec x)$:
+[Boosting](https://en.wikipedia.org/wiki/Boosting_\(meta-algorithm\)) is a loosely-defined strategy for combining the efforts of multiple weak models into a single, strong meta-model or composite model.   Mathematicians represent both the weak and composite models as functions, but in practice the models can be anything including k-nearest-neighbors or   regression trees. Given a single feature vector $\vec x$ and target value $y$ from a single observation, we can express a meta-model that predicts $\hat y$ as the addition of $M$ weak models $f_m(\vec x)$:
 
 \[
-\hat y = F_M(\vec x) = f_1(\vec x) + ...  + f_M(\vec x) = \sum_{i=1}^M f_i(\vec x)
+\hat y = F_M(\vec x) = f_1(\vec x) + ...  + f_M(\vec x) = \sum_{m=1}^M f_m(\vec x)
 \]
 
-In practice, we always have more than one observation, ($\vec x_i$, $y_i$), but it's easier to start out thinking about how to deal with a single observation. Later, we'll stack $n$ feature vectors as rows in a matrix, $X = [\vec x_1, \vec x_2, ..., \vec x_n]$, and targets into a vector, $\vec y = [y_1, y_2, ..., y_n]$.
+In practice, we always have more than one observation, ($\vec x_i$, $y_i$), but it's easier to start out thinking about how to deal with a single observation. Later, we'll stack $N$ feature vectors as rows in a matrix, $X = [\vec x_1, \vec x_2, ..., \vec x_N]$, and targets into a vector, $\vec y = [y_1, y_2, ..., y_N]$ for $N$ observations.
 
-The form of $f_i(\vec x)$ functions we use for the weak models is often the same and the terms of $F_M(\vec x)$ differ only by a scale factor so it's convenient to add a scale term to the equation:
+The form of $f_m(\vec x)$ functions we use for the weak models is often the same and the terms of $F_M(\vec x)$ differ only by a scale factor so it's convenient to add a scale term to the equation:
 
 \[
-\hat y = F_M(\vec x) = w_1 f_1(\vec x) + ...  + w_M f_M(\vec x) = \sum_{i=1}^M w_i f_i(\vec x)
+\hat y = F_M(\vec x) = w_1 f_1(\vec x) + ...  + w_M f_M(\vec x) = \sum_{m=1}^M w_m f_m(\vec x)
 \]
 
 Mathematicians call this "additive modeling" and electrical engineers use it for decomposing signals into a collection of sine waves representing the frequency components (insert terrifying flashback to Fourier analysis here.) 
 
-It's often the case that an additive model can build the individual $f_i(\vec x)$ terms independently and in parallel, but that's not the case for boosting. Boosting constructs and adds weak models in a stage-wise fashion, one after the other, each one chosen to improve the overall model performance. The boosting strategy is greedy in the sense that choosing $f_i(\vec x)$ and $w_i$ never alters previous weights and functions. We can stop adding weak models when $\hat y = F_M(\vec x)$'s performance is good enough or when $w_i f_i(\vec x)$ doesn't add anything.  <!-- When we care about distinguishing between the various $\hat y$ for different values of $M$, we can use $\hat y^{(i)}$ to represent $F_i(\vec x)$. (We can't use the simpler notation $\hat y_i$ because that means target value $i$ within the $\hat {\vec y}$ vector.)-->
+It's often the case that an additive model can build the individual $f_m(\vec x)$ terms independently and in parallel, but that's not the case for boosting. Boosting constructs and adds weak models in a stage-wise fashion, one after the other, each one chosen to improve the overall model performance. The boosting strategy is greedy in the sense that choosing $f_m(\vec x)$ and $w_m$ never alters previous weights and functions. We can stop adding weak models when $\hat y = F_M(\vec x)$'s performance is good enough or when $w_m f_m(\vec x)$ doesn't add anything.  <!-- When we care about distinguishing between the various $\hat y$ for different values of $M$, we can use $\hat y^{(i)}$ to represent $F_m(\vec x)$. (We can't use the simpler notation $\hat y_m$ because that means target value $i$ within the $\hat {\vec y}$ vector.)-->
 
 Because greedy strategies choose one component model at a time, you will often see boosting models expressed using this equivalent, recursive formulation:
 
 \[
-F_i(\vec x) = F_{i-1} + w_i f_i(\vec x)
+F_m(\vec x) = F_{m-1} + w_m f_m(\vec x)
 \]
 
-Boosting itself does not specify how to choose the weights, the weak learners, or the number of models, $M$.   Boosting does not even specify the form of the $f_i(\vec x)$ models, which can be placeholders for linear regression models, regression trees, or any other model we want.  The form of the weak model dictates the form of the meta-model. For example, if all weak models are linear models, then the resulting meta-model is a simple linear model. If we use tiny regression trees as the weak models, the result is a forest of trees whose predictions are added together.
+Boosting itself does not specify how to choose the weights, the weak learners, or the number of models, $M$.   Boosting does not even specify the form of the $f_m(\vec x)$ models, which can be placeholders for linear regression models, regression trees, or any other model we want.  The form of the weak model dictates the form of the meta-model. For example, if all weak models are linear models, then the resulting meta-model is a simple linear model. If we use tiny regression trees as the weak models, the result is a forest of trees whose predictions are added together.
 
 Let's see if we can design a strategy for picking weak models to create our own boosting algorithm for a single observation. Then, we can extend it to work on the multiple observations we'd encounter in practice.
 
 ## The intuition behind gradient boosting
 
-To construct a boosted regression model, let's start by creating a crappy model, $f_0(\vec x)$, that predicts an initial approximation of $y$ given feature vector $\vec x$. Then, let's gradually nudge the overall $F_M(\vec x)$ model towards the known target value $y$ by adding one or more scaled tweaks, $w_i \Delta_i(\vec x)$:
+To construct a boosted regression model, let's start by creating a crappy model, $f_0(\vec x)$, that predicts an initial approximation of $y$ given feature vector $\vec x$. Then, let's gradually nudge the overall $F_M(\vec x)$ model towards the known target value $y$ by adding one or more scaled tweaks, $w_m \Delta_m(\vec x)$:
 
 \latex{{
 \begin{eqnarray*}
 \hat y & = & f_0(\vec x) + w_1 \Delta_1(\vec x) + w_2 \Delta_2(\vec x) + ...  + w_M \Delta_M(\vec x) \\
- & = & f_0(\vec x) + \sum_{i=1}^M w_i \Delta_i(\vec x)\\
+ & = & f_0(\vec x) + \sum_{m=1}^M w_m \Delta_m(\vec x)\\
  & = & F_M(\vec x)\\
 \end{eqnarray*}
 }}
@@ -49,7 +49,7 @@ Or, using a recurrence relation, let:
 \latex{{
 \begin{eqnarray*}
 F_0(\vec x) &=& f_0(\vec x)\\
-F_i(\vec x) &=& F_{i-1}(\vec x) + w_i \Delta_i(\vec x)\\
+F_m(\vec x) &=& F_{m-1}(\vec x) + w_m \Delta_m(\vec x)\\
 \end{eqnarray*}
 }}
 
@@ -57,15 +57,15 @@ It might be helpful to think of this boosting approach as a golfer initially wha
 
 <img src="images/golf-dir-vector.png" width="70%">
 
-After the initial stroke, the golfer determines the appropriate nudge by computing the  difference between $y$ and the first approximation, $y - F_0(\vec x)$. (We can let $\vec x$ be the hole number 1-18, but it doesn't really matter since we're only working with one observation for illustration purposes.) This difference is often called the *residual*, but it's more general for gradient boosting to think of this as the *direction vector* from the current $\hat y$, $F_i(\vec x)$, to the true $y$.   Using the direction vector as our nudge, means training $\Delta_i (\vec x)$ on value $y - F_{i-1}(\vec x)$ for our base weak models.  As with any machine learning model, our $\Delta_i$ models will not have perfect recall and precision, so we should expect $\Delta_i$ to give a noisy prediction instead of exactly $y - F_{i-1}(\vec x)$. 
+After the initial stroke, the golfer determines the appropriate nudge by computing the  difference between $y$ and the first approximation, $y - F_0(\vec x)$. (We can let $\vec x$ be the hole number 1-18, but it doesn't really matter since we're only working with one observation for illustration purposes.) This difference is often called the *residual*, but it's more general for gradient boosting to think of this as the *direction vector* from the current $\hat y$, $F_m(\vec x)$, to the true $y$.   Using the direction vector as our nudge, means training $\Delta_m (\vec x)$ on value $y - F_{m-1}(\vec x)$ for our base weak models.  As with any machine learning model, our $\Delta_m$ models will not have perfect recall and precision, so we should expect $\Delta_m$ to give a noisy prediction instead of exactly $y - F_{m-1}(\vec x)$. 
 
-As an example, let's say that the hole is at $y$=100 yards, $f_0(\vec x)=70$, and all of our weights are $w_i = 1$. Manually boosting, we might see a sequence like the following, depending on the imprecise $\Delta_i$ strokes made by the golfer:
+As an example, let's say that the hole is at $y$=100 yards, $f_0(\vec x)=70$, and all of our weights are $w_m = 1$. Manually boosting, we might see a sequence like the following, depending on the imprecise $\Delta_m$ strokes made by the golfer:
 
 \latex{{
 {\small
 \begin{tabular}[t]{llll}
-{\bf Boosted}&{\bf Model}&{\bf Train} $\Delta_i$&{\bf Noisy}\\
-{\bf Model} & {\bf Output} $\hat y$ & {\bf on} $y - \hat y$ & {\bf Prediction} $\Delta_i$\\
+{\bf Boosted}&{\bf Model}&{\bf Train} $\Delta_m$&{\bf Noisy}\\
+{\bf Model} & {\bf Output} $\hat y$ & {\bf on} $y - \hat y$ & {\bf Prediction} $\Delta_m$\\
 \hline
 $F_0$ & 70 & 100-70=30 & $\Delta_1$ = 15\\
 $F_1 = F_0 + \Delta_1$ & 70+15=85 & 100-85=15 & $\Delta_2$ = 20 \\
@@ -76,9 +76,9 @@ $F_4 = F_3 + \Delta_4$ & 95+5=100 & &  \\
 }
 }}
 
-A GBM implementation would have to choose weights, $w_i$, appropriately to make sure $\hat y$ converges on $y$ instead of oscillating back and forth forever, among other things. An overall learning rate variable, $\eta$, is also typically used to speed up or slow down the overall approach of $\hat y$ to $y$, which also helps to alleviate oscillation. (Ideally, the jumps would shorten as we approach.)
+A GBM implementation would have to choose weights, $w_m$, appropriately to make sure $\hat y$ converges on $y$ instead of oscillating back and forth forever, among other things. An overall learning rate variable, $\eta$, is also typically used to speed up or slow down the overall approach of $\hat y$ to $y$, which also helps to alleviate oscillation. (Ideally, the jumps would shorten as we approach.)
 
-To show how flexible this technique is, consider training the weak models on just the direction of $y$, rather than the magnitude and direction of $y$. In other words, we would train the $\Delta_i (\vec x)$ on $sign(y - \hat y)$, not $y - \hat y$. The $sign(z)$ (or $sgn(z)$) function expresses the direction as one of $\{-1, 0, +1\}$. We'd have to change how we pick the weights, but both $sign(y - \hat y)$ and $y - \hat y$ point us in the right direction. 
+To show how flexible this technique is, consider training the weak models on just the direction of $y$, rather than the magnitude and direction of $y$. In other words, we would train the $\Delta_m (\vec x)$ on $sign(y - \hat y)$, not $y - \hat y$. The $sign(z)$ (or $sgn(z)$) function expresses the direction as one of $\{-1, 0, +1\}$. We'd have to change how we pick the weights, but both $sign(y - \hat y)$ and $y - \hat y$ point us in the right direction. 
 
 For the single observation case, both final $F_M$ models would converge to the same value, but that's not the case for multiple observations. In the general case, these two direction vector definitions lead the overall model to converge on different predicted target $\hat {\vec y}$ columns; naturally, their hops through the predicted values would also be different. In <a href="descent.html">Gradient boosting performs gradient descent</a>, we'll show that these two direction vector definitions are optimizing different measures of model performance.
 
@@ -88,9 +88,9 @@ There are several things to reinforce before moving on:
 
 <ul>
 	<li>The weak models learn direction **vectors**, not just magnitudes.
-	<li>The initial model $f_0(\vec x)$ is trying to learn $y$ given $\vec x$, but the $\Delta_i (\vec x)$ tweaks are trying to learn direction vectors given $\vec x$.
-	<li>All weak models, $f_0(\vec x)$ and $\Delta_i(\vec x)$, train on the original feature vector $\vec x$.
-	<li>Two common direction vector choices are $sign(y-F_{i-1}(\vec x))$ and $y-F_{i-1}(\vec x)$.
+	<li>The initial model $f_0(\vec x)$ is trying to learn $y$ given $\vec x$, but the $\Delta_m (\vec x)$ tweaks are trying to learn direction vectors given $\vec x$.
+	<li>All weak models, $f_0(\vec x)$ and $\Delta_m(\vec x)$, train on the original feature vector $\vec x$.
+	<li>Two common direction vector choices are $sign(y-F_{m-1}(\vec x))$ and $y-F_{m-1}(\vec x)$.
 </ul>
 
 Let's walk through a concrete example to see what gradient boosting looks like on more than one observation.
@@ -130,9 +130,9 @@ def data():
 df = data()
 </pyeval>
 
-where row $i$ is an observation with one-dimensional feature vector $\vec x_i$ (bold $\vec x$) and target value $y_i$. Matrix $X = [\vec x_1, \vec x_2, ..., \vec x_n]$ holds all  feature vectors and $\vec y$ (bold $\vec y$) is the entire `rent` column $\vec y = [y_1, y_2, ..., y_n]$. $F_{i-1}(\vec x_i)$ yields a predicted value but $F_{i-1}(X)$ yields a predicted target vector, one value for each $\vec x_i$.
+where row $i$ is an observation with one-dimensional feature vector $\vec x_i$ (bold $\vec x$) and target value $y_i$. Matrix $X = [\vec x_1, \vec x_2, ..., \vec x_n]$ holds all  feature vectors and $\vec y$ (bold $\vec y$) is the entire `rent` column $\vec y = [y_1, y_2, ..., y_n]$. $F_{m-1}(\vec x_i)$ yields a predicted value but $F_{m-1}(X)$ yields a predicted target vector, one value for each $\vec x_i$.
 
-From this data, we'd like to build a GBM to predict rent price given square footage. To move towards $\vec y$ from any $\hat {\vec y}$, we can use any direction vector we want, but let's start with $\vec y-\hat{\vec y}$. Then, in <a href="L1-norm.html">Heading in the right direction</a>, we'll see how it also works for $sign(\vec y-\hat{\vec y})$.
+From this data, we'd like to build a GBM to predict rent price given square footage. To move towards $\vec y$ from any $\hat {\vec y}$, we can use any direction vector we want, but let's start with $\vec y-\hat{\vec y}$. Then, in [Heading in the right direction](L1-loss.html), we'll see how it also works for $sign(\vec y-\hat{\vec y})$.
 
 Let's use the mean (average) of the rent prices as our initial model: $F_0(\vec x_i)$ = $f_0(\vec x_i)$ = 1200 for all $i$: $F_0(X) = 1200$. Once we have $F_0$, we compute $F_1$ by subtracting the previous estimate from the target, $\vec y - F_0$:
 
@@ -231,7 +231,7 @@ plt.show()
 Next, we train a weak model, $\Delta_1$, to predict that  difference vector. A perfect model, $\Delta_1$, would yield exactly $\vec y-F_0(X)$, meaning that we'd be done after one step since $F_1(X)$ would be $F_1(X) = F_0(X) + \vec y - F_0(X)$, or just $\vec y$. Because it imperfectly captures that difference, $F_1(X)$ is still not quite $\vec y$, so we need to keep going for a few stages. To keep things simple, we can use a weight of $w_i$ = 1 everywhere so that our recurrence relation for all feature vectors looks like:
 
 \[
-F_i(X) = F_{i-1}(X) + \eta \Delta_i(X)
+F_m(X) = F_{m-1}(X) + \eta \Delta_m(X)
 \]
 
 We use a learning rate of $\eta = 0.7$ because of an experiment shown below, so $F_1 = F_0 + 0.7  \Delta_1$, $F_2 = F_1 + 0.7  \Delta_2$, and so on. The following table summarizes the intermediate values of the various key "players":
@@ -250,7 +250,7 @@ $\Delta_1$ & $F_1$ & $\vec y-F_1$ & $\Delta_2$ & $F_2$ & $\vec y - F_2$ & $\Delt
 }
 }}
 
-It helps to keep in mind that we are always training on the direction vector $\vec y - F_{i-1}$ but get imperfect model $\Delta_i$. The best way to visualize the learning of $\vec y-F_{i-1}$ difference vectors by weak models, $\Delta_i$, is by looking at the difference vectors and model predictions horizontally on the same scale Y-axis:
+It helps to keep in mind that we are always training on the direction vector $\vec y - F_{m-1}$ but get imperfect model $\Delta_m$. The best way to visualize the learning of $\vec y-F_{m-1}$ difference vectors by weak models, $\Delta_m$, is by looking at the difference vectors and model predictions horizontally on the same scale Y-axis:
 
 <pyfig label=examples hide=true width="90%">
 def draw_stub(ax, x_train, y_train, y_pred, split, stage):
@@ -305,12 +305,14 @@ plt.tight_layout()
 plt.show()
 </pyfig>
 
-The dashed lines indicate the actual predictions of $\Delta_i$ and the blue dots are the difference vectors. The predictions are step functions because we've used a *regression tree stub* as our base weak model with manually-selected split points (850, 850, and 925). \todo{why those splits?} Here are the three stubs implementing our $\Delta_i$ weak models:
+The dashed lines indicate the actual predictions of $\Delta_m$, the blue dots are the difference vectors, and the dotted line is the origin at 0. The predictions are step functions because we've used a *regression tree stub* as our base weak model with manually-selected split points (850, 850, and 925). Here are the three stubs implementing our $\Delta_m$ weak models:
 
 <img src="images/stubs-mse.svg" width="90%">
 
 <aside title="Regression tree stubs">
 A regression tree stub is a regression tree with a single root and two children that splits on a single variable, which is what we have here, at a single threshold. (If we had more than a single value in our feature vectors, we'd have to build a taller tree that tested more variables; to avoid over fitting, we don't want very tall trees, however.) If a test value is less than the threshold, the model yields the average of the training samples in the left leaf. If the test value is greater than or equal to the threshold, the model yields the average of the train examples in the right leaf. 
+
+\todo{why those splits?}
 
 </aside>
 
@@ -356,7 +358,7 @@ ax.plot([splits[1],splits[1]], [splitys[0], splitys[1]], linewidth=.8, linestyle
 ax.plot([splits[3],splits[3]], [splitys[1], splitys[2]], linewidth=.8, linestyle='--', c='k')
 ax.plot([s,s], [prevy,y], linewidth=.8, linestyle='--', c='k')
 
-ax.set_ylabel(r"Sum $\Delta_i$ models", fontsize=16)
+ax.set_ylabel(r"Sum $\Delta_m$ models", fontsize=16)
 ax.set_xlabel(r"${\bf x}$", fontsize=20)
 
 ax.set_yticks([-100,-50,0,50,100,150])
@@ -422,7 +424,7 @@ plt.tight_layout()
 plt.show()
 </pyfig>
 
-Let's turn to the hyper parameters now.  We used weight $w_i = 1$ in this manually-computed example, but a real implementation would choose the optimal weights so that each $w_i \Delta_i(\vec x)$ term minimized the mean squared error, $\sum_j^n(y_j - F_i(\vec x_j))^2$, of model $F_i$ across all $n$ observations. 
+Let's turn to the hyper-parameters now.  We used weight $w_m = 1$ in this manually-computed example, but a real implementation would choose the optimal weights so that each $w_m \Delta_m(\vec x)$ term minimized the mean squared error, $\sum_i^N(y_i - F_m(\vec x_i))^2$, of model $F_m$ across all $N$ observations. 
 
 The primary value of the learning rate, or "*shrinkage*" as some papers call it, is to reduce overfitting of the overall model. As Chen and Guestrin say in [XGBoost: A Scalable Tree Boosting System](https://arxiv.org/pdf/1603.02754.pdf), "*shrinkage reduces the influence of each individual tree and leaves space for future trees to improve the model.*"  There are a number of articles on the web about tuning the learning rate and other hyper-parameters, such as Jason Brownlee's [Tune Learning Rate for Gradient Boosting with XGBoost in Python](https://machinelearningmastery.com/tune-learning-rate-for-gradient-boosting-with-xgboost-in-python).  The following graph shows how the mean squared error changes as we add more weak models, illustrated with a few different learning rates.  
 

@@ -2,6 +2,6 @@
 	"type":"article",
         "title":"",
         "author":"Terence Parr and Jeremy Howard",
-        "chapters":["L1-norm.md", "L2-norm.md", "descent.md"],
+        "chapters":["L1-loss.md", "L2-loss.md", "descent.md"],
 	"data":"/Users/parrt/github/ml-articles/data"
 }

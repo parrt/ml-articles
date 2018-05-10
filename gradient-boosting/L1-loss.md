@@ -2,13 +2,9 @@
 
 \author{[Terence Parr](http://parrt.cs.usfca.edu) and [Jeremy Howard](http://www.fast.ai/about/#jeremy)}
 
-\preabstract{
-(We teach in University of San Francisco's [MS in Data Science program](https://www.usfca.edu/arts-sciences/graduate-programs/data-science) and have other nefarious projects underway. You might know Terence as the creator of the [ANTLR parser generator](http://www.antlr.org). Jeremy is a founding researcher at [fast.ai](http://fast.ai), a research institute dedicated to making deep learning more accessible.)
-}
+In our previous article, <a href="L2-loss.html">Gradient boosting: Distance to target</a>, our model took steps towards the target $\vec y$ based upon the difference vector, $\vec y-F_m(X)$, which includes the magnitude not just the direction of $\vec y$ from our current mode $F_m(X)$. The difference vector makes the $F_m$ composite models converge rapidly towards $\vec y$.  The negative, of course, is that using the magnitude makes the composite model chase outliers.   This occurs because mean computations are easily skewed by outliers and our regression tree stubs yield predictions using the mean of all target values in a leaf.  For noisy target variables, it makes more sense to step merely in the *direction* of $\vec y$ from $F_m$ rather than the magnitude and direction. 
 
-Making steps based upon the magnitude of $y-F_i$ makes the $F_i$ composite models converge rapidly towards $y$.  The negative, of course, is that using the magnitude makes the composite model chase outliers.   This occurs because mean computations are easily skewed by outliers and our stubs yield predictions using the mean of all target values in a leaf.  For noisy target variables, it sometimes makes sense to move merely in the direction of $y$ from $F_i$ rather than the magnitude and direction. 
-
-This brings us to the second commonly-used direction vector with gradient boosting: $sign(y-F_i(\vec x_i))$, which is either -1, 0, or +1 for each observation $\vec x_i$.   No matter how distant the true target is from our current prediction, our direction vector is just the direction without the magnitude. If there are outliers in the target variable that we cannot remove, using just the direction is better than direction and magnitude. We'll show later that using $sign(y-F_i(\vec x_i))$ as our direction vector leads to a solution optimized according to the $L_1$  *cost function*: $\sum_{i=1}^{n} |y_i - F_M(\vec x_i)|$. This fact means we should start with the median, not the mean, as our initial model $f_0$ since the median is the best single value to minimize the $L_1$ norm
+This brings us to the second commonly-used vector with gradient boosting, the direction vector $sign(y_i-F_m(\vec x_i))$, which is either -1, 0, or +1 for each observation $\vec x_i$.   No matter how distant the true target is from our current prediction, the used to take steps towards the target is just the direction without the magnitude. If there are outliers in the target variable that we cannot remove, using just the direction is better than both direction and magnitude. We'll show in <a href="descent.html">Gradient boosting performs gradient descent</a> that using $sign(y-F_m(\vec x_i))$ as our vector leads to a solution optimized according to the mean absolute value (MAE) or $L_1$  *loss function*: $\sum_{i=1}^{N} |y_i - F_M(\vec x_i)|$. This fact means we should start with the median, not the mean, as our initial model $f_0$ since the median is the best single value to minimize the $L_1$ norm
 
 Another difference is that we choose the median and not the mean for our initial model $f_0$ (though it would still converge no matter where we started $f_0$). The median is not sensitive to outliers and is a good choice, again because of the $L_1$  cost function.
 
@@ -21,13 +17,13 @@ F_0(\vec x) = f_0(\vec x)
 and we could use the equation used for $y-\hat y$ direction vectors for obtaining new composite models from the previous:
 
 \[
-F_i(\vec x) = F_{i-1}(\vec x) + w_i \Delta_i(\vec x)\\
+F_m(\vec x) = F_{i-1}(\vec x) + w_m \Delta_m(\vec x)\\
 \]
 
-but we would need very small weights, $w_i$, or a very small learning rate to avoid oscillating around the solution instead of converging to it.
+but we would need very small weights, $w_m$, or a very small learning rate to avoid oscillating around the solution instead of converging to it.
 
 \[
-F_i(\vec x) = F_{i-1}(\vec x) + \Delta_i(\vec x; \vec w_i)\\
+F_m(\vec x) = F_{i-1}(\vec x) + \Delta_m(\vec x; \vec w_m)\\
 \]
 
 Wow. leaves have diff weights for CARTs. only seem to need for MAE version. so the usual math eqn isn't what's done in practice. weak models don't repro dir vector well enough I guess. \todo{ can mention momentum instead of or in addition to leaf weights.  see accelerated gradient boosting paper recently.}
@@ -82,7 +78,7 @@ stages = 4
 
 def boost(df, xcol, ycol, splits, eta, stages):
     """
-    Update df to have direction_i, delta_i, F_i.
+    Update df to have direction_m, delta_m, F_m.
     Return MSE, MAE
     """
     f0 = df[ycol].median()
@@ -299,12 +295,12 @@ That's easy enough, so what's the problem? How do we know this procedure is corr
 
 we add together the results of multiple weak learners
 
-How good is that model? To answer that, we need a loss or cost function, $L(y,\hat y)$, that computes the cost of predicting $\hat y$ instead of $y$.  The squared error, $L(y,\hat y) = (y-\hat y)^2$ is the most common, but sometimes we care more about the absolute difference, $L(y,\hat y) = |y-\hat y|$. The loss across all observations is just the sum (or the average if you want to divide by $n$) of all the individual observation losses:
+How good is that model? To answer that, we need a loss or cost function, $L(y,\hat y)$, that computes the cost of predicting $\hat y$ instead of $y$.  The squared error, $L(y,\hat y) = (y-\hat y)^2$ is the most common, but sometimes we care more about the absolute difference, $L(y,\hat y) = |y-\hat y|$. The loss across all observations is just the sum (or the average if you want to divide by $N$) of all the individual observation losses:
 
 \[
-L(\vec y, X) = \sum_{i=1}^{n} L(y_i, F_M(\vec x_i))
+L(\vec y, X) = \sum_{i=1}^{N} L(y_i, F_M(\vec x_i))
 \]
 
-That gives this either $L(\vec y, X) = \sum_{i=1}^{n} (y_i - F_M(\vec x_i))^2$ or $L(\vec y, X) = \sum_{i=1}^{n} |y_i - F_M(\vec x_i)|$.
+That gives this either $L(\vec y, X) = \sum_{i=1}^{N} (y_i - F_M(\vec x_i))^2$ or $L(\vec y, X) = \sum_{i=1}^{N} |y_i - F_M(\vec x_i)|$.
 
 Have you ever wondered why this technique is called *gradient* boosting? We're boosting gradients because our weak models learn direction vectors, and the other common term for "direction vector" is, drumroll please, *gradient*.  that leads us to optimization via gradient descent.
