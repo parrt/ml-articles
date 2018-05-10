@@ -4,11 +4,20 @@
 
 In our previous article, <a href="L2-loss.html">Gradient boosting: Distance to target</a>, our model took steps towards the target $\vec y$ based upon the difference vector, $\vec y-F_m(X)$, which includes the magnitude not just the direction of $\vec y$ from our current mode $F_m(X)$. The difference vector makes the $F_m$ composite models converge rapidly towards $\vec y$.  The negative, of course, is that using the magnitude makes the composite model chase outliers.   This occurs because mean computations are easily skewed by outliers and our regression tree stubs yield predictions using the mean of all target values in a leaf.  For noisy target variables, it makes more sense to step merely in the *direction* of $\vec y$ from $F_m$ rather than the magnitude and direction. 
 
-This brings us to the second commonly-used vector with gradient boosting, the direction vector $sign(y_i-F_m(\vec x_i))$, which is either -1, 0, or +1 for each observation $\vec x_i$.   No matter how distant the true target is from our current prediction, the used to take steps towards the target is just the direction without the magnitude. If there are outliers in the target variable that we cannot remove, using just the direction is better than both direction and magnitude. We'll show in <a href="descent.html">Gradient boosting performs gradient descent</a> that using $sign(y-F_m(\vec x_i))$ as our vector leads to a solution optimized according to the mean absolute value (MAE) or $L_1$  *loss function*: $\sum_{i=1}^{N} |y_i - F_M(\vec x_i)|$. This fact means we should start with the median, not the mean, as our initial model $f_0$ since the median is the best single value to minimize the $L_1$ norm
+This brings us to the second commonly-used vector with gradient boosting, the direction vector $sign(y_i-F_m(\vec x_i))$, which is either -1, 0, or +1 for each observation $\vec x_i$.   No matter how distant the true target is from our current prediction, the vector used to take steps towards the target is just the direction without the magnitude. If there are outliers in the target variable that we cannot remove, using just the direction is better than both direction and magnitude. We'll show in <a href="descent.html">Gradient boosting performs gradient descent</a> that using $sign(y-F_m(\vec x_i))$ as our step vector leads to a solution that optimizes the model according to the mean absolute value (MAE) or $L_1$  *loss function*: $\sum_{i=1}^{N} |y_i - F_M(\vec x_i)|$. 
 
-Another difference is that we choose the median and not the mean for our initial model $f_0$ (though it would still converge no matter where we started $f_0$). The median is not sensitive to outliers and is a good choice, again because of the $L_1$  cost function.
+Optimizing the MAE means we should start with the median, not the mean, as our initial model, $f_0$, since the median of $y$ minimizes the $L_1$ loss. (It's the best single-value approximation.)  Other than that, we can start out with the same recurrence relations for finding composite model $F_m(\vec x)$ as we did for the different sector version in the last article:
 
-The equation for $F_0$ is the same:
+\latex{{
+\begin{eqnarray*}
+F_0(\vec x) &=& f_0(\vec x)\\
+F_m(\vec x) &=& F_{m-1}(\vec x) + w_m \Delta_m(\vec x)\\
+\end{eqnarray*}
+}}
+
+Recall that $F_m(\vec x)$ yields a predicted value but $F_m(X)$ yields a predicted target vector, one value for each $\vec x$ feature vector.
+
+So the equation for $F_0$ is the same:
 
 \[
 F_0(\vec x) = f_0(\vec x)

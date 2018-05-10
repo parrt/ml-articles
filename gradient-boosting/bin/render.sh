@@ -5,9 +5,9 @@ O="/tmp/gradient-boosting"
 
 while true
 do
-	if test $I/css/article.css -nt $O/L2-norm.html || \
-           test $I/L2-norm.md -nt $O/L2-norm.html || \
-           test $I/L1-norm.md -nt $O/L1-norm.html || \
+	if test $I/css/article.css -nt $O/L2-loss.html || \
+           test $I/L2-loss.md -nt $O/L2-loss.html || \
+           test $I/L1-loss.md -nt $O/L1-loss.html || \
            test $I/descent.md -nt $O/descent.html
 	then
 		/Users/parrt/github/bookish/bin/article.sh $I/article.json

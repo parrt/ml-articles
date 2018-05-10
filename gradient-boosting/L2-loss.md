@@ -130,7 +130,7 @@ def data():
 df = data()
 </pyeval>
 
-where row $i$ is an observation with one-dimensional feature vector $\vec x_i$ (bold $\vec x$) and target value $y_i$. Matrix $X = [\vec x_1, \vec x_2, ..., \vec x_n]$ holds all  feature vectors and $\vec y$ (bold $\vec y$) is the entire `rent` column $\vec y = [y_1, y_2, ..., y_n]$. $F_{m-1}(\vec x_i)$ yields a predicted value but $F_{m-1}(X)$ yields a predicted target vector, one value for each $\vec x_i$.
+where row $i$ is an observation with one-dimensional feature vector $\vec x_i$ (bold $\vec x$) and target value $y_i$. Matrix $X = [\vec x_1, \vec x_2, ..., \vec x_n]$ holds all  feature vectors and $\vec y$ (bold $\vec y$) is the entire `rent` column $\vec y = [y_1, y_2, ..., y_n]$. $F_m(\vec x_i)$ yields a predicted value but $F_m(X)$ yields a predicted target vector, one value for each $\vec x_i$.
 
 From this data, we'd like to build a GBM to predict rent price given square footage. To move towards $\vec y$ from any $\hat {\vec y}$, we can use any direction vector we want, but let's start with $\vec y-\hat{\vec y}$. Then, in [Heading in the right direction](L1-loss.html), we'll see how it also works for $sign(\vec y-\hat{\vec y})$.
 
