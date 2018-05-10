@@ -117,7 +117,14 @@ bookcolors = {'crimson': '#a50026', 'red': '#d73027', 'redorange': '#f46d43',
               'orange': '#fdae61', 'yellow': '#fee090', 'sky': '#e0f3f8', 
               'babyblue': '#abd9e9', 'lightblue': '#74add1', 'blue': '#4575b4',
               'purple': '#313695'}
-# can't end with quote
+
+def draw_vector(ax, x, y, dx, dy, yrange):
+    ax.plot([x,x+dx], [y,y+dy], c='r', linewidth=.8)
+    ay = y+dy
+    yrange *= 0.03
+    ad = -yrange if dy>=0 else yrange
+    ax.plot([x+dx-4,x+dx], [ay+ad,ay], c='r', linewidth=.8)
+    ax.plot([x+dx,x+dx+4], [ay,ay+ad], c='r', linewidth=.8)
 </pyeval>
 
 <pyeval label="examples" output="df" hide=true>

@@ -43,6 +43,44 @@ Wow. leaves have diff weights for CARTs. only seem to need for MAE version. so t
 
 \todo{Use line not dot in legend for red lines}
 
+<pyeval label="examples" hide=true>
+import pandas as pd
+import matplotlib.pyplot as plt
+from matplotlib import rc
+import matplotlib
+import numpy as np
+from scipy.optimize import minimize_scalar
+from sklearn.metrics import mean_squared_error, mean_absolute_error
+#rc('text', usetex=True)
+matplotlib.rcParams['mathtext.fontset'] = 'cm'
+matplotlib.rcParams['mathtext.rm'] = 'serif'
+matplotlib.rc('xtick', labelsize=13) 
+matplotlib.rc('ytick', labelsize=13) 
+
+bookcolors = {'crimson': '#a50026', 'red': '#d73027', 'redorange': '#f46d43',
+              'orange': '#fdae61', 'yellow': '#fee090', 'sky': '#e0f3f8', 
+              'babyblue': '#abd9e9', 'lightblue': '#74add1', 'blue': '#4575b4',
+              'purple': '#313695'}
+
+def draw_vector(ax, x, y, dx, dy, yrange):
+    ax.plot([x,x+dx], [y,y+dy], c='r', linewidth=.8)
+    ay = y+dy
+    yrange *= 0.03
+    ad = -yrange if dy>=0 else yrange
+    ax.plot([x+dx-4,x+dx], [ay+ad,ay], c='r', linewidth=.8)
+    ax.plot([x+dx,x+dx+4], [ay,ay+ad], c='r', linewidth=.8)
+</pyeval>
+
+<pyeval label="examples" output="df" hide=true>
+def data():
+    df = pd.DataFrame(data={"sqfeet":[700,950,800,900,750]})
+    df["rent"] = pd.Series([1125,1350,1135,1300,1150])
+    df = df.sort_values('sqfeet')
+    return df
+
+df = data()
+</pyeval>
+
 <pyeval label=mae hide=true>
 import pandas as pd
 import matplotlib.pyplot as plt
