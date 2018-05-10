@@ -219,20 +219,14 @@ ax.plot([df.sqfeet.min()-10,df.sqfeet.max()+10], [f0,f0],
 ax.set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
 ax.text(815, f0+15, r"$f_0({\bf x})$", fontsize=20)
 
-ax.set_ylabel(r"Rent $y$", fontsize=20)
-ax.set_xlabel(r"${\bf x}$", fontsize=20)
+ax.set_ylabel(r"Rent ($y$)", fontsize=14)
+ax.set_xlabel(r"SqFeet (${\bf x}$)", fontsize=14)
 
 # draw arrows
 for x,y,yhat in zip(df.sqfeet,df.rent,df.F0):
-    if y-yhat!=0:
-        ax.arrow(x, yhat, 0, y-yhat,
-                  length_includes_head=True,
-                  fc='r', ec='r',
-                  linewidth=0.8,
-                  head_width=4, head_length=15,  
-                 )
+    draw_vector(ax, x, yhat, 0, y-yhat, df.rent.max()-df.rent.min())
 
-plt.show()
+plt.show() 
 </pyfig>
 
 Next, we train a weak model, $\Delta_1$, to predict that  difference vector. A perfect model, $\Delta_1$, would yield exactly $\vec y-F_0(X)$, meaning that we'd be done after one step since $F_1(X)$ would be $F_1(X) = F_0(X) + \vec y - F_0(X)$, or just $\vec y$. Because it imperfectly captures that difference, $F_1(X)$ is still not quite $\vec y$, so we need to keep going for a few stages. To keep things simple, we can use a weight of $w_i$ = 1 everywhere so that our recurrence relation for all feature vectors looks like:
@@ -286,18 +280,14 @@ def draw_stub(ax, x_train, y_train, y_pred, split, stage):
 
 def draw_residual(ax, x_train, y_train, y_hat):
     for x,y,yhat in zip(x_train, y_train, y_hat):
-        if y-yhat!=0:
-            ax.arrow(x, yhat, 0, y-yhat,
-                      length_includes_head=True,
-                      fc='r', ec='r',
-                      linewidth=0.8,
-                     )
+        draw_vector(ax, x, yhat, 0, y-yhat, df.rent.max()-df.rent.min())
 
 fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(10, 3.5), sharey=True)
 
 axes[0].set_ylabel(r"$y-\hat y$", fontsize=20)
 for a in range(3):
-    axes[a].set_xlabel(r"${\bf x}$", fontsize=20)
+    axes[a].set_xlabel(r"SqFeet", fontsize=14)
+    axes[a].set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
     
 draw_stub(axes[0], df.sqfeet, df.dir1, df.delta1, splits[1], stage=1)
 draw_residual(axes[0], df.sqfeet,df.dir1,df.delta1)
@@ -365,8 +355,8 @@ ax.plot([splits[1],splits[1]], [splitys[0], splitys[1]], linewidth=.8, linestyle
 ax.plot([splits[3],splits[3]], [splitys[1], splitys[2]], linewidth=.8, linestyle='--', c='k')
 ax.plot([s,s], [prevy,y], linewidth=.8, linestyle='--', c='k')
 
-ax.set_ylabel(r"Sum $\Delta_m$ models", fontsize=16)
-ax.set_xlabel(r"${\bf x}$", fontsize=20)
+ax.set_ylabel(r"Sum $\Delta_i$ models", fontsize=16)
+ax.set_xlabel(r"SqFeet", fontsize=14)
 
 ax.set_yticks([-100,-50,0,50,100,150])
 
@@ -415,8 +405,8 @@ ax.plot([splits[1],splits[1]], [splitys[0], splitys[1]], linewidth=.8, linestyle
 ax.plot([splits[3],splits[3]], [splitys[1], splitys[2]], linewidth=.8, linestyle='--', c='k')
 ax.plot([s,s], [prevy,y], linewidth=.8, linestyle='--', c='k')
 
-ax.set_ylabel(r"Rent", fontsize=16)
-ax.set_xlabel(r"${\bf x}$", fontsize=20)
+ax.set_ylabel(r"Rent", fontsize=14)
+ax.set_xlabel(r"SqFeet", fontsize=14)
 
 ax.set_yticks(np.arange(1150,1351,50))
 

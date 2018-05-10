@@ -69,9 +69,7 @@ def draw_vector(ax, x, y, dx, dy, yrange):
     ad = -yrange if dy>=0 else yrange
     ax.plot([x+dx-4,x+dx], [ay+ad,ay], c='r', linewidth=.8)
     ax.plot([x+dx,x+dx+4], [ay,ay+ad], c='r', linewidth=.8)
-</pyeval>
-
-<pyeval label="examples" output="df" hide=true>
+	
 def data():
     df = pd.DataFrame(data={"sqfeet":[700,950,800,900,750]})
     df["rent"] = pd.Series([1125,1350,1135,1300,1150])
@@ -81,34 +79,136 @@ def data():
 df = data()
 </pyeval>
 
-<pyeval label=mae hide=true>
-import pandas as pd
-import matplotlib.pyplot as plt
-from matplotlib import rc
-import matplotlib
-import numpy as np
-from scipy.optimize import minimize_scalar
-from sklearn.metrics import mean_squared_error, mean_absolute_error
-#rc('text', usetex=True)
-matplotlib.rcParams['mathtext.fontset'] = 'cm'
-matplotlib.rcParams['mathtext.rm'] = 'serif'
-matplotlib.rc('xtick', labelsize=13) 
-matplotlib.rc('ytick', labelsize=13) 
+<!-- One weight per \Delta -->
 
-bookcolors = {'crimson': '#a50026', 'red': '#d73027', 'redorange': '#f46d43',
-              'orange': '#fdae61', 'yellow': '#fee090', 'sky': '#e0f3f8', 
-              'babyblue': '#abd9e9', 'lightblue': '#74add1', 'blue': '#4575b4',
-              'purple': '#313695'}
+<pyeval label=examples hide=true>
+def stub_predict(x_train, y_train, split):
+    left = y_train[x_train<split]
+    right = y_train[x_train>split]
+    lmean = np.mean(left)
+    rmean = np.mean(right)    
+#     lw,rw = w
+    lw,rw = 1,1
+    return np.array([lw*lmean if x<split else rw*rmean for x in x_train])
 
-def data():
-    df = pd.DataFrame(data={"sqfeet":[700,950,800,900,750]})
-    df["rent"] = pd.Series([1125,1350,1135,1300,1150])
-    df = df.sort_values('sqfeet')
-    return df
-df = data()
+eta = 1.0
+splits = [None,850, 850, 725] # manually pick them
+w = [None, (20,100), (5,30), (5,20)]
+stages = 4
+
+def boost(df, xcol, ycol, splits, eta, stages):
+    """
+    Update df to have direction_i, delta_i, F_i.
+    Return MSE, MAE
+    """
+    f0 = df[ycol].median()
+    df['F0'] = f0
+
+    for s in range(1,stages):
+        # print("Weight", w[s])
+        df[f'dir{s}'] = np.sign(df[ycol] - df[f'F{s-1}'])
+        df[f'delta{s}'] = stub_predict(df[xcol], df[f'dir{s}'], splits[s])
+        df[f'wdelta{s}'] = df[f'delta{s}'] * 40
+        df[f'F{s}'] = df[f'F{s-1}'] + eta * df[f'wdelta{s}']
+
+    mse = [mean_squared_error(df[ycol], df['F'+str(s)]) for s in range(stages)]
+    mae = [mean_absolute_error(df[ycol], df['F'+str(s)]) for s in range(stages)]
+    return mse, mae
+
+mse,mae = boost(df, 'sqfeet', 'rent', splits, eta, stages)
+df['deltas'] = df[['delta1','delta2','delta3']].sum(axis=1) # sum deltas
 </pyeval>
 
-<pyeval label=mae hide=true>
+Show single weight
+
+<pyfig label=examples hide=true width="90%">
+f0 = df.rent.median()
+fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(10, 4), sharey=True)
+
+# NUMBER 1
+
+ax = axes[0]
+line1, = ax.plot(df.sqfeet,df.rent,'o', linewidth=.8, markersize=4, label="$y$")
+# fake a line to get smaller red dot
+line2, = ax.plot([0,0],[0,0], c='r', markersize=4, label=r"$\Delta_1$", linewidth=.8)
+ax.plot([df.sqfeet.min()-10,df.sqfeet.max()+10], [f0,f0],
+         linewidth=.8, linestyle='--', c='k')
+ax.set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
+ax.set_ylim(df.rent.min()-10, df.rent.max()+20)
+ax.text(815, f0+10, r"$f_0({\bf x})$", fontsize=18)
+
+ax.set_ylabel(r"Rent ($y$)", fontsize=16)
+ax.set_xlabel(r"SqFeet (${\bf x}$)", fontsize=14)
+
+# draw arrows
+for x,y,yhat in zip(df.sqfeet,df.rent,df.F0):
+    draw_vector(ax, x, yhat, 0, np.sign(y-yhat)*2, df.rent.max()-df.rent.min())
+    
+ax.legend(handles=[line1,line2], fontsize=16,
+          loc='upper left', 
+          labelspacing=.1,
+          handletextpad=.2,
+          handlelength=.7,
+          frameon=True)
+
+# NUMBER 2
+
+ax = axes[1]
+line1, = ax.plot(df.sqfeet,df.rent,'o', linewidth=.8, markersize=4, label="$y$")
+# fake a line to get smaller red dot
+line2, = ax.plot([0,0],[0,0], c='r', markersize=4, label=r"$w_1 \Delta_1$", linewidth=.8)
+ax.plot([df.sqfeet.min()-10,df.sqfeet.max()+10], [f0,f0],
+         linewidth=.8, linestyle='--', c='k')
+ax.set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
+ax.set_ylim(df.rent.min()-10, df.rent.max()+20)
+ax.text(815, f0+10, r"$f_0({\bf x})$", fontsize=18)
+
+ax.set_xlabel(r"SqFeet (${\bf x}$)", fontsize=14)
+
+# draw arrows
+for x,y,yhat,d in zip(df.sqfeet,df.rent,df.F0,df.wdelta1):
+    draw_vector(ax, x, yhat, 0, d, df.rent.max()-df.rent.min())
+
+ax.legend(handles=[line1,line2], fontsize=16,
+          loc='upper left', 
+          labelspacing=.1,
+          handletextpad=.2,
+          handlelength=.7,
+          frameon=True)
+
+# NUMBER 3
+
+ax = axes[2]
+line1, = ax.plot(df.sqfeet,df.rent,'o', linewidth=.8, markersize=4, label="$y$")
+# fake a line to get smaller red dot
+line2, = ax.plot([0,0],[0,0], c='r', markersize=4, label=r"$w_2 \Delta_2$", linewidth=.8)
+ax.plot([df.sqfeet.min()-10,df.sqfeet.max()+10], [f0,f0],
+         linewidth=.8, linestyle='--', c='k')
+ax.set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
+ax.set_ylim(df.rent.min()-10, df.rent.max()+20)
+ax.text(815, f0+10, r"$f_0({\bf x})$", fontsize=18)
+
+ax.set_xlabel(r"SqFeet (${\bf x}$)", fontsize=14)
+
+# draw arrows
+for x,y,yhat,d in zip(df.sqfeet,df.rent,df.F1,df.wdelta2):
+    draw_vector(ax, x, yhat, 0, d, df.rent.max()-df.rent.min())
+    
+# ax.text(710,1250, "$m=1$", fontsize=18)
+
+ax.legend(handles=[line1,line2], fontsize=16,
+          loc='upper left', 
+          labelspacing=.1,
+          handletextpad=.2,
+          handlelength=.7,
+          frameon=True)
+
+plt.tight_layout()
+plt.show()
+</pyfig>
+
+<!-- Separate weight per leaf -->
+<pyeval label=examples hide=true>
 def stub_predict(x_train, y_train, split):
     left = y_train[x_train<split]
     right = y_train[x_train>split]
@@ -149,7 +249,7 @@ df['deltas'] = df[['delta1','delta2','delta3']].sum(axis=1) # sum deltas
 
 <!-- rent vs x -->
 
-<pyfig label=mae hide=true width="62%">
+<pyfig label=examples hide=true width="62%">
 f0 = df.rent.median()
 fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(8, 4), sharey=True)
 
@@ -218,7 +318,7 @@ plt.show()
 
 <!-- Plot delta predictions versus residuals -->
 
-<pyfig label=mae hide=true width="90%">
+<pyfig label=examples hide=true width="90%">
 def draw_stub(ax, x_train, y_train, y_pred, split, stage, locs):
     line1, = ax.plot(x_train, y_train, 'o',
                      markersize=4,
@@ -280,7 +380,7 @@ plt.show()
 
 <!-- composite model -->
 
-<pyfig label=mae hide=true width="45%">
+<pyfig label=examples hide=true width="45%">
 df = data()
 eta = 1
 mse,mae = boost(df, 'sqfeet', 'rent', splits, eta, stages)
