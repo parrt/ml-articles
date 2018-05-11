@@ -37,12 +37,6 @@ F_m(\vec x) = F_{i-1}(\vec x) + \Delta_m(\vec x; \vec w_m)\\
 
 Wow. leaves have diff weights for CARTs. only seem to need for MAE version. so the usual math eqn isn't what's done in practice. weak models don't repro dir vector well enough I guess. \todo{ can mention momentum instead of or in addition to leaf weights.  see accelerated gradient boosting paper recently.}
 
-\todo{short arrows look like markers on the first image}
-
-\todo{Fix axes so they say rent and square feet not X and Y}
-
-\todo{Use line not dot in legend for red lines}
-
 <pyeval label="examples" hide=true>
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -154,7 +148,7 @@ plt.tight_layout()
 plt.show()
 </pyfig>
 
-Now show perfect $\Delta_m$.
+Now show perfect $\Delta_m$ with $w_m = 30$.
 
 <pyfig label=examples hide=true width="90%">
 f0 = df.rent.median()
@@ -286,7 +280,7 @@ df['deltas'] = df[['delta1','delta2','delta3']].sum(axis=1) # sum deltas
 
 <!-- rent vs x -->
 
-All vectors
+All weighted vectors
 
 <pyfig label=examples hide=true width="90%">
 f0 = df.rent.median()
@@ -426,64 +420,77 @@ plt.tight_layout()
 plt.show()
 </pyfig>
 
-\todo{show  Delta one and Delta to then Delta two and Delta three}
+<img src="images/stubs-mae.svg" width="90%">
 
 <!-- composite model -->
 
-<pyfig label=examples hide=true width="45%">
+<pyfig label=examples hide=true width="90%">
 df = data()
 eta = 1
 mse,mae = boost(df, 'sqfeet', 'rent', splits, eta, stages)
+df['deltas12'] = eta * df[['delta1','delta2']].sum(axis=1)
+df['deltas123'] = eta * df[['delta1','delta2','delta3']].sum(axis=1)
 df['deltas'] = eta * df[['wdelta1','wdelta2','wdelta3']].sum(axis=1) # sum deltas
-df[['sqfeet','rent','F0','wdelta1','wdelta2','wdelta3','deltas','F3']]
 
-# Iterate through F3, finding split points in predicted rent
+# Iterate through F_'stage', finding split points in predicted rent
 # and create coordinate list to draw lines
-split_x_locs = []
-x_prev = np.min(df.sqfeet)
-y_prev = np.min(df.F3)
-X = df.sqfeet.values
-coords = []
-for i,y_hat in enumerate(df.F3.values):
-    if y_hat!=y_prev:
-        mid = (X[i]+X[i-1])/2
-        coords.append((mid,y_prev))
-        coords.append((mid,y_hat))
-        coords.append((X[i],y_hat))
+def get_combined_splits(stage):
+    x_prev = np.min(df.sqfeet)
+    y_prev = np.min(df[f'F{stage}'])
+    X = df.sqfeet.values
+    coords = []
+    for i,y_hat in enumerate(df[f'F{stage}'].values):
+        if y_hat!=y_prev:
+            mid = (X[i]+X[i-1])/2
+            coords.append((mid,y_prev))
+            coords.append((mid,y_hat))
+            coords.append((X[i],y_hat))
+        else:
+            coords.append((X[i],y_hat))
+        y_prev = y_hat
+    return coords
+
+def plot_combined(ax, stage, coords):
+    line1, = ax.plot(df.sqfeet,df.rent, 'o', label=r'$y$')
+    prev = None
+    for x,y in coords:
+        if prev is not None:
+            line2, = ax.plot([prev[0],x], [prev[1],y], linewidth=.8,
+                             linestyle='--', c='k')
+        prev = (x,y)
+
+    ax.set_xlabel(r"SqFeet", fontsize=14)
+
+    ax.set_yticks(np.arange(1150,1351,50))
+    ax.set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
+    labs = ['\Delta_1', '\Delta_2', '\Delta_3']
+    if stage==1:
+        label = r"$f_0 + \eta \Delta_1$"
     else:
-        coords.append((X[i],y_hat))
-    y_prev = y_hat
+        label=r"$f_0 + \eta ("+'+'.join(labs[:stage])+")$"
+    ax.legend(handles=[line2], fontsize=16,
+              loc='center left', 
+              labelspacing=.1,
+              handletextpad=.2,
+              handlelength=.7,
+              frameon=True,
+             labels = [label])
 
-fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(6.1, 3))
+fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(11, 3), sharey=True)
 
-line1, = ax.plot(df.sqfeet,df.rent, 'o', label=r'$y$')
+axes[0].set_ylabel(r"Rent", fontsize=14)
+coords = get_combined_splits(1)
+plot_combined(axes[0], 1, coords)
 
-prev = None
-for x,y in coords:
-    if prev is not None:
-        line2, = ax.plot([prev[0],x], [prev[1],y], linewidth=.8,
-                         linestyle='--', c='k',
-                         label=r"$f_0 + \eta (\Delta_1+\Delta_2+\Delta_3)$")
-    prev = (x,y)
+coords = get_combined_splits(2)
+plot_combined(axes[1], 2, coords)
 
-ax.set_ylabel(r"Rent", fontsize=14)
-ax.set_xlabel(r"SqFeet", fontsize=14)
-
-ax.set_yticks(np.arange(1150,1351,50))
-ax.set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
-
-ax.legend(handles=[line1,line2], fontsize=16,
-          loc='upper left', 
-          labelspacing=.1,
-          handletextpad=.2,
-          handlelength=.7,
-          frameon=True)
+coords = get_combined_splits(3)
+plot_combined(axes[2], 3, coords)
 
 plt.tight_layout()
 plt.show()
 </pyfig>
-
-<img src="images/stubs-mae.svg" width="90%">
 
 Now show addition of all terms, dsashed lines, visually.
 
