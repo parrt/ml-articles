@@ -240,7 +240,7 @@ We use a learning rate of $\eta = 0.7$ because of an experiment shown below, so 
 \latex{{
 {\small
 \begin{tabular}[t]{rrrrrrrr}
-$\Delta_1$ & $F_1$ & $\vec y-F_1$ & $\Delta_2$ & $F_2$ & $\vec y - F_2$ & $\Delta_3$ & $F_3$\\
+$\Delta_1$ & $F_1$ & $\vec y$-$F_1$ & $\Delta_2$ & $F_2$ & $\vec y$ - $F_2$ & $\Delta_3$ & $F_3$\\
 \hline
 -75 & 1159 & -34 & -22 & 1143 & -18 & -8 & 1137 \\
 -75 & 1159 & -9 & -22 & 1143 & 6 & -8 & 1137 \\

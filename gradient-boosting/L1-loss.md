@@ -15,27 +15,23 @@ F_m(\vec x) &=& F_{m-1}(\vec x) + w_m \Delta_m(\vec x)\\
 \end{eqnarray*}
 }}
 
-Recall that $F_m(\vec x)$ yields a predicted value but $F_m(X)$ yields a predicted target vector, one value for each $\vec x$ feature vector.
+Recall that $F_m(\vec x)$ yields a predicted value, $y_i$, but $F_m(X)$ yields a predicted target vector, $\vec y$, one value for each $\vec x_i$ feature row-vector in matrix $X$.
 
-So the equation for $F_0$ is the same:
+we would need very small weights, $w_m$, or a very small learning rate to avoid oscillating around the solution instead of converging to it.
 
-\[
-F_0(\vec x) = f_0(\vec x)
-\]
-
-and we could use the equation used for $y-\hat y$ direction vectors for obtaining new composite models from the previous:
-
-\[
-F_m(\vec x) = F_{i-1}(\vec x) + w_m \Delta_m(\vec x)\\
-\]
-
-but we would need very small weights, $w_m$, or a very small learning rate to avoid oscillating around the solution instead of converging to it.
-
-\[
-F_m(\vec x) = F_{i-1}(\vec x) + \Delta_m(\vec x; \vec w_m)\\
-\]
-
-Wow. leaves have diff weights for CARTs. only seem to need for MAE version. so the usual math eqn isn't what's done in practice. weak models don't repro dir vector well enough I guess. \todo{ can mention momentum instead of or in addition to leaf weights.  see accelerated gradient boosting paper recently.}
+\latex{{
+{\small
+\begin{tabular}[t]{rrrr}
+{\bf sqfeet} & {\bf rent} & $F_0$ & $sign(\vec y$-$F_0)$ \\
+\hline
+700 & 1125 & 1150 & -1 \\
+750 & 1150 & 1150 & 0 \\
+800 & 1135 & 1150 & -1 \\
+900 & 1300 & 1150 & 1 \\
+950 & 1350 & 1150 & 1 \\
+\end{tabular}
+}
+}}
 
 <pyeval label="examples" hide=true>
 import pandas as pd
@@ -71,11 +67,7 @@ def data():
     return df
 
 df = data()
-</pyeval>
 
-<!-- One weight per \Delta -->
-
-<pyeval label=examples hide=true>
 def stub_predict(x_train, y_train, split):
     left = y_train[x_train<split]
     right = y_train[x_train>split]
@@ -113,12 +105,9 @@ mse,mae = boost(df, 'sqfeet', 'rent', splits, eta, stages)
 df['deltas'] = df[['delta1','delta2','delta3']].sum(axis=1) # sum deltas
 </pyeval>
 
-Show single weight
-
 <pyfig label=examples hide=true width="32%">
 f0 = df.rent.median()
 fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(4, 3.5), sharey=True)
-
 
 ax = axes
 line1, = ax.plot(df.sqfeet,df.rent,'o', linewidth=.8, markersize=4, label="$y$")
@@ -148,7 +137,7 @@ plt.tight_layout()
 plt.show()
 </pyfig>
 
-Now show perfect $\Delta_m$ with $w_m = 30$.
+Now show direction vec with $w_m = 30$. (kinda like perfect deltas)
 
 <pyfig label=examples hide=true width="90%">
 f0 = df.rent.median()
@@ -238,6 +227,12 @@ plt.tight_layout()
 plt.show()
 </pyfig>
 	
+\[
+F_m(\vec x) = F_{i-1}(\vec x) + \Delta_m(\vec x; \vec w_m)\\
+\]
+
+Wow. leaves have diff weights for CARTs. only seem to need for MAE version. so the usual math eqn isn't what's done in practice. weak models don't repro dir vector well enough I guess. \todo{ can mention momentum instead of or in addition to leaf weights.  see accelerated gradient boosting paper recently.}
+
 <!-- Separate weight per leaf -->
 <pyeval label=examples hide=true>
 def stub_predict(x_train, y_train, split):
@@ -277,6 +272,37 @@ def boost(df, xcol, ycol, splits, eta, stages):
 mse,mae = boost(df, 'sqfeet', 'rent', splits, eta, stages)
 df['deltas'] = df[['delta1','delta2','delta3']].sum(axis=1) # sum deltas
 </pyeval>
+
+<!--
+<pyeval label="examples" hide=true>
+#print(df)
+# manually print table in python
+# for small phone, make 2 tables
+for i in range(len(df)):
+    print( " & ".join([f"{int(v)}" for v in df.iloc[i,0:4]]), r"\\")
+
+print
+for i in range(len(df)):
+    print( " & ".join([f"{int(v)}" for v in df.iloc[i,4:15]]), r"\\")
+</pyeval>
+-->
+
+
+and
+
+\latex{{
+{\small
+\begin{tabular}[t]{rrrrrrrrrrr}
+$\Delta_1$ & $\Delta_1(\vec x$;$\vec w_1)$ & $F_1$ & $\vec y$-$F_1$ & $\Delta_2$ & $\Delta_2(\vec x$;$\vec w_2)$ & $F_2$ & $\vec y$-$F_2$ & $\Delta_3$ & $\Delta_3(\vec x$;$\vec w_3)$ & $F_3$\\
+\hline
+0 & -13 & 1136 & -1 & 0 & -1 & 1135 & -1 & -1 & -5 & 1130 \\
+0 & -13 & 1136 & 1 & 0 & -1 & 1135 & 1 & 0 & 15 & 1150 \\
+0 & -13 & 1136 & -1 & 0 & -1 & 1135 & 0 & 0 & 15 & 1150 \\
+1 & 100 & 1250 & 1 & 1 & 30 & 1280 & 1 & 0 & 15 & 1295 \\
+1 & 100 & 1250 & 1 & 1 & 30 & 1280 & 1 & 0 & 15 & 1295 \\
+\end{tabular}
+}
+}}
 
 <!-- rent vs x -->
 
