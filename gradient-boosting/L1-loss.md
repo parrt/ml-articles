@@ -108,7 +108,7 @@ def boost(df, xcol, ycol, splits, eta, stages):
         # print("Weight", w[s])
         df[f'dir{s}'] = np.sign(df[ycol] - df[f'F{s-1}'])
         df[f'delta{s}'] = stub_predict(df[xcol], df[f'dir{s}'], splits[s])
-        df[f'wdelta{s}'] = df[f'delta{s}'] * 40
+        df[f'wdelta{s}'] = df[f'dir{s}'] * 30
         df[f'F{s}'] = df[f'F{s-1}'] + eta * df[f'wdelta{s}']
 
     mse = [mean_squared_error(df[ycol], df['F'+str(s)]) for s in range(stages)]
@@ -121,13 +121,12 @@ df['deltas'] = df[['delta1','delta2','delta3']].sum(axis=1) # sum deltas
 
 Show single weight
 
-<pyfig label=examples hide=true width="90%">
+<pyfig label=examples hide=true width="32%">
 f0 = df.rent.median()
-fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(11, 4), sharey=True)
+fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(4, 3.5), sharey=True)
 
-# NUMBER 1
 
-ax = axes[0]
+ax = axes
 line1, = ax.plot(df.sqfeet,df.rent,'o', linewidth=.8, markersize=4, label="$y$")
 # fake a line to get smaller red dot
 line2, = ax.plot([0,0],[0,0], c='r', markersize=4, label=r"$sign(y-f_0({\bf x}))$", linewidth=.8)
@@ -137,7 +136,7 @@ ax.set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
 ax.set_ylim(df.rent.min()-10, df.rent.max()+20)
 ax.text(815, f0+10, r"$f_0({\bf x})$", fontsize=18)
 
-ax.set_ylabel(r"Rent ($y$)", fontsize=16)
+ax.set_ylabel(r"Rent ($y$)", fontsize=14)
 ax.set_xlabel(r"SqFeet (${\bf x}$)", fontsize=14)
 
 # draw arrows
@@ -151,9 +150,20 @@ ax.legend(handles=[line2], fontsize=16,
           handlelength=.7,
           frameon=True)
 
-# NUMBER 2
+plt.tight_layout()
+plt.show()
+</pyfig>
 
-ax = axes[1]
+Now show perfect $\Delta_m$.
+
+<pyfig label=examples hide=true width="90%">
+f0 = df.rent.median()
+fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(11, 4), sharey=True)
+
+# NUMBER 1
+
+ax = axes[0]
+ax.set_ylabel(r"Rent", fontsize=14)
 line1, = ax.plot(df.sqfeet,df.rent,'o', linewidth=.8, markersize=4, label="$y$")
 # fake a line to get smaller red dot
 line2, = ax.plot([0,0],[0,0], c='r', markersize=4, label=r"$w_1 sign(y-f_0({\bf x}))$", linewidth=.8)
@@ -163,7 +173,7 @@ ax.set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
 ax.set_ylim(df.rent.min()-10, df.rent.max()+20)
 ax.text(815, f0+10, r"$f_0({\bf x})$", fontsize=18)
 
-ax.set_xlabel(r"SqFeet (${\bf x}$)", fontsize=14)
+ax.set_xlabel(r"SqFeet", fontsize=14)
 
 # draw arrows
 for x,y,yhat,d in zip(df.sqfeet,df.rent,df.F0,df.wdelta1):
@@ -176,9 +186,9 @@ ax.legend(handles=[line2], fontsize=16,
           handlelength=.7,
           frameon=True)
 
-# NUMBER 3
+# NUMBER 2
 
-ax = axes[2]
+ax = axes[1]
 line1, = ax.plot(df.sqfeet,df.rent,'o', linewidth=.8, markersize=4, label="$y$")
 # fake a line to get smaller red dot
 line2, = ax.plot([0,0],[0,0], c='r', markersize=4, label=r"$w_2 sign(y-F_1({\bf x}))$", linewidth=.8)
@@ -188,7 +198,7 @@ ax.set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
 ax.set_ylim(df.rent.min()-10, df.rent.max()+20)
 ax.text(815, f0+10, r"$f_0({\bf x})$", fontsize=18)
 
-ax.set_xlabel(r"SqFeet (${\bf x}$)", fontsize=14)
+ax.set_xlabel(r"SqFeet", fontsize=14)
 
 # draw arrows
 for x,y,yhat,d in zip(df.sqfeet,df.rent,df.F1,df.wdelta2):
@@ -203,10 +213,37 @@ ax.legend(handles=[line2], fontsize=16,
           handlelength=.7,
           frameon=True)
 
+# NUMBER 3
+
+ax = axes[2]
+line1, = ax.plot(df.sqfeet,df.rent,'o', linewidth=.8, markersize=4, label="$y$")
+# fake a line to get smaller red dot
+line2, = ax.plot([0,0],[0,0], c='r', markersize=4, label=r"$w_3 sign(y-F_2({\bf x}))$", linewidth=.8)
+ax.plot([df.sqfeet.min()-10,df.sqfeet.max()+10], [f0,f0],
+         linewidth=.8, linestyle='--', c='k')
+ax.set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
+ax.set_ylim(df.rent.min()-10, df.rent.max()+20)
+ax.text(815, f0+10, r"$f_0({\bf x})$", fontsize=18)
+
+ax.set_xlabel(r"SqFeet", fontsize=14)
+
+# draw arrows
+for x,y,yhat,d in zip(df.sqfeet,df.rent,df.F2,df.wdelta3):
+    draw_vector(ax, x, yhat, 0, d, df.rent.max()-df.rent.min())
+    
+# ax.text(710,1250, "$m=1$", fontsize=18)
+
+ax.legend(handles=[line2], fontsize=16,
+          loc='upper left', 
+          labelspacing=.1,
+          handletextpad=.2,
+          handlelength=.7,
+          frameon=True)
+
 plt.tight_layout()
 plt.show()
 </pyfig>
-
+	
 <!-- Separate weight per leaf -->
 <pyeval label=examples hide=true>
 def stub_predict(x_train, y_train, split):
@@ -369,7 +406,7 @@ def draw_residual(ax, df, stage):
 fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(11, 3.5), sharey=True, sharex=True)
 
 ax = axes[0]
-axes[0].set_ylabel(r"Direction in {-1,0,1}", fontsize=15)
+axes[0].set_ylabel(r"Direction in {-1,0,1}", fontsize=14)
 axes[0].set_yticks([-1,0,1])
 for a in range(3):
     axes[a].set_xlabel(r"SqFeet", fontsize=14)
@@ -429,10 +466,11 @@ for x,y in coords:
                          label=r"$f_0 + \eta (\Delta_1+\Delta_2+\Delta_3)$")
     prev = (x,y)
 
-ax.set_ylabel(r"Rent", fontsize=16)
-ax.set_xlabel(r"${\bf x}$", fontsize=20)
+ax.set_ylabel(r"Rent", fontsize=14)
+ax.set_xlabel(r"SqFeet", fontsize=14)
 
 ax.set_yticks(np.arange(1150,1351,50))
+ax.set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
 
 ax.legend(handles=[line1,line2], fontsize=16,
           loc='upper left', 
