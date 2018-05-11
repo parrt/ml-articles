@@ -315,18 +315,19 @@ A regression tree stub is a regression tree with a single root and two children 
 
 The composite model sums together all of the weak models so let's visualize the sum of the weak models:
 
-\todo{show  Delta one and Delta to then Delta two and Delta three}
-
 <pyeval label=examples hide=true>
 eta = 0.7
 df = data()
 mse,mae = boost(df, 'sqfeet', 'rent', splits, eta, stages)
+df = data()
+mse,mae = boost(df, 'sqfeet', 'rent', splits, 0.7, stages)
+df['deltas12'] = eta * df[['delta1','delta2']].sum(axis=1)
+df['deltas123'] = eta * df[['delta1','delta2','delta3']].sum(axis=1)
 df['deltas'] = eta * df[['delta1','delta2','delta3']].sum(axis=1) # sum deltas
-df[['sqfeet','rent','F0','delta1','delta2','delta3','deltas']]
 </pyeval>
 
-<pyfig label=examples hide=true width="45%">
-fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(6.1, 3))
+<pyfig label=examples hide=true width="32%">
+fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(4, 3))
 
 # plot deltas
 line1, = ax.plot(df.sqfeet,df.dir1, 'o', label=r'$y-f_0$')
@@ -359,11 +360,12 @@ ax.set_ylabel(r"Sum $\Delta_i$ models", fontsize=16)
 ax.set_xlabel(r"SqFeet", fontsize=14)
 
 ax.set_yticks([-100,-50,0,50,100,150])
+ax.set_xticks([700,800,900])
 
-ax.legend(handles=[line1,line2], fontsize=16,
-          loc='upper left', 
-          labelspacing=.1,
-          handletextpad=.2,
+ax.legend(handles=[line1,line2], fontsize=15,
+          loc='center left', 
+          labelspacing=0,
+          handletextpad=.1,
           handlelength=.7,
           frameon=True)
 
@@ -373,49 +375,83 @@ plt.show()
 
 If we add all of those weak models to the initial $f_0$ average model, we see that the full composite model is a very good predictor of the actual rent values:
 
-<pyfig label=examples hide=true width="45%">
+<pyfig label=examples hide=true width="90%">
 # Hideous manual computation of composite graph but...
 
-fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(6.1, 3))
+fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(11, 3), sharey=True)
 
-# plot deltas
-line1, = ax.plot(df.sqfeet,df.rent, 'o', label=r'$y$')
+def gety(df,stage,a,b):
+    if stage==1:
+        return np.mean(df.F0+df.delta1[(df.sqfeet>a)&(df.sqfeet<=b)])
+    if stage==2:
+        return np.mean(df.F0+df.deltas12[(df.sqfeet>a)&(df.sqfeet<=b)])
+    if stage==3:
+        return np.mean(df.F0+df.deltas123[(df.sqfeet>a)&(df.sqfeet<=b)])
+    return None
+    
+def plot_composite(ax,stage):
+    # plot deltas
+    line1, = ax.plot(df.sqfeet,df.rent, 'o', label=r'$y$')
 
-prevx = np.min(df.sqfeet)
-prevy = df.F0
-splitys = []
-for s in splits[1:]:
-    if s>prevx: # ignore splits at same spot for plotting
-        y = np.mean(df.F0+df.deltas[(df.sqfeet>prevx)&(df.sqfeet<=s)]) # all same, get as one
-        splitys.append(y)
-        #print(prevx,s,"=>",y)
-        ax.plot([prevx,s], [y,y], linewidth=.8, linestyle='--', c='k')
-    # draw verticals
-    prevx = s
-    prevy = y
+    prevx = np.min(df.sqfeet)
+    prevy = df.F0
+    splitys = []
+    for s in splits[1:]:
+        if s>prevx: # ignore splits at same spot for plotting
+#             y = np.mean(df.F0+df[f'delta{stage}'][(df.sqfeet>prevx)&(df.sqfeet<=s)]) # all same, get as one
+            y = gety(df,stage,prevx,s)
+#             print(prevx,s,"=>",y)
+            splitys.append(y)
+            ax.plot([prevx,s], [y,y], linewidth=.8, linestyle='--', c='k')
+        # draw verticals
+        prevx = s
+        prevy = y
 
-last = np.max(df.sqfeet)
-y = np.mean(df.F0+df.deltas[(df.sqfeet>prevx)&(df.sqfeet<=last)]) # all same, get as one
-#print(prev,last,"=>",y)
-splitys.append(y)
-line2, = ax.plot([prevx,last], [y,y], linewidth=.8, linestyle='--', c='k',
-                label=r"$f_0 + \eta (\Delta_1+\Delta_2+\Delta_3)$")
+    last = np.max(df.sqfeet)
+    y = gety(df,stage,prevx,last)
+#     y = np.mean(df.F0+df[f'delta{stage}'][(df.sqfeet>prevx)&(df.sqfeet<=last)]) # all same, get as one
+    #print(prev,last,"=>",y)
+    splitys.append(y)
+    line2, = ax.plot([prevx,last], [y,y], linewidth=.8, linestyle='--', c='k')
 
-ax.plot([splits[1],splits[1]], [splitys[0], splitys[1]], linewidth=.8, linestyle='--', c='k')
-ax.plot([splits[3],splits[3]], [splitys[1], splitys[2]], linewidth=.8, linestyle='--', c='k')
-ax.plot([s,s], [prevy,y], linewidth=.8, linestyle='--', c='k')
+    ax.plot([splits[1],splits[1]], [splitys[0], splitys[1]], linewidth=.8, linestyle='--', c='k')
+    ax.plot([splits[3],splits[3]], [splitys[1], splitys[2]], linewidth=.8, linestyle='--', c='k')
+    ax.plot([s,s], [prevy,y], linewidth=.8, linestyle='--', c='k')
 
+    ax.set_xlabel(r"SqFeet", fontsize=14)
+
+    #ax.set_yticks(np.arange(1150,1351,50))
+
+ax = axes[0]
 ax.set_ylabel(r"Rent", fontsize=14)
-ax.set_xlabel(r"SqFeet", fontsize=14)
-
-ax.set_yticks(np.arange(1150,1351,50))
-
-ax.legend(handles=[line1,line2], fontsize=16,
-          loc='upper left', 
+plot_composite(ax,1)
+ax.legend(handles=[line2], fontsize=16,
+          loc='center left', 
           labelspacing=.1,
           handletextpad=.2,
           handlelength=.7,
-          frameon=True)
+          frameon=True,
+          labels=[r"$f_0 + \eta \Delta_1$"])
+
+ax = axes[1]
+plot_composite(ax,2)
+ax.legend(handles=[line2], fontsize=16,
+          loc='center left', 
+          labelspacing=.1,
+          handletextpad=.2,
+          handlelength=.7,
+          frameon=True,
+          labels=[r"$f_0 + \eta (\Delta_1 + \Delta_2)$"])
+
+ax = axes[2]
+plot_composite(ax,3)
+ax.legend(handles=[line2], fontsize=16,
+          loc='center left', 
+          labelspacing=.1,
+          handletextpad=.2,
+          handlelength=.7,
+          frameon=True,
+          labels=[r"$f_0 + \eta (\Delta_1 + \Delta_2 + \Delta_3)$"])
 
 plt.tight_layout()
 plt.show()
