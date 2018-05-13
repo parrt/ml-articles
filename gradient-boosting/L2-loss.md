@@ -87,10 +87,10 @@ If you understand this golfer example, then you understand the key intuition beh
 There are several things to reinforce before moving on:
 
 <ul>
-	<li>The weak models learn direction **vectors**, not just magnitudes.
-	<li>The initial model $f_0(\vec x)$ is trying to learn $y$ given $\vec x$, but the $\Delta_m (\vec x)$ tweaks are trying to learn direction vectors given $\vec x$.
+	<li>The weak models learn difference **vectors**, not just magnitudes.
+	<li>The initial model $f_0(\vec x)$ is trying to learn $y$ given $\vec x$, but the $\Delta_m (\vec x)$ tweaks are trying to learn difference vectors given $\vec x$.
 	<li>All weak models, $f_0(\vec x)$ and $\Delta_m(\vec x)$, train on the original feature vector $\vec x$.
-	<li>Two common direction vector choices are $sign(y-F_{m-1}(\vec x))$ and $y-F_{m-1}(\vec x)$.
+	<li>Two common direction vector choices are $y-F_{m-1}(\vec x)$ and $sign(y-F_{m-1}(\vec x))$.
 </ul>
 
 Let's walk through a concrete example to see what gradient boosting looks like on more than one observation.
@@ -229,7 +229,7 @@ for x,y,yhat in zip(df.sqfeet,df.rent,df.F0):
 plt.show() 
 </pyfig>
 
-Next, we train a weak model, $\Delta_1$, to predict that  difference vector. A perfect model, $\Delta_1$, would yield exactly $\vec y-F_0(X)$, meaning that we'd be done after one step since $F_1(X)$ would be $F_1(X) = F_0(X) + \vec y - F_0(X)$, or just $\vec y$. Because it imperfectly captures that difference, $F_1(X)$ is still not quite $\vec y$, so we need to keep going for a few stages. To keep things simple, we can use a weight of $w_i$ = 1 everywhere so that our recurrence relation for all feature vectors looks like:
+Next, we train a weak model, $\Delta_1$, to predict that  difference vector. A perfect model, $\Delta_1$, would yield exactly $\vec y-F_0(X)$, meaning that we'd be done after one step since $F_1(X)$ would be $F_1(X) = F_0(X) + \vec y - F_0(X)$, or just $\vec y$. Because it imperfectly captures that difference, $F_1(X)$ is still not quite $\vec y$, so we need to keep going for a few stages. To keep things simple, we can use a weight of $w_m$ = 1 everywhere so that our recurrence relation for all feature vectors looks like:
 
 \[
 F_m(X) = F_{m-1}(X) + \eta \Delta_m(X)

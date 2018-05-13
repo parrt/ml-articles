@@ -273,33 +273,36 @@ mse,mae = boost(df, 'sqfeet', 'rent', splits, eta, stages)
 df['deltas'] = df[['delta1','delta2','delta3']].sum(axis=1) # sum deltas
 </pyeval>
 
-<!--
+<--
 <pyeval label="examples" hide=true>
 #print(df)
 # manually print table in python
 # for small phone, make 2 tables
+o = ""
 for i in range(len(df)):
-    print( " & ".join([f"{int(v)}" for v in df.iloc[i,0:4]]), r"\\")
+    o += " & ".join([f"{v:.2f}" for v in df.iloc[i,:][['sqfeet','rent','F0','dir1']]]) + "\\" + "\n"
 
-print
 for i in range(len(df)):
-    print( " & ".join([f"{int(v)}" for v in df.iloc[i,4:15]]), r"\\")
+    o += " & ".join([f"{v:.2f}" for v in df.iloc[i,4:15]]) + r"\\"+ "\n"
+
+o = o.replace(".00", "")
+print(o)
 </pyeval>
 -->
-
 
 and
 
 \latex{{
 {\small
+\setlength{\tabcolsep}{0.5em}
 \begin{tabular}[t]{rrrrrrrrrrr}
 $\Delta_1$ & $\Delta_1(\vec x$;$\vec w_1)$ & $F_1$ & $\vec y$-$F_1$ & $\Delta_2$ & $\Delta_2(\vec x$;$\vec w_2)$ & $F_2$ & $\vec y$-$F_2$ & $\Delta_3$ & $\Delta_3(\vec x$;$\vec w_3)$ & $F_3$\\
 \hline
-0 & -13 & 1136 & -1 & 0 & -1 & 1135 & -1 & -1 & -5 & 1130 \\
-0 & -13 & 1136 & 1 & 0 & -1 & 1135 & 1 & 0 & 15 & 1150 \\
-0 & -13 & 1136 & -1 & 0 & -1 & 1135 & 0 & 0 & 15 & 1150 \\
-1 & 100 & 1250 & 1 & 1 & 30 & 1280 & 1 & 0 & 15 & 1295 \\
-1 & 100 & 1250 & 1 & 1 & 30 & 1280 & 1 & 0 & 15 & 1295 \\
+-0.67 & -13.33 & 1136.67 & -1 & -0.33 & -1.67 & 1135 & -1 & -1 & -5 & 1130\\
+-0.67 & -13.33 & 1136.67 & 1 & -0.33 & -1.67 & 1135 & 1 & 0.75 & 15 & 1150\\
+-0.67 & -13.33 & 1136.67 & -1 & -0.33 & -1.67 & 1135 & 0 & 0.75 & 15 & 1150\\
+1 & 100 & 1250 & 1 & 1 & 30 & 1280 & 1 & 0.75 & 15 & 1295\\
+1 & 100 & 1250 & 1 & 1 & 30 & 1280 & 1 & 0.75 & 15 & 1295\\
 \end{tabular}
 }
 }}
