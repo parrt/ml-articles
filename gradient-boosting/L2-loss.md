@@ -457,9 +457,29 @@ plt.tight_layout()
 plt.show()
 </pyfig>
 
-Let's turn to the hyper-parameters now.  We used weight $w_m = 1$ in this manually-computed example, but a real implementation would choose the optimal weights so that each $w_m \Delta_m(\vec x)$ term minimized the mean squared error, $\sum_i^N(y_i - F_m(\vec x_i))^2$, of model $F_m$ across all $N$ observations. 
+We used weight $w_m = 1$ in this manually-computed example for simplicity, but a GBM implementation would choose the optimal weights so that each $w_m \Delta_m(\vec x)$ term minimized the mean squared error, $\sum_i^N(y_i - F_m(\vec x_i))^2$, of model $F_m$ across all $N$ observations. See page 3 of <a href="https://statweb.stanford.edu/~jhf/ftp/trebst.pdf">Friedman's paper</a> for the form of the equation (Friedman's equation 8) that, when minimized, yields the appropriate weight for stage $m$.
 
-The primary value of the learning rate, or "*shrinkage*" as some papers call it, is to reduce overfitting of the overall model. As Chen and Guestrin say in [XGBoost: A Scalable Tree Boosting System](https://arxiv.org/pdf/1603.02754.pdf), "*shrinkage reduces the influence of each individual tree and leaves space for future trees to improve the model.*"  There are a number of articles on the web about tuning the learning rate and other hyper-parameters, such as Jason Brownlee's [Tune Learning Rate for Gradient Boosting with XGBoost in Python](https://machinelearningmastery.com/tune-learning-rate-for-gradient-boosting-with-xgboost-in-python).  The following graph shows how the mean squared error changes as we add more weak models, illustrated with a few different learning rates.  
+We've also stopped at $M=3$. \todo{how to pick M? it's a hyper-parameter.}
+
+## Measuring model performance
+
+How good is our model? To answer that, we need a loss or cost function, $L(\vec y,\hat{\vec y})$ or $L(y_i,\hat y_i)$, that computes the cost of predicting $\hat{\vec y}$ instead of $\vec y$.   The loss across all $N$  observations is just the sum (or the average if you want to divide by $N$) of all the individual observation losses:
+
+\[
+L(\vec y, F_M(X)) = \frac{1}{N} \sum_{i=1}^{N} L(y_i, F_M(\vec x_i))
+\]
+
+The mean squared error (MSE) is the most common, and what we are optimizing in this article:
+
+\[
+L(\vec y,F_M(X)) = \frac{1}{N} \sum_{i=1}^{N} (y_i - F_M(\vec x_i))^2
+\]
+
+(In vector operations, we'd look at this as $||\vec y-\hat{\vec y}||_2^2$, the square of the $L_2$ vector norm.)
+
+## Choosing a learning rate
+
+Let's use the mean squared error to tune the learning rate hyper-parameter.  The primary value of the learning rate, or "*shrinkage*" as some papers call it, is to reduce overfitting of the overall model. As Chen and Guestrin say in [XGBoost: A Scalable Tree Boosting System](https://arxiv.org/pdf/1603.02754.pdf), "*shrinkage reduces the influence of each individual tree and leaves space for future trees to improve the model.*"  There are a number of articles on the web about tuning the learning rate and other hyper-parameters, such as Jason Brownlee's [Tune Learning Rate for Gradient Boosting with XGBoost in Python](https://machinelearningmastery.com/tune-learning-rate-for-gradient-boosting-with-xgboost-in-python).  The following graph shows how the mean squared error changes as we add more weak models, illustrated with a few different learning rates.  
 
 <pyeval label="examples" hide=true>
 # Compute MSE
@@ -525,5 +545,7 @@ plt.show()
 </pyfig>
 
 Ultimately, we picked $\eta=0.7$ as it looked like it reaches the minimum error at stage $M=3$.
+
+\todo{Friedman page 13 says "...smaller values of the shrinkage perimeter [...] are seen to result in better performance, ..."}
 
 The idea of using a learning rate to reduce overfitting in models that optimize cost functions to learn, such as deep learning neural networks, is very common. Rather than using a constant learning rate, though, we can start the learning rate out energetically and gradually slow it down as the model approaches optimality; this proves very effective in practice.

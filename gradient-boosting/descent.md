@@ -2,9 +2,7 @@
 
 \author{[Terence Parr](http://parrt.cs.usfca.edu) and [Jeremy Howard](http://www.fast.ai/about/#jeremy)}
 
-\preabstract{
-(We teach in University of San Francisco's [MS in Data Science program](https://www.usfca.edu/arts-sciences/graduate-programs/data-science) and have other nefarious projects underway. You might know Terence as the creator of the [ANTLR parser generator](http://www.antlr.org). Jeremy is a founding researcher at [fast.ai](http://fast.ai), a research institute dedicated to making deep learning more accessible.)
-}
+Friedman says '*... consider F(x) evaluated at each point $\vec x$ to be a "parameter"*'
 
 Students ask the most natural but hard-to-answer questions:
 
