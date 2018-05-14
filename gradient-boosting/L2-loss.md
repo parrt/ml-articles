@@ -57,7 +57,7 @@ It might be helpful to think of this boosting approach as a golfer initially wha
 
 <img src="images/golf-dir-vector.png" width="70%">
 
-After the initial stroke, the golfer determines the appropriate nudge by computing the  difference between $y$ and the first approximation, $y - F_0(\vec x)$. (We can let $\vec x$ be the hole number 1-18, but it doesn't really matter since we're only working with one observation for illustration purposes.) This difference is often called the *residual*, but it's helpful for gradient boosting to think of this as the *distance vector* or *difference vector* from the current $\hat y$, $F_m(\vec x)$, to the true $y$.   Using the difference vector as our nudge, means training $\Delta_m (\vec x)$ on value $y - F_{m-1}(\vec x)$ for our base weak models.  As with any machine learning model, our $\Delta_m$ models will not have perfect recall and precision, so we should expect $\Delta_m$ to give a noisy prediction instead of exactly $y - F_{m-1}(\vec x)$. 
+After the initial stroke, the golfer determines the appropriate nudge by computing the  difference between $y$ and the first approximation, $y - F_0(\vec x)$. (We can let $\vec x$ be the hole number 1-18, but it doesn't really matter since we're only working with one observation for illustration purposes.) This difference is usually called the *residual* or *residual vector*, but it's helpful for gradient boosting to think of this as the vector pointing from the current $\hat y$, $F_m(\vec x)$, prediction to the true $y$.  (In the <a href="L1-loss.html">second article</a>, we will look at just direction information not magnitude; we'll call that the direction vector to distinguish from the residual vector.) Using the residual vector as our nudge, means training $\Delta_m (\vec x)$ on value $y - F_{m-1}(\vec x)$ for our base weak models.  As with any machine learning model, our $\Delta_m$ models will not have perfect recall and precision, so we should expect $\Delta_m$ to give a noisy prediction instead of exactly $y - F_{m-1}(\vec x)$. 
 
 As an example, let's say that the hole is at $y$=100 yards, $f_0(\vec x)=70$, and all of our weights are $w_m = 1$. Manually boosting, we might see a sequence like the following, depending on the imprecise $\Delta_m$ strokes made by the golfer:
 
@@ -87,8 +87,8 @@ If you understand this golfer example, then you understand the key intuition beh
 There are several things to reinforce before moving on:
 
 <ul>
-	<li>The weak models learn difference **vectors**, not just magnitudes.
-	<li>The initial model $f_0(\vec x)$ is trying to learn $y$ given $\vec x$, but the $\Delta_m (\vec x)$ tweaks are trying to learn difference vectors given $\vec x$.
+	<li>The weak models learn residual **vectors** with direction information, not just magnitudes.
+	<li>The initial model $f_0(\vec x)$ is trying to learn $y$ given $\vec x$, but the $\Delta_m (\vec x)$ tweaks are trying to learn residual vectors given $\vec x$.
 	<li>All weak models, $f_0(\vec x)$ and $\Delta_m(\vec x)$, train on the original feature vector $\vec x$.
 	<li>Two common direction vector choices are $y-F_{m-1}(\vec x)$ and $sign(y-F_{m-1}(\vec x))$.
 </ul>
@@ -207,7 +207,7 @@ print("F3 MSE", mean_squared_error(df.rent, df.F3), "MAE", mean_absolute_error(d
 }
 }}
 
-The last column shows not only the direction but the magnitude of the difference between where we are, $F_0(X)$, and where we want to go, $\vec y$. The red vectors in the following diagram are a visualization of the difference vectors from our initial model to the rent target values.
+The last column shows not only the direction but the magnitude of the difference between where we are, $F_0(X)$, and where we want to go, $\vec y$. The red vectors in the following diagram are a visualization of the residual vectors from our initial model to the rent target values.
 
 <pyfig label=examples hide=true width="35%">
 f0 = df.rent.mean()
@@ -229,7 +229,7 @@ for x,y,yhat in zip(df.sqfeet,df.rent,df.F0):
 plt.show() 
 </pyfig>
 
-Next, we train a weak model, $\Delta_1$, to predict that  difference vector. A perfect model, $\Delta_1$, would yield exactly $\vec y-F_0(X)$, meaning that we'd be done after one step since $F_1(X)$ would be $F_1(X) = F_0(X) + \vec y - F_0(X)$, or just $\vec y$. Because it imperfectly captures that difference, $F_1(X)$ is still not quite $\vec y$, so we need to keep going for a few stages. To keep things simple, we can use a weight of $w_m$ = 1 everywhere so that our recurrence relation for all feature vectors looks like:
+Next, we train a weak model, $\Delta_1$, to predict that  residual vector. A perfect model, $\Delta_1$, would yield exactly $\vec y-F_0(X)$, meaning that we'd be done after one step since $F_1(X)$ would be $F_1(X) = F_0(X) + \vec y - F_0(X)$, or just $\vec y$. Because it imperfectly captures that difference, $F_1(X)$ is still not quite $\vec y$, so we need to keep going for a few stages. To keep things simple, we can use a weight of $w_m$ = 1 everywhere so that our recurrence relation for all feature vectors looks like:
 
 \[
 F_m(X) = F_{m-1}(X) + \eta \Delta_m(X)
@@ -251,7 +251,7 @@ $\Delta_1$ & $F_1$ & $\vec y$-$F_1$ & $\Delta_2$ & $F_2$ & $\vec y$ - $F_2$ & $\
 }
 }}
 
-It helps to keep in mind that we are always training on the direction vector $\vec y - F_{m-1}$ but get imperfect model $\Delta_m$. The best way to visualize the learning of $\vec y-F_{m-1}$ difference vectors by weak models, $\Delta_m$, is by looking at the difference vectors and model predictions horizontally on the same scale Y-axis:
+It helps to keep in mind that we are always training on the direction vector $\vec y - F_{m-1}$ but get imperfect model $\Delta_m$. The best way to visualize the learning of $\vec y-F_{m-1}$ residual vectors by weak models, $\Delta_m$, is by looking at the residual vectors and model predictions horizontally on the same scale Y-axis:
 
 <pyfig label=examples hide=true width="90%">
 def draw_stub(ax, x_train, y_train, y_pred, split, stage):
@@ -302,7 +302,7 @@ plt.tight_layout()
 plt.show()
 </pyfig>
 
-The dashed lines indicate the actual predictions of $\Delta_m$, the blue dots are the difference vectors, and the dotted line is the origin at 0. The predictions are step functions because we've used a *regression tree stub* as our base weak model with manually-selected split points (850, 850, and 925). Here are the three stubs implementing our $\Delta_m$ weak models:
+The dashed lines indicate the actual predictions of $\Delta_m$, the blue dots are the residual vectors, and the dotted line is the origin at 0. The predictions are step functions because we've used a *regression tree stub* as our base weak model with manually-selected split points (850, 850, and 925). Here are the three stubs implementing our $\Delta_m$ weak models:
 
 <img src="images/stubs-mse.svg" width="90%">
 
