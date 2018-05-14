@@ -57,7 +57,7 @@ It might be helpful to think of this boosting approach as a golfer initially wha
 
 <img src="images/golf-dir-vector.png" width="70%">
 
-After the initial stroke, the golfer determines the appropriate nudge by computing the  difference between $y$ and the first approximation, $y - F_0(\vec x)$. (We can let $\vec x$ be the hole number 1-18, but it doesn't really matter since we're only working with one observation for illustration purposes.) This difference is usually called the *residual* or *residual vector*, but it's helpful for gradient boosting to think of this as the vector pointing from the current $\hat y$, $F_m(\vec x)$, prediction to the true $y$.  (In the <a href="L1-loss.html">second article</a>, we will look at just direction information not magnitude; we'll call that the direction vector to distinguish from the residual vector.) Using the residual vector as our nudge, means training $\Delta_m (\vec x)$ on value $y - F_{m-1}(\vec x)$ for our base weak models.  As with any machine learning model, our $\Delta_m$ models will not have perfect recall and precision, so we should expect $\Delta_m$ to give a noisy prediction instead of exactly $y - F_{m-1}(\vec x)$. 
+After the initial stroke, the golfer determines the appropriate nudge by computing the  difference between $y$ and the first approximation, $y - F_0(\vec x)$. (We can let $\vec x$ be the hole number 1-18, but it doesn't really matter since we're only working with one observation for illustration purposes.) This difference is usually called the *residual* or *residual vector*, but it's helpful for gradient boosting to think of this as the vector pointing from the current $\hat y$, $F_m(\vec x)$, prediction to the true $y$.  (In the <a href="L1-loss.html">second article</a>, we will look at just the sign of the direction, not magnitude; we'll call that the *sign vector* to distinguish from the residual vector.) Using the residual vector as our nudge, means training $\Delta_m (\vec x)$ on value $y - F_{m-1}(\vec x)$ for our base weak models.  As with any machine learning model, our $\Delta_m$ models will not have perfect recall and precision, so we should expect $\Delta_m$ to give a noisy prediction instead of exactly $y - F_{m-1}(\vec x)$. 
 
 As an example, let's say that the hole is at $y$=100 yards, $f_0(\vec x)=70$, and all of our weights are $w_m = 1$. Manually boosting, we might see a sequence like the following, depending on the imprecise $\Delta_m$ strokes made by the golfer:
 
@@ -290,19 +290,19 @@ for a in range(3):
     axes[a].set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
     
 draw_stub(axes[0], df.sqfeet, df.dir1, df.delta1, splits[1], stage=1)
-draw_residual(axes[0], df.sqfeet,df.dir1,df.delta1)
+#draw_residual(axes[0], df.sqfeet,df.dir1,df.delta1)
 
 draw_stub(axes[1], df.sqfeet, df.dir2, df.delta2, splits[2], stage=2)
-draw_residual(axes[1], df.sqfeet,df.dir2,df.delta2)
+#draw_residual(axes[1], df.sqfeet,df.dir2,df.delta2)
 
 draw_stub(axes[2], df.sqfeet, df.dir3, df.delta3, splits[3], stage=3)
-draw_residual(axes[2], df.sqfeet,df.dir3,df.delta3)
+#draw_residual(axes[2], df.sqfeet,df.dir3,df.delta3)
 
 plt.tight_layout()
 plt.show()
 </pyfig>
 
-The dashed lines indicate the actual predictions of $\Delta_m$, the blue dots are the residual vectors, and the dotted line is the origin at 0. The predictions are step functions because we've used a *regression tree stub* as our base weak model with manually-selected split points (850, 850, and 925). Here are the three stubs implementing our $\Delta_m$ weak models:
+The blue dots are the residual vector elements used to train $\Delta_m$ weak models, the dashed lines are the predictions made by $\Delta_m$, and the dotted line is the origin at 0. The predictions are step functions because we've used a *regression tree stub* as our base weak model with manually-selected split points (850, 850, and 925). Here are the three stubs implementing our $\Delta_m$ weak models:
 
 <img src="images/stubs-mse.svg" width="90%">
 

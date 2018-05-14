@@ -10,8 +10,18 @@
     font-weight: 700;
     text-align: center;
 }
-#toc li, #toc ul, #toc ul li{
+#toc ul {
     list-style: outside none none !important;
+	margin:1px;
+	padding:1px;
+}
+#toc li {
+	margin:1px;
+	padding:1px;
+}
+#toc ul li{
+	margin-left: 15px;
+	padding:1px;
 }
 #toc a {
 	color: #3A4145;

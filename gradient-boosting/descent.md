@@ -17,6 +17,16 @@ Students ask the most natural but hard-to-answer questions:
 The third question is the hardest to explain. As Gorman points out, &ldquo;<i>This is the part that gets butchered by a lot of gradient boosting explanations</i>.&rdquo; (His blog post does a good job of explaining it, but I thought I would give my own perspective here.)
 
 
+How good is that model? To answer that, we need a loss or cost function, $L(y,\hat y)$, that computes the cost of predicting $\hat y$ instead of $y$.  The squared error, $L(y,\hat y) = (y-\hat y)^2$ is the most common, but sometimes we care more about the absolute difference, $L(y,\hat y) = |y-\hat y|$. The loss across all observations is just the sum (or the average if you want to divide by $N$) of all the individual observation losses:
+
+\[
+L(\vec y, X) = \sum_{i=1}^{N} L(y_i, F_M(\vec x_i))
+\]
+
+That gives this either $L(\vec y, X) = \sum_{i=1}^{N} (y_i - F_M(\vec x_i))^2$ or $L(\vec y, X) = \sum_{i=1}^{N} |y_i - F_M(\vec x_i)|$.
+
+Have you ever wondered why this technique is called *gradient* boosting? We're boosting gradients because our weak models learn sign vectors, and the other common term for "direction vector" is, drumroll please, *gradient*.  that leads us to optimization via gradient descent.
+
 
 ## The intuition behind gradient descent
 
@@ -89,6 +99,8 @@ $x_{t+1} = x_t - \eta \nabla f(x_t)$
 to find $x$ that minimizes $f(x)$.   When using it to train a model, $x$ is the set of parameters for the model. In neural networks, the architecture is embodied by the $f$ function.
 
 pikes peak metaphor: elevation function is model, x is location. shift x until elevation is minimized.  that is one model  called elevation. x is parameter.  with boosting, get a starting elevation (the summit?) then ask which direction we should take a step to head towards lower elevation at a specific x location.  hmm...maybe it's like we know the elevation at bottom, 6000' (vs 14110' at summit).  We ask, is current elevation 6000? No, need another step so drop elevation by 1 unit. this would be simulating one $\vec x$ and one $y$ target...too easy to move one person downhill. but it's like start at some elevation, now go down until bottom (cost is 0 when we reach bottom). duh. ok, extend so there are 20 kids on trip and all at different starting points. Now pretend they are all at average elevation.  Boosting tweaks not the x location of each kid, but sends a "go down or go up or stop moving signal".   The updated prediction of kid elevations is initial guess of average and then tweaks giving instructions to head up/down to reach same base camp at bottom. (some might have gotten lost and ended up below base camp). Hmm...actually, no. we send park rangers, one per kid, starting at basecamp looking to reach each kid. initial guess basecamp.  Then ask for ranger i, is kid i above/below/same. Tell ranger to move. Ranger elevation is initial + all tweaks. when tweak vector goes to all 0s, rangers have reached all kids. how does x location come into play?  training ranger to move elevation up/down might involve shifting in x/y plane to get single elevation value.
+
+\todo{ To get really fancy, we can even add momentum <a href="https://arxiv.org/abs/1803.02042">Accelerated Gradient Boosting</a> can mention momentum instead of or in addition to leaf weights.  see accelerated gradient boosting paper recently.}
 
 ## Summary
 

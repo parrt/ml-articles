@@ -8,7 +8,7 @@ This brings us to the second commonly-used vector with gradient boosting, which 
 
 If there are outliers in the target variable that we cannot remove, using just the direction is better than both direction and magnitude. We'll show in <a href="descent.html">Gradient boosting performs gradient descent</a> that using $sign(y-F_m(\vec x_i))$ as our step vector leads to a solution that optimizes the model according to the mean absolute value (MAE) or $L_1$  *loss function*: $\sum_{i=1}^{N} |y_i - F_M(\vec x_i)|$ for $N$ observations. 
 
-Optimizing the MAE means we should start with the median, not the mean, as our initial model, $f_0$, since the median of $y$ minimizes the $L_1$ loss. (The median is the best single-value approximation of $L_1$ loss.)  Other than that, let's assume that the same recurrence relations will work for finding composite models based upon the signing of the difference as we used for the residual vector version in the last article:
+Optimizing the MAE means we should start with the median, not the mean, as our initial model, $f_0$, since the median of $y$ minimizes the $L_1$ loss. (The median is the best single-value approximation of $L_1$ loss.)  Other than that, let's assume that the same recurrence relations will work for finding composite models based upon the sign of the difference, as we used for the residual vector version in the last article:
 
 \latex{{
 \begin{eqnarray*}
@@ -108,7 +108,7 @@ mse,mae = boost(df, 'sqfeet', 'rent', splits, eta, stages)
 df['deltas'] = df[['delta1','delta2','delta3']].sum(axis=1) # sum deltas
 </pyeval>
 
-Visually, we can see that the sign vector has components pointing in the right direction of the true target:
+Visually, we can see that the first sign vector has components pointing in the right direction of the true target from $f_0(X)$:
  
 <pyfig label=examples hide=true width="32%">
 f0 = df.rent.median()
@@ -142,7 +142,7 @@ plt.tight_layout()
 plt.show()
 </pyfig>
 
-But, without the distance to the target as part of our sign vector, the $w_m (\hat y - F_{m-1}(X))$ steps towards $y$ would move very slowly unless we cranked up the $w_m$ weights. Unfortunately, if we crank up the weights arbitrarily, the stages of boosting might oscillate around but never reach an accurate prediction. For example, if we set $w_m = 30$ and look at the weighted sign vectors for a few boosting stages, we see some $\hat y_i$ converging ($\vec x >= 900$) to $y_i$ and some $\hat y_i$ oscillating up and down ($\vec x < 900$). (We're using the $sign$, as if we had a perfect $\Delta$ predictor, in order to focus on how the weights affect movement of $\hat{\vec y}$.)
+But, without the distance to the target as part of our sign vector, the $w_m (\hat y - F_{m-1}(X))$ steps towards $\vec y$ would move very slowly unless we cranked up the $w_m$ weights. Unfortunately, if we crank up the weights arbitrarily, the weak model predictions might force the composite model predictions to oscillate around, but never reach, an accurate prediction. For example, if we set $w_m = 30$ and look at the weighted weak models for a few boosting stages, we see some $\hat y_i$ converging ($\vec x >= 900$) to $y_i$ and some $\hat y_i$ oscillating up and down ($\vec x < 900$). (Here we assume perfect $\Delta_m$ models, $\Delta_m = sign(y-F_{m-1})$, in order to focus on how the weights affect movement of $\hat{\vec y}$.)
 
 <pyfig label=examples hide=true width="90%">
 f0 = df.rent.median()
@@ -154,7 +154,7 @@ ax = axes[0]
 ax.set_ylabel(r"Rent", fontsize=14)
 line1, = ax.plot(df.sqfeet,df.rent,'o', linewidth=.8, markersize=4, label="$y$")
 # fake a line to get smaller red dot
-line2, = ax.plot([0,0],[0,0], c='r', markersize=4, label=r"$w_1 sign(y-f_0({\bf x}))$", linewidth=.8)
+line2, = ax.plot([0,0],[0,0], c='r', markersize=4, label=r"$w_1 \Delta_1$", linewidth=.8)
 ax.plot([df.sqfeet.min()-10,df.sqfeet.max()+10], [f0,f0],
          linewidth=.8, linestyle='--', c='k')
 ax.set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
@@ -179,7 +179,7 @@ ax.legend(handles=[line2], fontsize=16,
 ax = axes[1]
 line1, = ax.plot(df.sqfeet,df.rent,'o', linewidth=.8, markersize=4, label="$y$")
 # fake a line to get smaller red dot
-line2, = ax.plot([0,0],[0,0], c='r', markersize=4, label=r"$w_2 sign(y-F_1({\bf x}))$", linewidth=.8)
+line2, = ax.plot([0,0],[0,0], c='r', markersize=4, label=r"$w_2 \Delta_2$", linewidth=.8)
 ax.plot([df.sqfeet.min()-10,df.sqfeet.max()+10], [f0,f0],
          linewidth=.8, linestyle='--', c='k')
 ax.set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
@@ -206,7 +206,7 @@ ax.legend(handles=[line2], fontsize=16,
 ax = axes[2]
 line1, = ax.plot(df.sqfeet,df.rent,'o', linewidth=.8, markersize=4, label="$y$")
 # fake a line to get smaller red dot
-line2, = ax.plot([0,0],[0,0], c='r', markersize=4, label=r"$w_3 sign(y-F_2({\bf x}))$", linewidth=.8)
+line2, = ax.plot([0,0],[0,0], c='r', markersize=4, label=r"$w_3 \Delta_3$", linewidth=.8)
 ax.plot([df.sqfeet.min()-10,df.sqfeet.max()+10], [f0,f0],
          linewidth=.8, linestyle='--', c='k')
 ax.set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
@@ -232,13 +232,13 @@ plt.tight_layout()
 plt.show()
 </pyfig>
 
-A weight of 30 is just too coarse to allow tight convergence to $\vec y$ across all $y_i$.  When using the residual vector, each data point gets a weight tailored to its distance to the target.  The problem we have with the sign vector is that a single weight across all $\hat y_i$ only works if it's very small. But, that means very slow convergence. So, the solution is to use a different weight for each group of similar feature vectors.  Mathematically, that means moving the weight term to a parameter of the weak models and making it a vector $\vec w_m$ for each stage, $m$:
+A weight of 30 is just too coarse to allow tight convergence to $\vec y$ for all $y_i$ simultaneously.  When using the residual vector, each data point gets a weight tailored to its distance to the target.  The problem we have with the sign vector is that a single weight across all $\hat y_i$ only works if it's very small. But, that means very slow convergence. So, the solution is to use a different weight for each group of similar feature vectors.  Mathematically, that means moving the weight term to a parameter of the weak models and making $\vec w_m$ a vector of leaf weights for each stage, $m$:
 
 \[
-F_m(\vec x) = F_{i-1}(\vec x) + \Delta_m(\vec x; \vec w_m)\\
+F_m(\vec x) = F_{m-1}(\vec x) + \Delta_m(\vec x; \vec w_m)\\
 \]
 
-With regards to weak models based upon regression trees stubs, each stub leaf gets its own weight. If we let $\vec w_1=[20,100]$, $\vec w_2=[5,30]$, and $\vec w_3=[5,20]$, then we get the following table of partial results:
+Because we're using weak models based upon regression trees stubs, each stub leaf gets its own weight. If we manually pick some nice weight vectors, $\vec w_1=[20,100]$, $\vec w_2=[5,30]$, and $\vec w_3=[5,20]$, then we get the following table of partial results:
 
 <!-- Separate weight per leaf -->
 <pyeval label=examples hide=true>
@@ -312,7 +312,7 @@ $\Delta_1$ & $\Delta_1(\vec x$;$\vec w_1)$ & $F_1$ & $\vec y$-$F_1$ & $\Delta_2$
 }
 }}
 
-Visually, the unweighted sign vectors for the first three stages look like the following.
+Let's examine the sign vectors and the imperfect $\Delta_m$ weak model regression tree stumps visually (with stub split points chosen manually as 850, 850, 725):
 
 <pyfig label=examples hide=true width="90%">
 def draw_stub(ax, x_train, y_train, y_pred, split, stage, locs):
@@ -353,20 +353,20 @@ fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(11, 3.5), sharey=True, share
 
 ax = axes[0]
 axes[0].set_ylabel(r"Direction in {-1,0,1}", fontsize=14)
-axes[0].set_yticks([-1,0,1])
+axes[0].set_yticks([-1,-.5,0,.5,1])
 for a in range(3):
     axes[a].set_xlabel(r"SqFeet", fontsize=14)
     axes[a].set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
 
 locs = ['upper left','lower right','lower right']
 draw_stub(axes[0], df.sqfeet, df.dir1, df.delta1, splits[1], stage=1, locs=locs)
-draw_residual(axes[0], df, stage=1)
+#draw_residual(axes[0], df, stage=1)
 
 draw_stub(axes[1], df.sqfeet, df.dir2, df.delta2, splits[2], stage=2, locs=locs)
-draw_residual(axes[1], df, stage=2)
+#draw_residual(axes[1], df, stage=2)
 
 draw_stub(axes[2], df.sqfeet, df.dir3, df.delta3, splits[3], stage=3, locs=locs)
-draw_residual(axes[2], df, stage=3)
+#draw_residual(axes[2], df, stage=3)
 
 plt.tight_layout()
         
@@ -374,11 +374,11 @@ plt.savefig('/tmp/t.svg')
 plt.show()
 </pyfig>
 
-The $\Delta_m$ weak models have a hard time predicting the three rent prices on the left, as you can see. Here are the stubs that generate those dashed lines:
+The blue dots are the sign vector elements used to train $\Delta_m$ weak models, the dashed lines are the predictions made by $\Delta_m$, and the dotted line is the origin at 0. The $\Delta_m$  models have a hard time predicting the sign vectors, as you can see, because the sign vector elements are dissimilar in one leaf of each stub. Here are the stubs that generate those dashed lines:
 
 <img src="images/stubs-mae.svg" width="90%">
 
-Here are the weighted $\Delta_m$ prediction vectors for first three stages that illustrates how using two different weights for the same model allows much more control over steps to the target.
+Despite the imprecision of the weak models, the weighted $\Delta_m$ predictions nudge $\hat{\vec y}$ closer and closer to the true $\vec y$. The following figure illustrates how using two different weights for the same model, one per stub leaf, allows more control over steps to the target than a single weight allows.
 
 <pyfig label=examples hide=true width="90%">
 f0 = df.rent.median()
@@ -456,7 +456,9 @@ plt.tight_layout()
 plt.show()
 </pyfig>
 
-We've manually chosen these weights as nice round numbers so we can do the computations more easily.  In practice, the the listing algorithm must compute the optimal weights of a complicated expression you can find on page 6 of <a href="https://statweb.stanford.edu/~jhf/ftp/trebst.pdf">Friedman's paper</a>. As he points out, however, the sign vector case simplifies to the weight of a leaf being just the median of the true $y_i$ values for the observations in that leaf. Weight $w_l$ for leaf $l$ is $median(y_i - F_{m-1}(\vec x_i))$ for all $\vec x_i$ in leaf $l$. (See Algorithm 3 *LAD_TreeBoost* on page 7 of Friedman's paper.) In a sense, this weight computation is acting like the residual vector. Instead of a separate "weight" for each observation, however, we use a separate weight for all similar observations (those in the same leaf). This has the effect that the prediction for similar observations takes steps sized proportionally to the median distance from the weak model's prediction to the true target values. As the weak model predictions get better, the algorithm takes smaller steps to zero in on the best prediction.
+We've manually chosen these weights as nice round numbers so we can do the computations more easily.  In practice, a boosting algorithm must compute the optimal weights of a complicated expression you can find on page 6 of <a href="https://statweb.stanford.edu/~jhf/ftp/trebst.pdf">Friedman's paper</a>. As he points out, however, the sign vector case simplifies to the weight of a leaf being just the median of the true $y_i$ values for the observations in that leaf. Weight $w_l$ for leaf $l$ is $median(y_i - F_{m-1}(\vec x_i))$ for all $\vec x_i$ in leaf $l$. (See Algorithm 3 *LAD_TreeBoost* on page 7 of Friedman's paper.) In a sense, this weight computation is acting like the residual vector. Instead of a separate "weight" for each observation, however, we use a separate weight for all similar observations (those in the same leaf). This has the effect that the prediction for similar observations takes steps proportional to the median distance from the weak model's prediction to the true target values. As the weak model predictions get better, the algorithm takes smaller steps to zero in on the best prediction. 
+
+The following sequence of diagrams shows the composite model predictions versus true $y_i$ values.
 
 <!-- composite model -->
 
@@ -501,9 +503,9 @@ def plot_combined(ax, stage, coords):
     ax.set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
     labs = ['\Delta_1', '\Delta_2', '\Delta_3']
     if stage==1:
-        label = r"$f_0 + \eta \Delta_1$"
+        label = r"$f_0 + \Delta_1$"
     else:
-        label=r"$f_0 + \eta ("+'+'.join(labs[:stage])+")$"
+        label=r"$f_0 + "+'+'.join(labs[:stage])+"$"
     ax.legend(handles=[line2], fontsize=16,
               loc='center left', 
               labelspacing=.1,
@@ -511,6 +513,7 @@ def plot_combined(ax, stage, coords):
               handlelength=.7,
               frameon=True,
              labels = [label])
+    ax.text(800,1325, f"$F_{stage}$", fontsize=16)
 
 fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(11, 3), sharey=True)
 
@@ -528,22 +531,5 @@ plt.tight_layout()
 plt.show()
 </pyfig>
 
-Now show addition of all terms, dsashed lines, visually.
+As we add more weak models, the composite model gets more and more accurate.
 
-$\hat y = f_0(\vec x) + \Delta_1(\vec x) + \Delta_2(\vec x) + ...  + \Delta_M(\vec x)$
-
-That's easy enough, so what's the problem? How do we know this procedure is correct and terminates? Why do they call it gradient boosting?
-
-we add together the results of multiple weak learners
-
-How good is that model? To answer that, we need a loss or cost function, $L(y,\hat y)$, that computes the cost of predicting $\hat y$ instead of $y$.  The squared error, $L(y,\hat y) = (y-\hat y)^2$ is the most common, but sometimes we care more about the absolute difference, $L(y,\hat y) = |y-\hat y|$. The loss across all observations is just the sum (or the average if you want to divide by $N$) of all the individual observation losses:
-
-\[
-L(\vec y, X) = \sum_{i=1}^{N} L(y_i, F_M(\vec x_i))
-\]
-
-That gives this either $L(\vec y, X) = \sum_{i=1}^{N} (y_i - F_M(\vec x_i))^2$ or $L(\vec y, X) = \sum_{i=1}^{N} |y_i - F_M(\vec x_i)|$.
-
-Have you ever wondered why this technique is called *gradient* boosting? We're boosting gradients because our weak models learn sign vectors, and the other common term for "direction vector" is, drumroll please, *gradient*.  that leads us to optimization via gradient descent.
-
-\todo{ can mention momentum instead of or in addition to leaf weights.  see accelerated gradient boosting paper recently.}
