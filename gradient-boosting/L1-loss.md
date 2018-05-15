@@ -2,22 +2,22 @@
 
 \author{[Terence Parr](http://parrt.cs.usfca.edu) and [Jeremy Howard](http://www.fast.ai/about/#jeremy)}
 
-In our previous article, <a href="L2-loss.html">Gradient boosting: Distance to target</a>, our model took steps towards the target $\vec y$ based upon the residual vector, $\vec y-F_m(X)$, which includes the magnitude not just the direction of $\vec y$ from our current composite model's prediction, $F_m(X)$. The residual vector makes composite models converge rapidly towards $\vec y$.  The negative, of course, is that using the magnitude makes the composite model chase outliers.   This occurs because mean computations are easily skewed by outliers and our regression tree stubs yield predictions using the mean of all target values in a leaf.  For noisy target variables, it makes more sense to step merely in the *direction* of $\vec y$ from $F_m$ rather than the magnitude and direction. 
+In our previous article, <a href="L2-loss.html">Gradient boosting: Distance to target</a>, our model took steps towards the target $\vec y$ based upon the residual vector, $\vec y-F_{m-1}(X)$, which includes the magnitude not just the direction of $\vec y$ from our the previous composite model's prediction, $F_{m-1}(X)$. The residual vector makes composite models converge rapidly towards $\vec y$.  The negative, of course, is that using the magnitude makes the composite model chase outliers.   This occurs because mean computations are easily skewed by outliers and our regression tree stubs yield predictions using the mean of all target values in a leaf.  For noisy target variables, it makes more sense to step merely in the *direction* of $\vec y$ from $F_{m-1}$ rather than the magnitude and direction. 
 
-This brings us to the second commonly-used vector with gradient boosting, which we can call the *sign vector*: $sign(y_i-F_m(\vec x_i))$. The sign vector elements are either -1, 0, or +1, one value for each observation $\vec x_i$.   No matter how distant the true target is from our current prediction, the vector used to take steps towards the target is just direction info without the magnitude.  This sign vector is a bit weird, though, because the vector elements are limited to -1, 0, or +1.  In two dimensions, such vectors can only point at multiples of 45 degrees (0, 45, 90, 135, ...) and so the sign vector will rarely point directly at the target. Just to be clear, the sign vector is not the unit vector in the direction of $y_i-F_m(\vec x_i)$.
+This brings us to the second commonly-used vector with gradient boosting, which we can call the *sign vector*: $sign(y_i-F_{m-1}(\vec x_i))$. The sign vector elements are either -1, 0, or +1, one value for each observation $\vec x_i$.   No matter how distant the true target is from our current prediction, the vector used to take steps towards the target is just direction info without the magnitude.  This sign vector is a bit weird, though, because the vector elements are limited to -1, 0, or +1.  In two dimensions, such vectors can only point at multiples of 45 degrees (0, 45, 90, 135, ...) and so the sign vector will rarely point directly at the target. Just to be clear, the sign vector is not the unit vector in the direction of $y_i-F_{m-1}(\vec x_i)$.
 
-If there are outliers in the target variable that we cannot remove, using just the direction is better than both direction and magnitude. We'll show in <a href="descent.html">Gradient boosting performs gradient descent</a> that using $sign(y-F_m(\vec x_i))$ as our step vector leads to a solution that optimizes the model according to the mean absolute value (MAE) or $L_1$  *loss function*: $\sum_{i=1}^{N} |y_i - F_M(\vec x_i)|$ for $N$ observations. 
+If there are outliers in the target variable that we cannot remove, using just the direction is better than both direction and magnitude. We'll show in <a href="descent.html">Gradient boosting performs gradient descent</a> that using $sign(y-F_{m-1}(\vec x_i))$ as our step vector leads to a solution that optimizes the model according to the mean absolute value (MAE) or $L_1$  *loss function*: $\sum_{i=1}^{N} |y_i - F_M(\vec x_i)|$ for $N$ observations. 
 
 Optimizing the MAE means we should start with the median, not the mean, as our initial model, $f_0$, since the median of $y$ minimizes the $L_1$ loss. (The median is the best single-value approximation of $L_1$ loss.)  Other than that, let's assume that the same recurrence relations will work for finding composite models based upon the sign of the difference, as we used for the residual vector version in the last article:
 
 \latex{{
 \begin{eqnarray*}
 F_0(\vec x) &=& f_0(\vec x)\\
-F_m(\vec x) &=& F_{m-1}(\vec x) + w_m \Delta_m(\vec x)\\
+F_m(\vec x) &=& F_{m-1}(\vec x) + \eta w_m \Delta_m(\vec x)\\
 \end{eqnarray*}
 }}
 
-Recall that $F_m(\vec x)$ yields a predicted value, $y_i$, but $F_m(X)$ yields a predicted target vector, $\vec y$, one value for each $\vec x_i$ feature row-vector in matrix $X$. 
+Let's assume $\eta = 1$ so that it drops out of the equation to simplify our discussion, but keep in mind that it's an important hyper parameter you need to set in practice.  Recall that $F_m(\vec x)$ yields a predicted value, $y_i$, but $F_m(X)$ yields a predicted target vector, $\vec y$, one value for each $\vec x_i$ feature row-vector in matrix $X$. 
 
 Here is the rental data again along with the initial $F_0$ model and the first sign vector:
 
@@ -232,13 +232,13 @@ plt.tight_layout()
 plt.show()
 </pyfig>
 
-A weight of 30 is just too coarse to allow tight convergence to $\vec y$ for all $y_i$ simultaneously.  When using the residual vector, each data point gets a weight tailored to its distance to the target.  The problem we have with the sign vector is that a single weight across all $\hat y_i$ only works if it's very small. But, that means very slow convergence. So, the solution is to use a different weight for each group of similar feature vectors.  Mathematically, that means moving the weight term to a parameter of the weak models and making $\vec w_m$ a vector of leaf weights for each stage, $m$:
+A weight of 30 is just too coarse to allow tight convergence to $\vec y$ for all $y_i$ simultaneously.  When using the residual vector, each data point gets a weight tailored to its distance to the target.  The problem we have with the sign vector is that a single weight across all $\hat y_i$ only works if it's very small. But, that means very slow convergence. So, the solution is to use a different weight for each group of similar feature vectors.  Mathematically, that means changing the weight term from a multiplier to a parameter of the weak models and making $\vec w_m$ a vector of weights for each stage, $m$:
 
 \[
 F_m(\vec x) = F_{m-1}(\vec x) + \Delta_m(\vec x; \vec w_m)\\
 \]
 
-Because we're using weak models based upon regression trees stubs, each stub leaf gets its own weight. If we manually pick some nice weight vectors, $\vec w_1=[20,100]$, $\vec w_2=[5,30]$, and $\vec w_3=[5,20]$, then we get the following table of partial results:
+Because we're using weak models based upon regression trees stubs, each stub leaf gets its own weight. If we manually pick some nice weight vectors, $\vec w_1=[20,100]$, $\vec w_2=[5,30]$, and $\vec w_3=[5,20]$, then we get the following table of partial results (with $\eta=1$):
 
 <!-- Separate weight per leaf -->
 <pyeval label=examples hide=true>
@@ -541,4 +541,6 @@ L(\vec y,F_M(X)) = \frac{1}{N} \sum_{i=1}^{N} |y_i - F_M(\vec x_i)|
 
 (Using vector operations, that summation is the $L_1$ norm: $||\vec y-F_M(X)||_1$).
 
-In the next and final article, <a href="descent.html">Gradient boosting performs gradient descent</a> we show that training our $\Delta_m$ on the sign vector leads to a minimization of the mean absolute error (MAE) loss function.
+As you can see, using the sign vector instead of the residual factor does not change the mechanism behind gradient boosting. The only difference is that the sequence of composite model predictions, $F_m(X)$, sweep through different points in $N$-space and the algorithm converges on different points. ($\vec y$ and $F_m(X)$ are in $N$-space because there are $N$ observations.)
+
+In the next and final article, <a href="descent.html">Gradient boosting performs gradient descent</a> we show how gradient boosting leads to the minimization of different loss functions, depending on the direction vector used in the algorithm.
