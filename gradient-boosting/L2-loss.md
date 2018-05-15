@@ -235,7 +235,7 @@ Next, we train a weak model, $\Delta_1$, to predict that  residual vector. A per
 F_m(X) = F_{m-1}(X) + \eta \Delta_m(X)
 \]
 
-We use a learning rate of $\eta = 0.7$ because of an experiment shown below, so $F_1 = F_0 + 0.7  \Delta_1$, $F_2 = F_1 + 0.7  \Delta_2$, and so on. The following table summarizes the intermediate values of the various key "players":
+We'll discuss the learning rate below, but for now, please assume that our learning rate is $\eta = 0.7$, so $F_1 = F_0 + 0.7  \Delta_1$, $F_2 = F_1 + 0.7  \Delta_2$, and so on. The following table summarizes the intermediate values of the various key "players":
 
 \latex{{
 {\small
@@ -251,7 +251,7 @@ $\Delta_1$ & $F_1$ & $\vec y$-$F_1$ & $\Delta_2$ & $F_2$ & $\vec y$ - $F_2$ & $\
 }
 }}
 
-It helps to keep in mind that we are always training on the direction vector $\vec y - F_{m-1}$ but get imperfect model $\Delta_m$. The best way to visualize the learning of $\vec y-F_{m-1}$ residual vectors by weak models, $\Delta_m$, is by looking at the residual vectors and model predictions horizontally on the same scale Y-axis:
+It helps to keep in mind that we are always training on the residual vector $\vec y - F_{m-1}$ but get imperfect model $\Delta_m$. The best way to visualize the learning of $\vec y-F_{m-1}$ residual vectors by weak models, $\Delta_m$, is by looking at the residual vectors and model predictions horizontally on the same scale Y-axis:
 
 <pyfig label=examples hide=true width="90%">
 def draw_stub(ax, x_train, y_train, y_pred, split, stage):
@@ -421,6 +421,7 @@ def plot_composite(ax,stage):
     ax.set_xlabel(r"SqFeet", fontsize=14)
 
     #ax.set_yticks(np.arange(1150,1351,50))
+    ax.text(800,1325, f"$F_{stage}$", fontsize=16)
 
 ax = axes[0]
 ax.set_ylabel(r"Rent", fontsize=14)
@@ -457,13 +458,18 @@ plt.tight_layout()
 plt.show()
 </pyfig>
 
-We used weight $w_m = 1$ in this manually-computed example for simplicity, but a GBM implementation would choose the optimal weights so that each $w_m \Delta_m(\vec x)$ term minimized the mean squared error, $\sum_i^N(y_i - F_m(\vec x_i))^2$, of model $F_m$ across all $N$ observations. See page 3 of <a href="https://statweb.stanford.edu/~jhf/ftp/trebst.pdf">Friedman's paper</a> for the form of the equation (Friedman's equation 8) that, when minimized, yields the appropriate weight for stage $m$.
+The weights, $w_m$, don't appear in the model equations in these graphs because we used weight $w_m = 1$ for simplicity. But, a GBM implementation would choose the optimal weight $w_m$ so as to minimize the squared difference between $\vec y$ and the prediction of the new composite model $F_m(X)$ that used $w_m$. So, first we choose the new weak model $\Delta_m$ then try out different weights, looking for the one that makes best use of this new model.  See page 8 of <a href="https://statweb.stanford.edu/~jhf/ftp/trebst.pdf">Friedman's paper</a> for the form of the equation (Friedman's equation 12) that, when minimized, yields the appropriate weight for stage $m$. In our notation, the minimization is:
 
-We've also stopped at $M=3$. \todo{how to pick M? it's a hyper-parameter.}
+\[
+w_m = argmin_w \sum_{i=1}^{N} (y_i - (F_{m-1}(\vec x_i) + w \Delta_m(\vec x_i)))^2
+\]
+
+In English, $argmin_w$ just says to find the $w$ such that the value of the summation to the right is minimized. The summation says to compute the loss across all observations between what we want, $y_i$, and what the model would give us if we used weight $w$: $F_{m-1}(\vec x_i) + w \Delta_m(\vec x_i)$.
+
 
 ## Measuring model performance
 
-How good is our model? To answer that, we need a loss or cost function, $L(\vec y,\hat{\vec y})$ or $L(y_i,\hat y_i)$, that computes the cost of predicting $\hat{\vec y}$ instead of $\vec y$.   The loss across all $N$  observations is just the sum (or the average if you want to divide by $N$) of all the individual observation losses:
+How good is our model? To answer that, we need a loss or cost function, $L(\vec y,\hat{\vec y})$ or $L(y_i,\hat y_i)$, that computes the cost of predicting $\hat{\vec y}$ instead of $\vec y$.   The loss across all $N$  observations is just the average (or the sum if you want since $N$ is a constant once we start training) of all the individual observation losses:
 
 \[
 L(\vec y, F_M(X)) = \frac{1}{N} \sum_{i=1}^{N} L(y_i, F_M(\vec x_i))
@@ -475,11 +481,15 @@ The mean squared error (MSE) is the most common, and what we are optimizing in t
 L(\vec y,F_M(X)) = \frac{1}{N} \sum_{i=1}^{N} (y_i - F_M(\vec x_i))^2
 \]
 
-(In vector operations, we'd look at this as $||\vec y-\hat{\vec y}||_2^2$, the square of the $L_2$ vector norm.)
+(In vector operations, we'd look at this as $||\vec y-F_M(X)||_2^2$, the square of the $L_2$ vector norm.)
 
-## Choosing a learning rate
+In the final article, <a href="descent.html">Gradient boosting performs gradient descent</a> we show that training our $\Delta_m$ on the residual vector leads to a minimization of the mean squared error loss function.
 
-Let's use the mean squared error to tune the learning rate hyper-parameter.  The primary value of the learning rate, or "*shrinkage*" as some papers call it, is to reduce overfitting of the overall model. As Chen and Guestrin say in [XGBoost: A Scalable Tree Boosting System](https://arxiv.org/pdf/1603.02754.pdf), "*shrinkage reduces the influence of each individual tree and leaves space for future trees to improve the model.*"  There are a number of articles on the web about tuning the learning rate and other hyper-parameters, such as Jason Brownlee's [Tune Learning Rate for Gradient Boosting with XGBoost in Python](https://machinelearningmastery.com/tune-learning-rate-for-gradient-boosting-with-xgboost-in-python).  The following graph shows how the mean squared error changes as we add more weak models, illustrated with a few different learning rates.  
+## Choosing hyper-parameters
+
+We've discussed two GBM hyper-parameters in this article, the number of stages $M$ and the learning rate $\eta$.  Both affect model accuracy.  The more stages we use, the more accurate the model, but the more likely we are to be overfitting. The primary value of the learning rate, or "*shrinkage*" as some papers call it, is to reduce overfitting of the overall model. As Chen and Guestrin say in [XGBoost: A Scalable Tree Boosting System](https://arxiv.org/pdf/1603.02754.pdf), "*shrinkage reduces the influence of each individual tree and leaves space for future trees to improve the model.*" Friedman recommends a low learning rate like 0.1 and a larger number of stages. In practice, people do a grid search over the hyper-parameter space looking for the best model performance.  For example, see the article by Jason Brownlee called [Tune Learning Rate for Gradient Boosting with XGBoost in Python](https://machinelearningmastery.com/tune-learning-rate-for-gradient-boosting-with-xgboost-in-python). (Grid search can be very expensive given all of the model construction involved.) 
+
+The following graph shows how the mean squared error changes as we add more weak models, illustrated with a few different learning rates.  
 
 <pyeval label="examples" hide=true>
 # Compute MSE
@@ -544,8 +554,8 @@ plt.tight_layout()
 plt.show()
 </pyfig>
 
-Ultimately, we picked $\eta=0.7$ as it looked like it reaches the minimum error at stage $M=3$.
+Ultimately, we picked $\eta=0.7$ as it looked like it reaches the minimum error at the last stage, $M=3$.
 
-\todo{Friedman page 13 says "...smaller values of the shrinkage perimeter [...] are seen to result in better performance, ..."}
+We stopped at $M=3$ just because it fit the purposes of explaining how boosting works.  As we said, practitioners use a grid search to optimize hyper-parameters, such as $M$, but one could also keep adding stages until performance stops improving.  The risk in this case would be over fitting the model.
 
-The idea of using a learning rate to reduce overfitting in models that optimize cost functions to learn, such as deep learning neural networks, is very common. Rather than using a constant learning rate, though, we can start the learning rate out energetically and gradually slow it down as the model approaches optimality; this proves very effective in practice.
+As a side note, the idea of using a learning rate to reduce overfitting in models that optimize cost functions to learn, such as deep learning neural networks, is very common. Rather than using a constant learning rate, though, we can start the learning rate out energetically and gradually slow it down as the model approaches optimality; this proves very effective in practice.

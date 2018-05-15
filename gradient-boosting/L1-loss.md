@@ -531,13 +531,12 @@ plt.tight_layout()
 plt.show()
 </pyfig>
 
-As we add more weak models, the composite model gets more and more accurate. 
+As we add more weak models, the composite model gets more and more accurate.
 
-We can measure how good any $F_m(X)$ is using the mean absolute difference (MAE) as our loss or cost function, $L(\vec y,\hat{\vec y}) = |\vec y-\hat{\vec y}|$, which that computes the cost of predicting $\hat y$ instead of $y$.  The loss across all observations is just the sum (or the average if you want to divide by $N$) of all the individual observation losses:
+How accurate is it? As in the previous article, we can use a loss function $L(\vec y,\hat{\vec y})$, that computes the cost of predicting $\hat{\vec y}$ instead of $\vec y$.  Because we are worried about outliers, it's appropriate to use the mean absolute difference (MAE) as our loss function:
 
 \[
-L(\vec y, X) = \sum_{i=1}^{N} L(y_i, F_M(\vec x_i))
+L(\vec y,F_M(X)) = \frac{1}{N} \sum_{i=1}^{N} |y_i - F_M(\vec x_i)|
 \]
 
-That gives this either $L(\vec y, X) = \sum_{i=1}^{N} (y_i - F_M(\vec x_i))^2$ or $L(\vec y, X) = \sum_{i=1}^{N} |y_i - F_M(\vec x_i)|$.
-
+(Using vector operations, that summation is the $L_1$ norm: $||\vec y-F_M(X)||_1$).
