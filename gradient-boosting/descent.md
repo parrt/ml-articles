@@ -2,6 +2,72 @@
 
 \author{[Terence Parr](http://parrt.cs.usfca.edu) and [Jeremy Howard](http://www.fast.ai/about/#jeremy)}
 
+So far we've looked at GBMs that use two different direction vectors, the residual vector (<a href="L2-loss.html">Gradient boosting: Distance to target</a>) and the sign vector (<a href="L1.loss.html">Gradient boosting: Heading in the right direction</a>). It's natural to ask whether there are other direction vectors we can use and what effect they have on the final $F_M(X)$ predictions.  Your intuition probably told you that gradually nudging our $\hat{\vec y}$ prediction towards target $\vec y$ gradually improves model performance, but would $\hat{\vec y}$ ever stop if we kept increasing $M$? If so, where would it stop?
+
+It would also be useful to know to what vector $\hat{\vec y}$ will converge.
+
+o show that they optimize two different functions
+
+o Show the relationship with gradient descent
+
+o key insight is the direction vector versus plain residual signal
+
+o we can minimize any differentiable loss function
+
+o training is about mapping X to y with F(X)
+
+show the sequence of $F_m$ locations in 5 space
+
+\latex{{
+{\small
+\setlength{\tabcolsep}{0.5em}
+\begin{tabular}[t]{rrrrrr}
+{\bf SqFeet} & {\bf Rent} & $F_0$ & $F_1$ & $F_2$ & $F_3$\\
+\hline
+700 & 1125 & 1212 & 1159 & 1143 & 1137 \\
+750 & 1150 & 1212 & 1159 & 1143 & 1137 \\
+800 & 1135 & 1212 & 1159 & 1143 & 1137 \\
+900 & 1300 & 1212 & 1291 & 1314 & 1308 \\
+950 & 1350 & 1212 & 1291 & 1314 & 1339
+\end{tabular}
+}
+}}
+
+for L1
+
+\latex{{
+{\small
+\setlength{\tabcolsep}{0.5em}
+\begin{tabular}[t]{rrrrrr}
+{\bf SqFeet} & {\bf Rent} & $F_0$ & $F_1$ & $F_2$ & $F_3$\\
+\hline
+700 & 1125 & 1150 & 1136 & 1135 & 1130 \\
+750 & 1150 & 1150 & 1136 & 1135 & 1150 \\
+800 & 1135 & 1150 & 1136 & 1135 & 1150 \\
+900 & 1300 & 1150 & 1250 & 1280 & 1295 \\
+950 & 1350 & 1150 & 1250 & 1280 & 1295 \\
+\end{tabular}
+}
+}}
+
+\[
+\frac{\partial L(y_i, F(\vec x_i))}{\partial F(\vec x_i)}
+\]
+
+\[
+\frac{\partial L(\vec y, F(X))}{\partial F(X)}
+\]
+
+\[
+\frac{\partial L(\vec y, \hat{\vec y})}{\partial \hat{\vec y}}
+\]
+
+ we looked at the mechanism behind GBMs. The only real difference between the GBMs in the two articles is the direction vector that used to step from the current approximation $\hat{\vec y}$ towards the true target $\vec y$.
+
+The mathematician's favorite trick is to
+
+How do you optimize a function? set the derivative to zero and solve for x.
+ 
 Friedman says '*... consider F(x) evaluated at each point $\vec x$ to be a "parameter"*'
 
 Students ask the most natural but hard-to-answer questions:
