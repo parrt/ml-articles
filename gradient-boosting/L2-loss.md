@@ -466,6 +466,7 @@ w_m = argmin_w \sum_{i=1}^{N} (y_i - (F_{m-1}(\vec x_i) + w \Delta_m(\vec x_i)))
 
 In English, $argmin_w$ just says to find the $w$ such that the value of the summation to the right is minimized. The summation says to compute the loss across all observations between what we want, $y_i$, and what the model would give us if we used weight $w$: $F_{m-1}(\vec x_i) + w \Delta_m(\vec x_i)$.
 
+It's worth pointing out something subtle with the learning rate and the notation used in the graphs: $f_0 + \eta(\Delta_1 + \Delta_2 + \Delta_3)$. That makes it look like the learning rate could be applied all the way at the end as a global learning rate. Mathematically, the formula is correct but it hides the fact that each weak model, $\Delta_m$, is trained on $\vec y - F_{m-1}(X)$ and $F_{m-1}(X)$ is a function of the learning rate: $F_{m-1}(X) = F_{m-2}(X) + \eta w_{m-1} \Delta_{m-1}(X)$. Friedman calls this *incremental shrinkage*.
 
 ## Measuring model performance
 
@@ -556,6 +557,12 @@ plt.show()
 
 Ultimately, we picked $\eta=0.7$ as it looked like it reaches the minimum error at the last stage, $M=3$.
 
-We stopped at $M=3$ just because it fit the purposes of explaining how boosting works.  As we said, practitioners use a grid search to optimize hyper-parameters, such as $M$, but one could also keep adding stages until performance stops improving.  The risk in this case would be over fitting the model.
+We stopped at $M=3$ for purposes of a simple explanation of how boosting works.  As we said, practitioners use a grid search to optimize hyper-parameters, such as $M$, but one could also keep adding stages until performance stops improving.  The risk in this case would be over fitting the model.
 
 As a side note, the idea of using a learning rate to reduce overfitting in models that optimize cost functions to learn, such as deep learning neural networks, is very common. Rather than using a constant learning rate, though, we can start the learning rate out energetically and gradually slow it down as the model approaches optimality; this proves very effective in practice.
+
+Ok, let's tie all of this together.  A gradient boosting regression model, $F_M(X)$, adds together an initial weak model, $f_0(X)$, that predicts the average $\vec y$ value, and the predictions of $M$ weak models, $\Delta_m(X)$, that nudge $\hat{\vec y}$ towards $\vec y$. Each $\Delta_m(X)$ is trained on a residual vector that measures the direction and magnitude of the true target $\vec y$ from the previous model, $\vec y - F_{m-1}(X)$. The new prediction $F_m(X)$ is the addition of the previous model and a nudge, $\Delta_m(X)$, multiplied by a weight and a learning rate: $F_m(X) = F_{m-1}(X) + \eta w_m \Delta_m(X)$.  The $w_m$ weights are computed by finding the weight that optimizes the mean squared error of the true target $\vec y$ and the proposed $F_m(X)$ model weighted by $w_m$. Hyper-parameters $\eta$ and $M$ are determined by grid search.
+
+If you more-or-less followed this discussion, then congratulations! You understand the key elements of gradient boosting for regression. That's all there is to it. Really. As we'll see in the next article, <a href="L1-loss.html">Gradient boosting: Heading in the right direction</a>, we can use a different direction vector than the residual, but the basic mechanism is the same. Using the sign of the residual rather than the residual vector itself, will have the effect of minimizing a different loss function than mean squared error (it'll minimize mean absolute value). 
+
+You might've heard that gradient boosting is very complex mathematically, but that's only if we care about proving correctness and convergence.  The mechanism of gradient boosting is straightforward. If you want to get funky with the math and see the cool relationship of gradient boosting with gradient descent, check out our last article in the series, <a href="descent.html">Gradient boosting performs gradient descent</a>.
