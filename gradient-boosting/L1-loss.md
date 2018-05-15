@@ -533,10 +533,12 @@ plt.show()
 
 As we add more weak models, the composite model gets more and more accurate.
 
-How accurate is it? As in the previous article, we can use a loss function $L(\vec y,\hat{\vec y})$, that computes the cost of predicting $\hat{\vec y}$ instead of $\vec y$.  Because we are worried about outliers, it's appropriate to use the mean absolute difference (MAE) as our loss function:
+How accurate is it? As in the previous article, we can use a loss function $L(\vec y,\hat{\vec y})$, that computes the cost of predicting $\hat{\vec y}$ instead of $\vec y$.  Because we are worried about outliers, it's appropriate to use the mean absolute error (MAE) as our loss function:
 
 \[
 L(\vec y,F_M(X)) = \frac{1}{N} \sum_{i=1}^{N} |y_i - F_M(\vec x_i)|
 \]
 
 (Using vector operations, that summation is the $L_1$ norm: $||\vec y-F_M(X)||_1$).
+
+In the next and final article, <a href="descent.html">Gradient boosting performs gradient descent</a> we show that training our $\Delta_m$ on the sign vector leads to a minimization of the mean absolute error (MAE) loss function.
