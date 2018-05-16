@@ -28,7 +28,7 @@ Because greedy strategies choose one component model at a time, you will often s
 F_m(\vec x) = F_{m-1} + w_m f_m(\vec x)
 \]
 
-Boosting itself does not specify how to choose the weights, the weak learners, or the number of models, $M$.   Boosting does not even specify the form of the $f_m(\vec x)$ models, which can be placeholders for linear regression models, regression trees, or any other model we want.  The form of the weak model dictates the form of the meta-model. For example, if all weak models are linear models, then the resulting meta-model is a simple linear model. If we use tiny regression trees as the weak models, the result is a forest of trees whose predictions are added together.
+Boosting itself does not specify how to choose the weak learners or the number of models, $M$.   Boosting does not even specify the form of the $f_m(\vec x)$ models, which can be placeholders for linear regression models, regression trees, or any other model we want.  The form of the weak model dictates the form of the meta-model. For example, if all weak models are linear models, then the resulting meta-model is a simple linear model. If we use tiny regression trees as the weak models, the result is a forest of trees whose predictions are added together.
 
 Let's see if we can design a strategy for picking weak models to create our own boosting algorithm for a single observation. Then, we can extend it to work on the multiple observations we'd encounter in practice.
 
@@ -76,21 +76,19 @@ $F_4 = F_3 + \Delta_4$ & 95+5=100 & &  \\
 }
 }}
 
-A GBM implementation would have to choose weights, $w_m$, appropriately to make sure $\hat y$ converges on $y$ instead of oscillating back and forth forever, among other things. An overall learning rate variable, $\eta$, is also typically used to speed up or slow down the overall approach of $\hat y$ to $y$, which also helps to alleviate oscillation. (Ideally, the jumps would shorten as we approach.)
+A general GBM implementation would have to choose weights, $w_m$, appropriately to make sure $\hat y$ steps quickly towards $y$.  (In the cases described in the first two articles of this series, choosing the weights is straightforward, as we'll see.) An overall learning rate, $\eta$, is also typically used to speed up or slow down the overall approach of $\hat y$ to $y$, which helps to alleviate oscillation and reduces the potential for over fitting. (Ideally, the jumps would shorten as we approach, but GBMs seem to use a constant learning rate.)
 
 To show how flexible this technique is, consider training the weak models on just the direction of $y$, rather than the magnitude and direction of $y$. In other words, we would train the $\Delta_m (\vec x)$ on $sign(y - \hat y)$, not $y - \hat y$. The $sign(z)$ (or $sgn(z)$) function expresses the direction as one of $\{-1, 0, +1\}$. We'd have to change how we pick the weights, but both $sign(y - \hat y)$ and $y - \hat y$ point us in the right direction. 
 
-For the single observation case, both final $F_M$ models would converge to the same value, but that's not the case for multiple observations. In the general case, these two direction vector definitions lead the overall model to converge on different predicted target $\hat {\vec y}$ columns; naturally, their hops through the predicted values would also be different. In <a href="descent.html">Gradient boosting performs gradient descent</a>, we'll show that these two direction vector definitions are optimizing different measures of model performance.
+For the single observation case, both final $F_M$ models would converge towards the same value, but that's not the case for multiple observations. In the general case, these two direction vector definitions lead the overall model to converge on different predicted target $\hat {\vec y}$ columns; naturally, their hops through the predicted values would also be different. In <a href="descent.html">Gradient boosting performs gradient descent</a>, we'll show that these two direction vector definitions are optimizing different measures of model performance.
 
-If you understand this golfer example, then you understand the key intuition behind boosting for regression, at least for a single observation.  Yup, that's it. Of course, we don't have the tools yet to prove this model converges on a useful approximation $\hat y$ or even that it terminates, but we wanted to show that the GBM idea itself is not hard to grok.
-
-There are several things to reinforce before moving on:
+If you understand this golfer example, then you understand the key intuition behind boosting for regression, at least for a single observation.  Yup, that's it, but there are several things to reinforce before moving on:
 
 <ul>
-	<li>The weak models learn residual **vectors** with direction information, not just magnitudes.
-	<li>The initial model $f_0(\vec x)$ is trying to learn $y$ given $\vec x$, but the $\Delta_m (\vec x)$ tweaks are trying to learn residual vectors given $\vec x$.
+	<li>The weak models learn direction **vectors** with direction information, not just magnitudes.
+	<li>The initial model $f_0(\vec x)$ is trying to learn target $y$ given $\vec x$, but the $\Delta_m (\vec x)$ tweaks are trying to learn direction vectors given $\vec x$.
 	<li>All weak models, $f_0(\vec x)$ and $\Delta_m(\vec x)$, train on the original feature vector $\vec x$.
-	<li>Two common direction vector choices are $y-F_{m-1}(\vec x)$ and $sign(y-F_{m-1}(\vec x))$.
+	<li>Two common direction vector choices are the residual, $y-F_{m-1}(\vec x)$, and the sign, $sign(y-F_{m-1}(\vec x))$.
 </ul>
 
 Let's walk through a concrete example to see what gradient boosting looks like on more than one observation.
@@ -229,7 +227,7 @@ for x,y,yhat in zip(df.sqfeet,df.rent,df.F0):
 plt.show() 
 </pyfig>
 
-Next, we train a weak model, $\Delta_1$, to predict that  residual vector. A perfect model, $\Delta_1$, would yield exactly $\vec y-F_0(X)$, meaning that we'd be done after one step since $F_1(X)$ would be $F_1(X) = F_0(X) + \vec y - F_0(X)$, or just $\vec y$. Because it imperfectly captures that difference, $F_1(X)$ is still not quite $\vec y$, so we need to keep going for a few stages. To keep things simple, we can use a weight of $w_m$ = 1 everywhere so that our recurrence relation for all feature vectors looks like:
+Next, we train a weak model, $\Delta_1$, to predict that  residual vector. A perfect model, $\Delta_1$, would yield exactly $\vec y-F_0(X)$, meaning that we'd be done after one step since $F_1(X)$ would be $F_1(X) = F_0(X) + \vec y - F_0(X)$, or just $\vec y$. Because it imperfectly captures that difference, $F_1(X)$ is still not quite $\vec y$, so we need to keep going for a few stages. Happily, the optimal weight is $w_m$ = 1 (see [Gradient boosting performs gradient descent](descent.html)) so that our recurrence relation for all feature vectors simplifies to:
 
 \[
 F_m(X) = F_{m-1}(X) + \eta \Delta_m(X)
@@ -458,14 +456,6 @@ plt.tight_layout()
 plt.show()
 </pyfig>
 
-The weights, $w_m$, don't appear in the model equations in these graphs because we used weight $w_m = 1$ for simplicity. But, a GBM implementation would choose the optimal weight $w_m$ so as to minimize the squared difference between $\vec y$ and the prediction of the new composite model $F_m(X)$ that used $w_m$. So, first we choose the new weak model $\Delta_m$ then try out different weights, looking for the one that makes best use of this new model.  See page 8 of <a href="https://statweb.stanford.edu/~jhf/ftp/trebst.pdf">Friedman's paper</a> for the form of the equation (Friedman's equation 12) that, when minimized, yields the appropriate weight for stage $m$. In our notation, the minimization is:
-
-\[
-w_m = argmin_w \sum_{i=1}^{N} (y_i - (F_{m-1}(\vec x_i) + w \Delta_m(\vec x_i)))^2
-\]
-
-In English, $argmin_w$ just says to find the $w$ such that the value of the summation to the right is minimized. The summation says to compute the loss across all observations between what we want, $y_i$, and what the model would give us if we used weight $w$: $F_{m-1}(\vec x_i) + w \Delta_m(\vec x_i)$.
-
 It's worth pointing out something subtle with the learning rate and the notation used in the graphs: $f_0 + \eta(\Delta_1 + \Delta_2 + \Delta_3)$. That makes it look like the learning rate could be applied all the way at the end as a global learning rate. Mathematically, the formula is correct but it hides the fact that each weak model, $\Delta_m$, is trained on $\vec y - F_{m-1}(X)$ and $F_{m-1}(X)$ is a function of the learning rate: $F_{m-1}(X) = F_{m-2}(X) + \eta w_{m-1} \Delta_{m-1}(X)$. Friedman calls this *incremental shrinkage*.
 
 ## Measuring model performance
@@ -561,8 +551,8 @@ We stopped at $M=3$ for purposes of a simple explanation of how boosting works. 
 
 As a side note, the idea of using a learning rate to reduce overfitting in models that optimize cost functions to learn, such as deep learning neural networks, is very common. Rather than using a constant learning rate, though, we can start the learning rate out energetically and gradually slow it down as the model approaches optimality; this proves very effective in practice.
 
-Ok, let's tie all of this together.  A gradient boosting regression model, $F_M(X)$, adds together an initial weak model, $f_0(X)$, that predicts the average $\vec y$ value, and the predictions of $M$ weak models, $\Delta_m(X)$, that nudge $\hat{\vec y}$ towards $\vec y$. Each $\Delta_m(X)$ is trained on a residual vector that measures the direction and magnitude of the true target $\vec y$ from the previous model, $\vec y - F_{m-1}(X)$. The new prediction $F_m(X)$ is the addition of the previous model and a nudge, $\Delta_m(X)$, multiplied by a weight and a learning rate: $F_m(X) = F_{m-1}(X) + \eta w_m \Delta_m(X)$.  The $w_m$ weights are computed by finding the weight that optimizes the mean squared error of the true target $\vec y$ and the proposed $F_m(X)$ model weighted by $w_m$. Hyper-parameters $\eta$ and $M$ are determined by grid search.
+Ok, let's tie all of this together.  A gradient boosting regression model, $F_M(X)$, adds together an initial weak model, $f_0(X)$, that predicts the average $\vec y$ value, and the predictions of $M$ weak models, $\Delta_m(X)$, that nudge $\hat{\vec y}$ towards $\vec y$. Each $\Delta_m(X)$ is trained on a residual vector that measures the direction and magnitude of the true target $\vec y$ from the previous model, $\vec y - F_{m-1}(X)$. The new prediction $F_m(X)$ is the addition of the previous model and a nudge, $\Delta_m(X)$, multiplied by a learning rate: $F_m(X) = F_{m-1}(X) + \eta \Delta_m(X)$.  Hyper-parameters $\eta$ and $M$ are determined by grid search.
 
 <img style="float:right;margin:0px 0px 0px 0;" src="images/congrats.png" width="15%"> If you more-or-less followed this discussion, then congratulations! You understand the key elements of gradient boosting for regression. That's all there is to it. Really. As we'll see in the next article, <a href="L1-loss.html">Gradient boosting: Heading in the right direction</a>, we can use a different direction vector than the residual, but the basic mechanism is the same. Using the sign of the residual rather than the residual vector itself, will have the effect of minimizing a different loss function than mean squared error (it'll minimize mean absolute value). 
 
-You might've heard that gradient boosting is very complex mathematically, but that's only if we care about proving correctness and convergence.  The mechanism of gradient boosting is straightforward. If you want to get funky with the math and see the cool relationship of gradient boosting with gradient descent, check out our last article in the series, <a href="descent.html">Gradient boosting performs gradient descent</a>.
+You might've heard that gradient boosting is very complex mathematically, but that's only if we care about generalizing gradient boosting with any direction vector, rather than the two we discussed in the first two articles of this series (residual and sign vectors). The mechanism of gradient boosting is straightforward. If you want to get funky with the math and see the cool relationship of gradient boosting with gradient descent, check out our last article in the series, <a href="descent.html">Gradient boosting performs gradient descent</a>.
