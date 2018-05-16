@@ -13,11 +13,11 @@ Optimizing the MAE means we should start with the median, not the mean, as our i
 \latex{{
 \begin{eqnarray*}
 F_0(\vec x) &=& f_0(\vec x)\\
-F_m(\vec x) &=& F_{m-1}(\vec x) + \eta w_m \Delta_m(\vec x)\\
+F_m(\vec x) &=& F_{m-1}(\vec x) + \eta \Delta_m(\vec x)\\
 \end{eqnarray*}
 }}
 
-Let's assume $\eta = 1$ so that it drops out of the equation to simplify our discussion, but keep in mind that it's an important hyper parameter you need to set in practice.  Recall that $F_m(\vec x)$ yields a predicted value, $y_i$, but $F_m(X)$ yields a predicted target vector, $\vec y$, one value for each $\vec x_i$ feature row-vector in matrix $X$. 
+Let's assume $\eta = 1$ so that it drops out of the equation to simplify our discussion, but keep in mind that it's an important hyper-parameter you need to set in practice.  Recall that $F_m(\vec x)$ yields a predicted value, $y_i$, but $F_m(X)$ yields a predicted target vector, $\vec y$, one value for each $\vec x_i$ feature row-vector in matrix $X$. 
 
 Here is the rental data again along with the initial $F_0$ model and the first sign vector:
 
@@ -142,7 +142,11 @@ plt.tight_layout()
 plt.show()
 </pyfig>
 
-But, without the distance to the target as part of our sign vector, the $w_m (\hat y - F_{m-1}(X))$ steps towards $\vec y$ would move very slowly unless we cranked up the $w_m$ weights. Unfortunately, if we crank up the weights arbitrarily, the weak model predictions might force the composite model predictions to oscillate around, but never reach, an accurate prediction. For example, if we set $w_m = 30$ and look at the weighted weak models for a few boosting stages, we see some $\hat y_i$ converging ($\vec x >= 900$) to $y_i$ and some $\hat y_i$ oscillating up and down ($\vec x < 900$). (Here we assume perfect $\Delta_m$ models, $\Delta_m = sign(y-F_{m-1})$, in order to focus on how the weights affect movement of $\hat{\vec y}$.)
+But, without the distance to the target as part of our sign vector, the $(\hat y - F_{m-1}(X))$ steps towards $\vec y$ would move very slowly unless we introduced a weight factor to the recurrence relation:
+
+$F_m(\vec x) = F_{m-1}(\vec x) + \eta w_m \Delta_m(\vec x)$
+
+Unfortunately, if we crank up such weights arbitrarily, the weak model predictions might force the composite model predictions to oscillate around, but never reach, an accurate prediction. For example, if we set $w_m = 30$ and look at the weighted weak models for a few boosting stages, we see some $\hat y_i$ converging ($\vec x >= 900$) to $y_i$ and some $\hat y_i$ oscillating up and down ($\vec x < 900$). (Here we assume perfect $\Delta_m$ models, $\Delta_m = sign(y-F_{m-1})$, in order to focus on how the weights affect movement of $\hat{\vec y}$.)
 
 <pyfig label=examples hide=true width="90%">
 f0 = df.rent.median()
@@ -232,11 +236,7 @@ plt.tight_layout()
 plt.show()
 </pyfig>
 
-A weight of 30 is just too coarse to allow tight convergence to $\vec y$ for all $y_i$ simultaneously.  When using the residual vector, each data point gets a weight tailored to its distance to the target.  The problem we have with the sign vector is that a single weight across all $\hat y_i$ only works if it's very small. But, that means very slow convergence. So, the solution is to use a different weight for each group of similar feature vectors.  Mathematically, that means changing the weight term from a multiplier to a parameter of the weak models and making $\vec w_m$ a vector of weights for each stage, $m$:
-
-\[
-F_m(\vec x) = F_{m-1}(\vec x) + \Delta_m(\vec x; \vec w_m)\\
-\]
+A weight of 30 is just too coarse to allow tight convergence to $\vec y$ for all $y_i$ simultaneously.  When using the residual vector, each data point gets a "weight", $y_i - F_{m-1}(\vec x_i)$, tailored to its distance to the target.  The problem we have with the sign vector is that a single weight across all $\hat y_i$ only works if it's very small. But, that means very slow convergence. So, the solution is to use a different weight for each group of similar feature vectors.
 
 Because we're using weak models based upon regression trees stubs, each stub leaf gets its own weight. If we manually pick some nice weight vectors, $\vec w_1=[20,100]$, $\vec w_2=[5,30]$, and $\vec w_3=[5,20]$, then we get the following table of partial results (with $\eta=1$):
 

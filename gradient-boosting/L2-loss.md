@@ -12,20 +12,14 @@
 
 In practice, we always have more than one observation, ($\vec x_i$, $y_i$), but it's easier to start out thinking about how to deal with a single observation. Later, we'll stack $N$ feature vectors as rows in a matrix, $X = [\vec x_1, \vec x_2, ..., \vec x_N]$, and targets into a vector, $\vec y = [y_1, y_2, ..., y_N]$ for $N$ observations.
 
-The form of $f_m(\vec x)$ functions we use for the weak models is often the same and the terms of $F_M(\vec x)$ differ only by a scale factor so it's convenient to add a scale term to the equation:
-
-\[
-\hat y = F_M(\vec x) = w_1 f_1(\vec x) + ...  + w_M f_M(\vec x) = \sum_{m=1}^M w_m f_m(\vec x)
-\]
-
 Mathematicians call this "additive modeling" and electrical engineers use it for decomposing signals into a collection of sine waves representing the frequency components (insert terrifying flashback to Fourier analysis here.) 
 
-It's often the case that an additive model can build the individual $f_m(\vec x)$ terms independently and in parallel, but that's not the case for boosting. Boosting constructs and adds weak models in a stage-wise fashion, one after the other, each one chosen to improve the overall model performance. The boosting strategy is greedy in the sense that choosing $f_m(\vec x)$ and $w_m$ never alters previous weights and functions. We can stop adding weak models when $\hat y = F_M(\vec x)$'s performance is good enough or when $w_m f_m(\vec x)$ doesn't add anything.  <!-- When we care about distinguishing between the various $\hat y$ for different values of $M$, we can use $\hat y^{(i)}$ to represent $F_m(\vec x)$. (We can't use the simpler notation $\hat y_m$ because that means target value $i$ within the $\hat {\vec y}$ vector.)-->
+It's often the case that an additive model can build the individual $f_m(\vec x)$ terms independently and in parallel, but that's not the case for boosting. Boosting constructs and adds weak models in a stage-wise fashion, one after the other, each one chosen to improve the overall model performance. The boosting strategy is greedy in the sense that choosing $f_m(\vec x)$ never alters previous functions. We can stop adding weak models when $\hat y = F_M(\vec x)$'s performance is good enough or when $f_m(\vec x)$ doesn't add anything.  <!-- When we care about distinguishing between the various $\hat y$ for different values of $M$, we can use $\hat y^{(i)}$ to represent $F_m(\vec x)$. (We can't use the simpler notation $\hat y_m$ because that means target value $i$ within the $\hat {\vec y}$ vector.)-->
 
-Because greedy strategies choose one component model at a time, you will often see boosting models expressed using this equivalent, recursive formulation:
+Because greedy strategies choose one weak model at a time, you will often see boosting models expressed using this equivalent, recursive formulation:
 
 \[
-F_m(\vec x) = F_{m-1} + w_m f_m(\vec x)
+F_m(\vec x) = F_{m-1} + f_m(\vec x)
 \]
 
 Boosting itself does not specify how to choose the weak learners or the number of models, $M$.   Boosting does not even specify the form of the $f_m(\vec x)$ models, which can be placeholders for linear regression models, regression trees, or any other model we want.  The form of the weak model dictates the form of the meta-model. For example, if all weak models are linear models, then the resulting meta-model is a simple linear model. If we use tiny regression trees as the weak models, the result is a forest of trees whose predictions are added together.
@@ -34,12 +28,12 @@ Let's see if we can design a strategy for picking weak models to create our own 
 
 ## The intuition behind gradient boosting
 
-To construct a boosted regression model, let's start by creating a crappy model, $f_0(\vec x)$, that predicts an initial approximation of $y$ given feature vector $\vec x$. Then, let's gradually nudge the overall $F_M(\vec x)$ model towards the known target value $y$ by adding one or more scaled tweaks, $w_m \Delta_m(\vec x)$:
+To construct a boosted regression model, let's start by creating a crappy model, $f_0(\vec x)$, that predicts an initial approximation of $y$ given feature vector $\vec x$. Then, let's gradually nudge the overall $F_M(\vec x)$ model towards the known target value $y$ by adding one or more tweaks, $\Delta_m(\vec x)$:
 
 \latex{{
 \begin{eqnarray*}
-\hat y & = & f_0(\vec x) + w_1 \Delta_1(\vec x) + w_2 \Delta_2(\vec x) + ...  + w_M \Delta_M(\vec x) \\
- & = & f_0(\vec x) + \sum_{m=1}^M w_m \Delta_m(\vec x)\\
+\hat y & = & f_0(\vec x) + \Delta_1(\vec x) + \Delta_2(\vec x) + ...  +  \Delta_M(\vec x) \\
+ & = & f_0(\vec x) + \sum_{m=1}^M  \Delta_m(\vec x)\\
  & = & F_M(\vec x)\\
 \end{eqnarray*}
 }}
@@ -49,7 +43,7 @@ Or, using a recurrence relation, let:
 \latex{{
 \begin{eqnarray*}
 F_0(\vec x) &=& f_0(\vec x)\\
-F_m(\vec x) &=& F_{m-1}(\vec x) + w_m \Delta_m(\vec x)\\
+F_m(\vec x) &=& F_{m-1}(\vec x) + \Delta_m(\vec x)\\
 \end{eqnarray*}
 }}
 
@@ -59,7 +53,7 @@ It might be helpful to think of this boosting approach as a golfer initially wha
 
 After the initial stroke, the golfer determines the appropriate nudge by computing the  difference between $y$ and the first approximation, $y - F_0(\vec x)$. (We can let $\vec x$ be the hole number 1-18, but it doesn't really matter since we're only working with one observation for illustration purposes.) This difference is usually called the *residual* or *residual vector*, but it's helpful for gradient boosting to think of this as the vector pointing from the current $\hat y$, $F_m(\vec x)$, prediction to the true $y$.  (In the <a href="L1-loss.html">second article</a>, we will look at just the sign of the direction, not magnitude; we'll call that the *sign vector* to distinguish from the residual vector.) Using the residual vector as our nudge, means training $\Delta_m (\vec x)$ on value $y - F_{m-1}(\vec x)$ for our base weak models.  As with any machine learning model, our $\Delta_m$ models will not have perfect recall and precision, so we should expect $\Delta_m$ to give a noisy prediction instead of exactly $y - F_{m-1}(\vec x)$. 
 
-As an example, let's say that the hole is at $y$=100 yards, $f_0(\vec x)=70$, and all of our weights are $w_m = 1$. Manually boosting, we might see a sequence like the following, depending on the imprecise $\Delta_m$ strokes made by the golfer:
+As an example, let's say that the hole is at $y$=100 yards, $f_0(\vec x)=70$. Manually boosting, we might see a sequence like the following, depending on the imprecise $\Delta_m$ strokes made by the golfer:
 
 \latex{{
 {\small
@@ -76,9 +70,9 @@ $F_4 = F_3 + \Delta_4$ & 95+5=100 & &  \\
 }
 }}
 
-A general GBM implementation would have to choose weights, $w_m$, appropriately to make sure $\hat y$ steps quickly towards $y$.  (In the cases described in the first two articles of this series, choosing the weights is straightforward, as we'll see.) An overall learning rate, $\eta$, is also typically used to speed up or slow down the overall approach of $\hat y$ to $y$, which helps to alleviate oscillation and reduces the potential for over fitting. (Ideally, the jumps would shorten as we approach, but GBMs seem to use a constant learning rate.)
+A GBM implementation would also support a so-called learning rate, $\eta$, that speeds up or slows down the overall approach of $\hat y$ to $y$, which helps to reduce the likelihood of overfitting. (Ideally, the jumps would shorten as we approach, but GBMs seem to use a constant learning rate.)
 
-To show how flexible this technique is, consider training the weak models on just the direction of $y$, rather than the magnitude and direction of $y$. In other words, we would train the $\Delta_m (\vec x)$ on $sign(y - \hat y)$, not $y - \hat y$. The $sign(z)$ (or $sgn(z)$) function expresses the direction as one of $\{-1, 0, +1\}$. We'd have to change how we pick the weights, but both $sign(y - \hat y)$ and $y - \hat y$ point us in the right direction. 
+To show how flexible this technique is, consider training the weak models on just the direction of $y$, rather than the magnitude and direction of $y$. In other words, we would train the $\Delta_m (\vec x)$ on $sign(y - \hat y)$, not $y - \hat y$. The $sign(z)$ (or $sgn(z)$) function expresses the direction as one of $\{-1, 0, +1\}$, but both $sign(y - \hat y)$ and $y - \hat y$ point us in suitable directions. 
 
 For the single observation case, both final $F_M$ models would converge towards the same value, but that's not the case for multiple observations. In the general case, these two direction vector definitions lead the overall model to converge on different predicted target $\hat {\vec y}$ columns; naturally, their hops through the predicted values would also be different. In <a href="descent.html">Gradient boosting performs gradient descent</a>, we'll show that these two direction vector definitions are optimizing different measures of model performance.
 
@@ -227,7 +221,7 @@ for x,y,yhat in zip(df.sqfeet,df.rent,df.F0):
 plt.show() 
 </pyfig>
 
-Next, we train a weak model, $\Delta_1$, to predict that  residual vector. A perfect model, $\Delta_1$, would yield exactly $\vec y-F_0(X)$, meaning that we'd be done after one step since $F_1(X)$ would be $F_1(X) = F_0(X) + \vec y - F_0(X)$, or just $\vec y$. Because it imperfectly captures that difference, $F_1(X)$ is still not quite $\vec y$, so we need to keep going for a few stages. Happily, the optimal weight is $w_m$ = 1 (see [Gradient boosting performs gradient descent](descent.html)) so that our recurrence relation for all feature vectors simplifies to:
+Next, we train a weak model, $\Delta_1$, to predict that  residual vector. A perfect model, $\Delta_1$, would yield exactly $\vec y-F_0(X)$, meaning that we'd be done after one step since $F_1(X)$ would be $F_1(X) = F_0(X) + \vec y - F_0(X)$, or just $\vec y$. Because it imperfectly captures that difference, $F_1(X)$ is still not quite $\vec y$, so we need to keep going for a few stages. Our recurrence relation with learning rate, $\eta$, is:
 
 \[
 F_m(X) = F_{m-1}(X) + \eta \Delta_m(X)
@@ -456,7 +450,7 @@ plt.tight_layout()
 plt.show()
 </pyfig>
 
-It's worth pointing out something subtle with the learning rate and the notation used in the graphs: $f_0 + \eta(\Delta_1 + \Delta_2 + \Delta_3)$. That makes it look like the learning rate could be applied all the way at the end as a global learning rate. Mathematically, the formula is correct but it hides the fact that each weak model, $\Delta_m$, is trained on $\vec y - F_{m-1}(X)$ and $F_{m-1}(X)$ is a function of the learning rate: $F_{m-1}(X) = F_{m-2}(X) + \eta w_{m-1} \Delta_{m-1}(X)$. Friedman calls this *incremental shrinkage*.
+It's worth pointing out something subtle with the learning rate and the notation used in the graphs: $f_0 + \eta(\Delta_1 + \Delta_2 + \Delta_3)$. That makes it look like the learning rate could be applied all the way at the end as a global learning rate. Mathematically, the formula is correct but it hides the fact that each weak model, $\Delta_m$, is trained on $\vec y - F_{m-1}(X)$ and $F_{m-1}(X)$ is a function of the learning rate: $F_{m-1}(X) = F_{m-2}(X) + \eta  \Delta_{m-1}(X)$. Friedman calls this *incremental shrinkage*.
 
 ## Measuring model performance
 
@@ -555,4 +549,4 @@ Ok, let's tie all of this together.  A gradient boosting regression model, $F_M(
 
 <img style="float:right;margin:0px 0px 0px 0;" src="images/congrats.png" width="15%"> If you more-or-less followed this discussion, then congratulations! You understand the key elements of gradient boosting for regression. That's all there is to it. Really. As we'll see in the next article, <a href="L1-loss.html">Gradient boosting: Heading in the right direction</a>, we can use a different direction vector than the residual, but the basic mechanism is the same. Using the sign of the residual rather than the residual vector itself, will have the effect of minimizing a different loss function than mean squared error (it'll minimize mean absolute value). 
 
-You might've heard that gradient boosting is very complex mathematically, but that's only if we care about generalizing gradient boosting with any direction vector, rather than the two we discussed in the first two articles of this series (residual and sign vectors). The mechanism of gradient boosting is straightforward. If you want to get funky with the math and see the cool relationship of gradient boosting with gradient descent, check out our last article in the series, <a href="descent.html">Gradient boosting performs gradient descent</a>.
+You might've heard that gradient boosting is very complex mathematically, but that's only if we care about generalizing gradient boosting to work with any direction vector, rather than the two we discuss in the first two articles of this series (residual and sign vectors). The mechanism of gradient boosting is straightforward. If you want to get funky with the math and see the cool relationship of gradient boosting with gradient descent, check out our last article in the series, <a href="descent.html">Gradient boosting performs gradient descent</a>.
