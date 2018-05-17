@@ -23,14 +23,14 @@ Here is the rental data again along with the initial $F_0$ model and the first s
 
 \latex{{
 {\small
-\begin{tabular}[t]{rrrr}
-{\bf sqfeet} & {\bf rent} & $F_0$ & $sign(\vec y$-$F_0)$ \\
+\begin{tabular}[t]{rrrrr}
+{\bf sqfeet} & {\bf rent} & $F_0$ & $\vec y$-$F_0$ & $sign(\vec y$-$F_0)$ \\
 \hline
-700 & 1125 & 1150 & -1 \\
-750 & 1150 & 1150 & 0 \\
-800 & 1135 & 1150 & -1 \\
-900 & 1300 & 1150 & 1 \\
-950 & 1350 & 1150 & 1 \\
+700 & 1125 & 1150 & -25 & -1\\
+750 & 1150 & 1150 & 0 & 0\\
+800 & 1135 & 1150 & -15 & -1\\
+900 & 1300 & 1150 & 150 & 1\\
+950 & 1350 & 1150 & 200 & 1\\
 \end{tabular}
 }
 }}
@@ -62,28 +62,45 @@ def draw_vector(ax, x, y, dx, dy, yrange):
     ad = -yrange if dy>=0 else yrange
     ax.plot([x+dx-4,x+dx], [ay+ad,ay], c='r', linewidth=.8)
     ax.plot([x+dx,x+dx+4], [ay,ay+ad], c='r', linewidth=.8)
-	
+    
 def data():
     df = pd.DataFrame(data={"sqfeet":[700,950,800,900,750]})
     df["rent"] = pd.Series([1125,1350,1135,1300,1150])
     df = df.sort_values('sqfeet')
     return df
 
+class Stub:
+    def __init__(self, X, residual, split):
+        """
+        We train on the residual or the sign vector but only to get
+        the regions in the leaves with y_i. Then we grab mean/median
+        of residual, y_i - F_{m-1}, in that region (L2/L1).
+        """
+        self.X, self.residual, self.split = X, residual, split
+        self.left = self.residual[self.X<self.split]
+        self.right = self.residual[self.X>=self.split]
+        
+    def l2predict(self,x):
+        lmean = np.mean(self.left)
+        rmean = np.mean(self.right)
+        return lmean if x < self.split else rmean
+        
+    def l1predict(self,x):
+        lmed = np.median(self.left)
+        rmed = np.median(self.right)
+        return lmed if x < self.split else rmed
+    
+class GBM:
+    def __init__(self, f0, stubs, eta):
+        self.f0, self.stubs, self.eta = f0, stubs, eta
+        
+    def l1predict(self, x):
+        delta = 0.0
+        for t in self.stubs:
+            delta += eta * t.l1predict(x)
+        return self.f0 + delta
+		
 df = data()
-
-def stub_predict(x_train, y_train, split):
-    left = y_train[x_train<split]
-    right = y_train[x_train>split]
-    lmean = np.mean(left)
-    rmean = np.mean(right)    
-#     lw,rw = w
-    lw,rw = 1,1
-    return np.array([lw*lmean if x<split else rw*rmean for x in x_train])
-
-eta = 1.0
-splits = [None,850, 850, 725] # manually pick them
-w = [None, (20,100), (5,30), (5,20)]
-stages = 4
 
 def boost(df, xcol, ycol, splits, eta, stages):
     """
@@ -93,19 +110,26 @@ def boost(df, xcol, ycol, splits, eta, stages):
     f0 = df[ycol].median()
     df['F0'] = f0
 
-    for s in range(1,stages):
-        # print("Weight", w[s])
-        df[f'dir{s}'] = np.sign(df[ycol] - df[f'F{s-1}'])
-        df[f'delta{s}'] = stub_predict(df[xcol], df[f'dir{s}'], splits[s])
-        df[f'wdelta{s}'] = df[f'dir{s}'] * 30
-        df[f'F{s}'] = df[f'F{s-1}'] + eta * df[f'wdelta{s}']
+    stubs = []
+    for s in range(1,M+1):
+        df[f'res{s}'] = df[ycol] - df[f'F{s-1}']
+        df[f'sign{s}'] = np.sign(df[f'res{s}'])
+        t = Stub(df.sqfeet, df[f'res{s}'], splits[s])
+        stubs.append(t)
+        df[f'delta{s}'] = [t.l1predict(x) for x in df[xcol]]
+        df[f'F{s}'] = df[f'F{s-1}'] + eta * df[f'delta{s}']
 
-    mse = [mean_squared_error(df[ycol], df['F'+str(s)]) for s in range(stages)]
-    mae = [mean_absolute_error(df[ycol], df['F'+str(s)]) for s in range(stages)]
-    return mse, mae
+    return GBM(f0, stubs, eta)
 
-mse,mae = boost(df, 'sqfeet', 'rent', splits, eta, stages)
-df['deltas'] = df[['delta1','delta2','delta3']].sum(axis=1) # sum deltas
+M = 3
+eta = 1
+splits = [None,850, 925, 725] # manually pick them
+boost(df, 'sqfeet', 'rent', splits, eta, M)
+
+mse = [mean_squared_error(df.rent, df['F'+str(s)]) for s in range(M+1)]
+mae = [mean_absolute_error(df.rent, df['F'+str(s)]) for s in range(M+1)]
+print(mse)
+print(mae)
 </pyeval>
 
 Visually, we can see that the first sign vector has components pointing in the right direction of the true target from $f_0(X)$:
@@ -142,143 +166,9 @@ plt.tight_layout()
 plt.show()
 </pyfig>
 
-But, without the distance to the target as part of our sign vector, the $(\hat y - F_{m-1}(X))$ steps towards $\vec y$ would move very slowly unless we introduced a weight factor to the recurrence relation:
-
-$F_m(\vec x) = F_{m-1}(\vec x) + \eta w_m \Delta_m(\vec x)$
-
-Unfortunately, if we crank up such weights arbitrarily, the weak model predictions might force the composite model predictions to oscillate around, but never reach, an accurate prediction. For example, if we set $w_m = 30$ and look at the weighted weak models for a few boosting stages, we see some $\hat y_i$ converging ($\vec x >= 900$) to $y_i$ and some $\hat y_i$ oscillating up and down ($\vec x < 900$). (Here we assume perfect $\Delta_m$ models, $\Delta_m = sign(y-F_{m-1})$, in order to focus on how the weights affect movement of $\hat{\vec y}$.)
-
-<pyfig label=examples hide=true width="90%">
-f0 = df.rent.median()
-fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(11, 4), sharey=True)
-
-# NUMBER 1
-
-ax = axes[0]
-ax.set_ylabel(r"Rent", fontsize=14)
-line1, = ax.plot(df.sqfeet,df.rent,'o', linewidth=.8, markersize=4, label="$y$")
-# fake a line to get smaller red dot
-line2, = ax.plot([0,0],[0,0], c='r', markersize=4, label=r"$w_1 \Delta_1$", linewidth=.8)
-ax.plot([df.sqfeet.min()-10,df.sqfeet.max()+10], [f0,f0],
-         linewidth=.8, linestyle='--', c='k')
-ax.set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
-ax.set_ylim(df.rent.min()-10, df.rent.max()+20)
-ax.text(815, f0+10, r"$f_0({\bf x})$", fontsize=18)
-
-ax.set_xlabel(r"SqFeet", fontsize=14)
-
-# draw arrows
-for x,y,yhat,d in zip(df.sqfeet,df.rent,df.F0,df.wdelta1):
-    draw_vector(ax, x, yhat, 0, d, df.rent.max()-df.rent.min())
-
-ax.legend(handles=[line2], fontsize=16,
-          loc='upper left', 
-          labelspacing=.1,
-          handletextpad=.2,
-          handlelength=.7,
-          frameon=True)
-
-# NUMBER 2
-
-ax = axes[1]
-line1, = ax.plot(df.sqfeet,df.rent,'o', linewidth=.8, markersize=4, label="$y$")
-# fake a line to get smaller red dot
-line2, = ax.plot([0,0],[0,0], c='r', markersize=4, label=r"$w_2 \Delta_2$", linewidth=.8)
-ax.plot([df.sqfeet.min()-10,df.sqfeet.max()+10], [f0,f0],
-         linewidth=.8, linestyle='--', c='k')
-ax.set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
-ax.set_ylim(df.rent.min()-10, df.rent.max()+20)
-ax.text(815, f0+10, r"$f_0({\bf x})$", fontsize=18)
-
-ax.set_xlabel(r"SqFeet", fontsize=14)
-
-# draw arrows
-for x,y,yhat,d in zip(df.sqfeet,df.rent,df.F1,df.wdelta2):
-    draw_vector(ax, x, yhat, 0, d, df.rent.max()-df.rent.min())
-    
-# ax.text(710,1250, "$m=1$", fontsize=18)
-
-ax.legend(handles=[line2], fontsize=16,
-          loc='upper left', 
-          labelspacing=.1,
-          handletextpad=.2,
-          handlelength=.7,
-          frameon=True)
-
-# NUMBER 3
-
-ax = axes[2]
-line1, = ax.plot(df.sqfeet,df.rent,'o', linewidth=.8, markersize=4, label="$y$")
-# fake a line to get smaller red dot
-line2, = ax.plot([0,0],[0,0], c='r', markersize=4, label=r"$w_3 \Delta_3$", linewidth=.8)
-ax.plot([df.sqfeet.min()-10,df.sqfeet.max()+10], [f0,f0],
-         linewidth=.8, linestyle='--', c='k')
-ax.set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
-ax.set_ylim(df.rent.min()-10, df.rent.max()+20)
-ax.text(815, f0+10, r"$f_0({\bf x})$", fontsize=18)
-
-ax.set_xlabel(r"SqFeet", fontsize=14)
-
-# draw arrows
-for x,y,yhat,d in zip(df.sqfeet,df.rent,df.F2,df.wdelta3):
-    draw_vector(ax, x, yhat, 0, d, df.rent.max()-df.rent.min())
-    
-# ax.text(710,1250, "$m=1$", fontsize=18)
-
-ax.legend(handles=[line2], fontsize=16,
-          loc='upper left', 
-          labelspacing=.1,
-          handletextpad=.2,
-          handlelength=.7,
-          frameon=True)
-
-plt.tight_layout()
-plt.show()
-</pyfig>
-
-A weight of 30 is just too coarse to allow tight convergence to $\vec y$ for all $y_i$ simultaneously.  When using the residual vector, each data point gets a "weight", $y_i - F_{m-1}(\vec x_i)$, tailored to its distance to the target.  The problem we have with the sign vector is that a single weight across all $\hat y_i$ only works if it's very small. But, that means very slow convergence. So, the solution is to use a different weight for each group of similar feature vectors.
+But, without the distance to the target as part of our sign vector, the $(\hat y - F_{m-1}(X))$ steps towards $\vec y$ would move very slowly. We need to weight the $\Delta_m$ predictions so that the algorithm takes bigger steps. Unfortunately, we can't use a single weight, like $w_m \Delta_m(\vec x)$, because it might force the composite model predictions to oscillate around, but never reach, an accurate prediction. A global weight per stage is just too coarse to allow tight convergence to $\vec y$ for all $y_i$ simultaneously.  When using the residual vector, each data point gets a "weight", $y_i - F_{m-1}(\vec x_i)$, tailored to its distance to the target. So, the solution is to use a different weight for each group of similar feature vectors.
 
 Because we're using weak models based upon regression trees stubs, each stub leaf gets its own weight. If we manually pick some nice weight vectors, $\vec w_1=[20,100]$, $\vec w_2=[5,30]$, and $\vec w_3=[5,20]$, then we get the following table of partial results (with $\eta=1$):
-
-<!-- Separate weight per leaf -->
-<pyeval label=examples hide=true>
-def stub_predict(x_train, y_train, split):
-    left = y_train[x_train<split]
-    right = y_train[x_train>split]
-    lmean = np.mean(left)
-    rmean = np.mean(right)    
-#     lw,rw = w
-    lw,rw = 1,1
-    return np.array([lw*lmean if x<split else rw*rmean for x in x_train])
-
-eta = 1.0
-splits = [None,850, 850, 725] # manually pick them
-w = [None, (20,100), (5,30), (5,20)]
-stages = 4
-
-def boost(df, xcol, ycol, splits, eta, stages):
-    """
-    Update df to have direction_m, delta_m, F_m.
-    Return MSE, MAE
-    """
-    f0 = df[ycol].median()
-    df['F0'] = f0
-
-    for s in range(1,stages):
-        # print("Weight", w[s])
-        df[f'dir{s}'] = np.sign(df[ycol] - df[f'F{s-1}'])
-        df[f'delta{s}'] = stub_predict(df[xcol], df[f'dir{s}'], splits[s])
-        weights = np.array([w[s][0] if x<splits[s] else w[s][1] for x in df[xcol]])
-        df[f'wdelta{s}'] = df[f'delta{s}'] * weights
-        df[f'F{s}'] = df[f'F{s-1}'] + eta * df[f'wdelta{s}']
-
-    mse = [mean_squared_error(df[ycol], df['F'+str(s)]) for s in range(stages)]
-    mae = [mean_absolute_error(df[ycol], df['F'+str(s)]) for s in range(stages)]
-    return mse, mae
-
-mse,mae = boost(df, 'sqfeet', 'rent', splits, eta, stages)
-df['deltas'] = df[['delta1','delta2','delta3']].sum(axis=1) # sum deltas
-</pyeval>
 
 <!--
 <pyeval label="examples" hide=true>
@@ -301,78 +191,20 @@ print(o)
 {\small
 \setlength{\tabcolsep}{0.5em}
 \begin{tabular}[t]{rrrrrrrrrrr}
-$\Delta_1$ & $\Delta_1(\vec x$;$\vec w_1)$ & $F_1$ & $\vec y$-$F_1$ & $\Delta_2$ & $\Delta_2(\vec x$;$\vec w_2)$ & $F_2$ & $\vec y$-$F_2$ & $\Delta_3$ & $\Delta_3(\vec x$;$\vec w_3)$ & $F_3$\\
+&&& $sign$ &&&& $sign$\vspace{-1mm}\\  
+$\Delta_1$ & $F_1$ & $\vec y$-$F_1$ & $\vec y$-$F_1$ & $\Delta_2$ & $F_2$ & $\vec y$-$F_2$ & $\vec y$-$F_2$ & $\Delta_3$ & $F_3$\\
 \hline
--0.67 & -13.33 & 1136.67 & -1 & -0.33 & -1.67 & 1135 & -1 & -1 & -5 & 1130\\
--0.67 & -13.33 & 1136.67 & 1 & -0.33 & -1.67 & 1135 & 1 & 0.75 & 15 & 1150\\
--0.67 & -13.33 & 1136.67 & -1 & -0.33 & -1.67 & 1135 & 0 & 0.75 & 15 & 1150\\
-1 & 100 & 1250 & 1 & 1 & 30 & 1280 & 1 & 0.75 & 15 & 1295\\
-1 & 100 & 1250 & 1 & 1 & 30 & 1280 & 1 & 0.75 & 15 & 1295\\
+-15 & 1135 & -10 & -1 & -5 & 1130 & -5 & -1 & -5 & 1125\\
+-15 & 1135 & 15 & 1 & -5 & 1130 & 20 & 1 & 2.50 & 1132.50\\
+-15 & 1135 & 0 & 0 & -5 & 1130 & 5 & 1 & 2.50 & 1132.50\\
+175 & 1325 & -25 & -1 & -5 & 1320 & -20 & -1 & 2.50 & 1322.50\\
+175 & 1325 & 25 & 1 & 25 & 1350 & 0 & 0 & 2.50 & 1352.50\\
 \end{tabular}
 }
 }}
 
-Let's examine the sign vectors and the imperfect $\Delta_m$ weak model regression tree stumps visually (with stub split points chosen manually as 850, 850, 725):
+(with stub split points chosen manually as 850, 850, 725):
 
-<pyfig label=examples hide=true width="90%">
-def draw_stub(ax, x_train, y_train, y_pred, split, stage, locs):
-    line1, = ax.plot(x_train, y_train, 'o',
-                     markersize=4,
-                     label=f"$sign(y-F_{stage-1})$")
-    label = r"$\Delta_"+str(stage)+r"({\bf x})$"
-    left = y_pred[x_train<split]
-    right = y_pred[x_train>split]
-    lmean = np.mean(left)
-    rmean = np.mean(right)
-    line2, = ax.plot([x_train.min()-10,split], [lmean,lmean],
-             linewidth=.8, linestyle='--', c='k', label=label)
-    ax.plot([split,x_train.max()+10], [rmean,rmean],
-             linewidth=.8, linestyle='--', c='k')
-    ax.plot([split,split], [lmean,rmean],
-             linewidth=.8, linestyle='--', c='k')
-    ax.plot([x_train.min()-10,x_train.max()+10], [0,0],
-             linewidth=.8, linestyle=':', c='k')
-    ax.legend(handles=[line1,line2], fontsize=15,
-              loc=locs[stage-1], 
-              labelspacing=.1,
-              handletextpad=.2,
-              handlelength=.7,
-              frameon=True)
-
-def draw_residual(ax, df, stage):
-    for x,d0,delta in zip(df.sqfeet,df[f'dir{stage}'],df[f'delta{stage}']):
-#         print(x, d0, delta)
-        draw_vector(ax, x, d0, 0, delta-d0, 2)
-#         if delta-d0!=0:
-#             ax.arrow(x, d0, 0, delta-d0,
-#                       fc='r', ec='r',
-#                       linewidth=0.8,
-#                      )
-
-fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(11, 3.5), sharey=True, sharex=True)
-
-ax = axes[0]
-axes[0].set_ylabel(r"Direction in {-1,0,1}", fontsize=14)
-axes[0].set_yticks([-1,-.5,0,.5,1])
-for a in range(3):
-    axes[a].set_xlabel(r"SqFeet", fontsize=14)
-    axes[a].set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
-
-locs = ['upper left','lower right','lower right']
-draw_stub(axes[0], df.sqfeet, df.dir1, df.delta1, splits[1], stage=1, locs=locs)
-#draw_residual(axes[0], df, stage=1)
-
-draw_stub(axes[1], df.sqfeet, df.dir2, df.delta2, splits[2], stage=2, locs=locs)
-#draw_residual(axes[1], df, stage=2)
-
-draw_stub(axes[2], df.sqfeet, df.dir3, df.delta3, splits[3], stage=3, locs=locs)
-#draw_residual(axes[2], df, stage=3)
-
-plt.tight_layout()
-        
-plt.savefig('/tmp/t.svg')
-plt.show()
-</pyfig>
 
 The blue dots are the sign vector elements used to train $\Delta_m$ weak models, the dashed lines are the predictions made by $\Delta_m$, and the dotted line is the origin at 0. The $\Delta_m$  models have a hard time predicting the sign vectors, as you can see, because the sign vector elements are dissimilar in one leaf of each stub. Here are the stubs that generate those dashed lines:
 
@@ -381,7 +213,6 @@ The blue dots are the sign vector elements used to train $\Delta_m$ weak models,
 Despite the imprecision of the weak models, the weighted $\Delta_m$ predictions nudge $\hat{\vec y}$ closer and closer to the true $\vec y$. The following figure illustrates how using two different weights for the same model, one per stub leaf, allows more control over steps to the target than a single weight allows.
 
 <pyfig label=examples hide=true width="90%">
-f0 = df.rent.median()
 fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(11, 4), sharey=True)
 
 def draw_stage_residual(ax, df, stage):
@@ -391,6 +222,7 @@ def draw_stage_residual(ax, df, stage):
 # PLOT 1
 
 ax = axes[0]
+f0 = df.rent.median()
 line1, = ax.plot(df.sqfeet,df.rent,'o', linewidth=.8, markersize=4, label="$y$")
 draw_stage_residual(ax, df, stage=1)
 # fake a line to get smaller red dot
@@ -408,7 +240,7 @@ ax.legend(handles=[line2], fontsize=15,
           handletextpad=.2,
           handlelength=.7,
           frameon=True,
-          labels=["$\Delta_1({\\bf x}; {\\bf w}_1=[20,100])$"])
+          labels=["$\Delta_1({\\bf x})$"])
 
 # PLOT 2
 
@@ -429,7 +261,7 @@ ax.legend(handles=[line2], fontsize=15,
           handletextpad=.2,
           handlelength=.7,
           frameon=True,
-          labels=["$\Delta_2({\\bf x}; {\\bf w}_2=[5,30])$"])
+          labels=["$\Delta_2({\\bf x})$"])
 
 # PLOT 3
 
@@ -450,7 +282,7 @@ ax.legend(handles=[line2], fontsize=15,
           handletextpad=.2,
           handlelength=.7,
           frameon=True,
-          labels=["$\Delta_3({\\bf x}; {\\bf w}_3=[5,20])$"])
+          labels=["$\Delta_3({\\bf x})$"])
 
 plt.tight_layout()
 plt.show()
@@ -464,68 +296,38 @@ The following sequence of diagrams shows the composite model predictions versus 
 
 <pyfig label=examples hide=true width="90%">
 df = data()
-eta = 1
-mse,mae = boost(df, 'sqfeet', 'rent', splits, eta, stages)
-df['deltas12'] = eta * df[['delta1','delta2']].sum(axis=1)
-df['deltas123'] = eta * df[['delta1','delta2','delta3']].sum(axis=1)
-df['deltas'] = eta * df[['wdelta1','wdelta2','wdelta3']].sum(axis=1) # sum deltas
+gbm = boost(df, 'sqfeet', 'rent', splits, eta, M)
+  
+fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(11.1, 3.5))
 
-# Iterate through F_'stage', finding split points in predicted rent
-# and create coordinate list to draw lines
-def get_combined_splits(stage):
-    x_prev = np.min(df.sqfeet)
-    y_prev = np.min(df[f'F{stage}'])
-    X = df.sqfeet.values
-    coords = []
-    for i,y_hat in enumerate(df[f'F{stage}'].values):
-        if y_hat!=y_prev:
-            mid = (X[i]+X[i-1])/2
-            coords.append((mid,y_prev))
-            coords.append((mid,y_hat))
-            coords.append((X[i],y_hat))
-        else:
-            coords.append((X[i],y_hat))
-        y_prev = y_hat
-    return coords
+def plot_composite(ax, stage):
+    line1, = ax.plot(df.sqfeet,df.rent, 'o')
 
-def plot_combined(ax, stage, coords):
-    line1, = ax.plot(df.sqfeet,df.rent, 'o', label=r'$y$')
-    prev = None
-    for x,y in coords:
-        if prev is not None:
-            line2, = ax.plot([prev[0],x], [prev[1],y], linewidth=.8,
-                             linestyle='--', c='k')
-        prev = (x,y)
-
-    ax.set_xlabel(r"SqFeet", fontsize=14)
-
-    ax.set_yticks(np.arange(1150,1351,50))
-    ax.set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
+    sqfeet_range = np.arange(700-10,950+10,.2)
+    y_pred = []
+    for x in sqfeet_range:
+        delta = 0.0
+        for t in gbm.stubs[0:stage]:
+            delta += eta * t.l1predict(x)
+        y_pred.append( f0 + delta )
+    line2, = ax.plot(sqfeet_range, y_pred, linewidth=.8, linestyle='--', c='k')
     labs = ['\Delta_1', '\Delta_2', '\Delta_3']
     if stage==1:
-        label = r"$f_0 + \Delta_1$"
+        label = r"$f_0 + \eta \Delta_1$"
     else:
-        label=r"$f_0 + "+'+'.join(labs[:stage])+"$"
+        label=r"$f_0 + \eta("+'+'.join(labs[:stage])+")$"
+
     ax.legend(handles=[line2], fontsize=16,
               loc='center left', 
               labelspacing=.1,
               handletextpad=.2,
               handlelength=.7,
               frameon=True,
-             labels = [label])
-    ax.text(800,1325, f"$F_{stage}$", fontsize=16)
+              labels=[label])
 
-fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(11, 3), sharey=True)
-
-axes[0].set_ylabel(r"Rent", fontsize=14)
-coords = get_combined_splits(1)
-plot_combined(axes[0], 1, coords)
-
-coords = get_combined_splits(2)
-plot_combined(axes[1], 2, coords)
-
-coords = get_combined_splits(3)
-plot_combined(axes[2], 3, coords)
+plot_composite(axes[0], 1)
+plot_composite(axes[1], 2)
+plot_composite(axes[2], 3)
 
 plt.tight_layout()
 plt.show()
