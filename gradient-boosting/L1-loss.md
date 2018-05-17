@@ -543,4 +543,8 @@ L(\vec y,F_M(X)) = \frac{1}{N} \sum_{i=1}^{N} |y_i - F_M(\vec x_i)|
 
 As you can see, using the sign vector instead of the residual factor does not change the mechanism behind gradient boosting. The only difference is that the sequence of composite model predictions, $F_m(X)$, sweep through different points in $N$-space and the algorithm converges on different points. ($\vec y$ and $F_m(X)$ are in $N$-space because there are $N$ observations.)
 
-In the next and final article, [Gradient boosting performs gradient descent](descent.html) we show how gradient boosting leads to the minimization of different loss functions, depending on the direction vector used in the algorithm.
+In the next and final article, [Gradient boosting performs gradient descent](descent.html) we show how gradient boosting leads to the minimization of different loss functions, depending on the direction vecto r used in the algorithm.
+
+## New notes
+
+We train on the residual or the sign vector but only to get the regions in the leaves with y_i. Then we grab mean/median of y_i - F_{m-1} in that region.
