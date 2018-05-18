@@ -209,6 +209,9 @@ ax.set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
 ax.set_ylim(df.rent.min()-100, df.rent.max()+20)
 ax.text(815, f0+10, r"$f_0({\bf x})$", fontsize=18)
 
+ax.arrow(830,1050, -20, 0, linewidth=.8, head_width=6, head_length=4)
+ax.text(834, 1050-8, "Oops!", fontsize=14)
+
 ax.set_ylabel(r"Rent ($y$)", fontsize=14)
 ax.set_xlabel(r"SqFeet (${\bf x}$)", fontsize=14)
 
@@ -229,17 +232,17 @@ plt.show()
 
 When training weak models on the residual vector, each element of the observation residual vector gets its own "weight," $y_i - F_{m-1}(\vec x_i)$, tailored to its distance to the target. That gives a hint that we should use multiple weights here too. We  shouldn't compute a weight for each observation, though, because then we're right back to the residual vector solution from the first article. So, let's try computing a weight for each group of similar feature vectors.  
 
-Since we're using regression tree stabs for our weak models, we can give each stub leaf its own weight, but how do we compute those weights? The graph of rent versus sqfeet clearly shows that we need a small value for the left stub leaf and a much larger value for the right stub leaf. The goal should be to have the next $F_1$ model step into the middle of the $y$ rent values in each group (leaf) of observations, which means jumping to the median $y$ in each group. The weight we need is the difference vector that gets us from $f_0$ to the median $y$ for each leaf group, which is just the median of $\vec y - f_0$ restricted to the observations in the leaf.  Equivalently, we can think of this as having each stub leaf predict the median residual of the observations in that leaf. This is a bit weird and an incredibly subtle point, so let's spell it out in an aside.
+Since we're using regression tree stabs for our weak models, we can give each stub leaf its own weight, but how do we compute those weights? The graph of rent versus sqfeet clearly shows that we need a small value for the left stub leaf and a much larger value for the right stub leaf. The goal should be to have the next $F_1$ model step into the middle of the $y$ rent values in each group (leaf) of observations, which means jumping to the median $y$ in each group. The weight we need for each leaf is the difference vector that gets us from $f_0$ to the median $y$ for each leaf group, which is just the median of $\vec y - f_0$ residual but restricted to the observations in the leaf. The signed vector already has the direction so let's use the absolute value of the median, meaning that our weights in this case are always positive. The sign vector elements will tell us which way to step. Equivalently, we can think of this process as having each stub leaf predict the median residual of the observations in that leaf (in which case we don't need the absolute value). This is a bit weird and an incredibly subtle point, so let's emphasize it in a callout:
 
 <aside title="The difference between MSE and MAE GBM trees">
 
 GBMs that optimize  MSE ($L_2$ loss) and MAE ($L_1$ loss) both train regression trees, $\Delta_m$, on direction vectors.  The first difference is that MSE trains trees on residual vectors and MAE trains trees on sign vectors. The goal of training the tree is to group similar observations into leaf nodes in both cases.  Because they are training on different data, the trees will group the observations in the training data differently. The actual training of the weak model trees always computes split points by trying to minimize the squared difference of target values within the two groups, even in the MAE case.  The second difference is that an MSE tree leaf predicts the average of the residuals, $y_i - F_{m-1}(\vec x_i)$, values for all $i$ observations in that leaf whereas an MAE tree leaf predicts the median of the residual. Both are predicting residuals. Weird, right?
 
-Just to drive this home, MSE trains on residual vectors and the leaves predict the average residual. MAE trains on sign vectors, but the leaves predict residuals like MSE, albeit the median, not the average residual. It's weird because models don't typically train on one space (sign values) and predict values in a different space (residuals). It's perhaps easier to think of MAE as training on sign vectors and predicting sign values (-1, 0, +1) but then weighting that by the median residual.
+Just to drive this home, MSE trains on residual vectors and the leaves predict the average residual. MAE trains on sign vectors, but the leaves predict residuals like MSE, albeit the median, not the average residual. It's weird because models don't typically train on one space (sign values) and predict values in a different space (residuals). It's perhaps easier to think of MAE as training on sign vectors and predicting sign values (-1, 0, +1) but then weighting that prediction by the absolute value of the median of the residual.
 
 </aside>
 
-weight 15 for the left leaf and 175 for the second leaf:
+The residual vector $\vec y - F_0$ has values -25, 0, -15 for the left leaf, which has a median of 15, so that is the weight for the left leaf. The right leaf has residuals 150 and 200, so the weight of the right leaf is 175.  The dashed line in the following graph illustrates composite model $F_1$.
 
 <pyfig label=examples hide=true width="40%">
 fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(5,3.8))
@@ -252,8 +255,8 @@ ax.plot([df.sqfeet.min()-10,df.sqfeet.max()+10], [f0,f0],
 for x,d0,delta in zip(df.sqfeet,df[f'F0'],df[f'F1']):
     draw_vector(ax, x, d0, 0, delta-d0, df.rent.max()-df.rent.min())
 
-ax.text(708, 1250, r"$f_0 + \Delta_1({\bf x}; {\bf w}_1)$", fontsize=18)
-ax.text(708, 1215, r"${\bf w}_1 = [15, 175]$", fontsize=16)
+ax.text(700-10, 1340, r"$F_0 = f_0 + \Delta_1({\bf x}; {\bf w}_1)$", fontsize=18)
+ax.text(700-10, 1315, r"${\bf w}_1 = [15, 175]$", fontsize=16)
 ax.text(900, f0-20, r"$f_0({\bf x})$", fontsize=18)
 
 ax.set_ylabel(r"Rent ($y$)", fontsize=14)
@@ -263,6 +266,8 @@ plt.tight_layout()
 
 plt.show()
 </pyfig>
+
+To indicate that the weak models each have a vector of weights, the graph use notation $\Delta_m(\vec x; \vec w_m)$.
 
 Let's eyeball two weights we need for the first weak model 
 
