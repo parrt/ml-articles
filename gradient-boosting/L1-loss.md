@@ -19,7 +19,7 @@ F_m(\vec x) &=& F_{m-1}(\vec x) + \eta \Delta_m(\vec x)\\
 
 Let's assume $\eta = 1$ so that it drops out of the equation to simplify our discussion, but keep in mind that it's an important hyper-parameter you need to set in practice.  Recall that $F_m(\vec x)$ yields a predicted value, $y_i$, but $F_m(X)$ yields a predicted target vector, $\vec y$, one value for each $\vec x_i$ feature row-vector in matrix $X$. 
 
-Here is the rental data again along with the initial $F_0$ model and the first sign vector:
+Here is the rental data again along with the initial $F_0$ model, the first residual, and the first sign vector:
 
 \latex{{
 {\small
@@ -99,7 +99,33 @@ class GBM:
         for t in self.stubs:
             delta += eta * t.l1predict(x)
         return self.f0 + delta
-		
+
+def plot_composite(ax, gbm, stage, legend=True):
+    line1, = ax.plot(df.sqfeet,df.rent, 'o')
+
+    sqfeet_range = np.arange(700-10,950+10,.2)
+    y_pred = []
+    for x in sqfeet_range:
+        delta = 0.0
+        for t in gbm.stubs[0:stage]:
+            delta += eta * t.l1predict(x)
+        y_pred.append( f0 + delta )
+    line2, = ax.plot(sqfeet_range, y_pred, linewidth=.8, linestyle='--', c='k')
+    labs = ['\Delta_1', '\Delta_2', '\Delta_3']
+    if stage==1:
+        label = r"$f_0 + \eta \Delta_1$"
+    else:
+        label=r"$f_0 + \eta("+'+'.join(labs[:stage])+")$"
+
+    if legend:
+        ax.legend(handles=[line2], fontsize=16,
+                  loc='center left', 
+                  labelspacing=.1,
+                  handletextpad=.2,
+                  handlelength=.7,
+                  frameon=True,
+                  labels=[label])
+				  		
 df = data()
 
 def boost(df, xcol, ycol, splits, eta, stages):
@@ -124,12 +150,10 @@ def boost(df, xcol, ycol, splits, eta, stages):
 M = 3
 eta = 1
 splits = [None,850, 925, 725] # manually pick them
-boost(df, 'sqfeet', 'rent', splits, eta, M)
+gbm = boost(df, 'sqfeet', 'rent', splits, eta, M)
 
 mse = [mean_squared_error(df.rent, df['F'+str(s)]) for s in range(M+1)]
 mae = [mean_absolute_error(df.rent, df['F'+str(s)]) for s in range(M+1)]
-print(mse)
-print(mae)
 </pyeval>
 
 Visually, we can see that the first sign vector has components pointing in the right direction of the true target from $f_0(X)$:
@@ -166,7 +190,9 @@ plt.tight_layout()
 plt.show()
 </pyfig>
 
-But, without the distance to the target as part of our sign vector, the $(\hat y - F_{m-1}(X))$ steps towards $\vec y$ would move very slowly. We need to weight the $\Delta_m$ predictions so that the algorithm takes bigger steps. Unfortunately, we can't use a single weight, like $w_m \Delta_m(\vec x)$, because it might force the composite model predictions to oscillate around, but never reach, an accurate prediction. A global weight per stage is just too coarse to allow tight convergence to $\vec y$ for all $y_i$ simultaneously. For example, if we set $w_1=100$ to get the fourth and fifth data points from 1150 to 1250 in one step, that would also push the other points very far below their true targets. Let's assume a split of 850 for the $\Delta_1$ regression stub because that groups the $y$ values into two similar groups (lower and higer values). That stub predicts -1 for $\vec x<850$ and 1 for $\vec x>=850$, then we scale by $w_1 = 100$ and get the following steps shown as red arrows:
+<img style="float:right;margin:0px 0px 0px 0;" src="images/stubs-mae-delta1.svg" width="27%">  As we did in the first article, our goal is to create a series of nudges, $\Delta_m$, that gradually shift our initial approximation, $f_0(X)$, towards the true target rent vector, $\vec y$. The first stub, $\Delta_1$, should be trained on $sign(\vec y - F_0(X))$ and let's choose a split point of 850 because that groups the $y$ values into two similar (low variance) groups, lower and higher values. Because we are dealing with $L_1$ absolute difference and not $L_2$ squared difference, stubs should predict the median, not the mean, of the observations in each leaf. That means $\Delta_1$ would predict  -1 for $\vec x$<850 and 1 for $\vec x$>=850.
+
+Without the distance to the target as part of our $\Delta_m$ nudges, however, the composite model $F_m(X)$ would step towards rent target vector $\vec y$ very slowly, one dollar at a time. We need to weight the $\Delta_m$ predictions so that the algorithm takes bigger steps. Unfortunately, we can't use a single weight per stage, like $w_m \Delta_m(\vec x)$, because it might force the composite model predictions to oscillate around, but never reach, an accurate prediction. A global weight per stage is just too coarse to allow tight convergence to $\vec y$ for all $y_i$ simultaneously. For example, if we set $w_1=100$ to get the fourth and fifth data points from 1150 to 1250 in one step, that would also push the other points very far below their true targets:
 
 <pyfig label=examples hide=true width="32%">
 f0 = df.rent.median()
@@ -201,46 +227,37 @@ plt.tight_layout()
 plt.show()
 </pyfig>
 
-When training weak models on the residual vector, each observation residual vector element gets its own "weight", $y_i - F_{m-1}(\vec x_i)$, tailored to its distance to the target. That suggests we a solution that uses multiple weights. If we compute a weight for each observation, then we're right back to the residual vector solution from the first article. So, let's try computing a weight for each group of similar feature vectors.  Since we're using regression tree stabs for our weak models, we can give each stub leaf its own weight. To get $\Delta_1$ we train it on $sign(y_i - F_0)$ and let's  pick $\vec x$=850 as the split point 
+When training weak models on the residual vector, each element of the observation residual vector gets its own "weight," $y_i - F_{m-1}(\vec x_i)$, tailored to its distance to the target. That gives a hint that we should use multiple weights here too. We  shouldn't compute a weight for each observation, though, because then we're right back to the residual vector solution from the first article. So, let's try computing a weight for each group of similar feature vectors.  
 
-.  The stub would predict -1 for values less than 850 and 1 for values greater than 850 Instead of a single weight scaling both group predictions, here are the steps we would take with weight 15 for the left leaf and 175 for the second leaf:
+Since we're using regression tree stabs for our weak models, we can give each stub leaf its own weight, but how do we compute those weights? The graph of rent versus sqfeet clearly shows that we need a small value for the left stub leaf and a much larger value for the right stub leaf. The goal should be to have the next $F_1$ model step into the middle of the $y$ rent values in each group (leaf) of observations, which means jumping to the median $y$ in each group. The weight we need is the difference vector that gets us from $f_0$ to the median $y$ for each leaf group, which is just the median of $\vec y - f_0$ restricted to the observations in the leaf.  Equivalently, we can think of this as having each stub leaf predict the median residual of the observations in that leaf. This is a bit weird and an incredibly subtle point, so let's spell it out in an aside.
 
-<pyfig label=examples hide=true width="32%">
-f0 = df.rent.median()
-fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(4, 3.5), sharey=True)
+<aside title="The difference between MSE and MAE GBM trees">
 
-ax = axes
-line1, = ax.plot(df.sqfeet,df.rent,'o', linewidth=.8, markersize=4, label="$y$")
-# fake a line to get smaller red dot
-line2, = ax.plot([0,0],[0,0], c=bookcolors['red'], markersize=4, label=r"$15sign(y-f_0({\bf x}))$", linewidth=.8)
-line3, = ax.plot([0,0],[0,0], c=bookcolors['orange'], markersize=4, label=r"$175sign(y-f_0({\bf x}))$", linewidth=.8)
+GBMs that optimize  MSE ($L_2$ loss) and MAE ($L_1$ loss) both train regression trees, $\Delta_m$, on direction vectors.  The first difference is that MSE trains trees on residual vectors and MAE trains trees on sign vectors. The goal of training the tree is to group similar observations into leaf nodes in both cases.  Because they are training on different data, the trees will group the observations in the training data differently. The actual training of the weak model trees always computes split points by trying to minimize the squared difference of target values within the two groups, even in the MAE case.  The second difference is that an MSE tree leaf predicts the average of the residuals, $y_i - F_{m-1}(\vec x_i)$, values for all $i$ observations in that leaf whereas an MAE tree leaf predicts the median of the residual. Both are predicting residuals. Weird, right?
+
+Just to drive this home, MSE trains on residual vectors and the leaves predict the average residual. MAE trains on sign vectors, but the leaves predict residuals like MSE, albeit the median, not the average residual. It's weird because models don't typically train on one space (sign values) and predict values in a different space (residuals). It's perhaps easier to think of MAE as training on sign vectors and predicting sign values (-1, 0, +1) but then weighting that by the median residual.
+
+</aside>
+
+weight 15 for the left leaf and 175 for the second leaf:
+
+<pyfig label=examples hide=true width="35%">
+fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(4.5,3))
+
+plot_composite(ax, gbm, 1, legend=False)
+
 ax.plot([df.sqfeet.min()-10,df.sqfeet.max()+10], [f0,f0],
-         linewidth=.8, linestyle='--', c='k')
-ax.set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
-ax.set_ylim(df.rent.min()-10, df.rent.max()+20)
-ax.text(815, f0+10, r"$f_0({\bf x})$", fontsize=18)
+         linewidth=.8, linestyle=':', c='k')
 
-ax.set_ylabel(r"Rent ($y$)", fontsize=14)
-ax.set_xlabel(r"SqFeet (${\bf x}$)", fontsize=14)
-print(splits)
-# draw arrows
-for x,y,yhat in zip(df.sqfeet,df.rent,df.F0):
-    if x<splits[1]:
-        draw_vector(ax, x, yhat, 0, np.sign(y-yhat)*15, df.rent.max()-df.rent.min())
+for x,d0,delta in zip(df.sqfeet,df[f'F0'],df[f'F1']):
+    draw_vector(ax, x, d0, 0, delta-d0, df.rent.max()-df.rent.min())
 
-for x,y,yhat in zip(df.sqfeet,df.rent,df.F0):
-    if x>=splits[1]:
-        draw_vector(ax, x, yhat, 0, np.sign(y-yhat)*175, df.rent.max()-df.rent.min(),
-                   c=bookcolors['orange'])
-
-ax.legend(handles=[line2,line3], fontsize=16,
-          loc='center left', 
-          labelspacing=.1,
-          handletextpad=.2,
-          handlelength=.7,
-          frameon=True)
+ax.text(708, 1250, r"$f_0 + \Delta_1({\bf x}; {\bf w}_1)$", fontsize=18)
+ax.text(708, 1215, r"${\bf w}_1 = [15, 175]$", fontsize=16)
+ax.text(900, f0-20, r"$f_0({\bf x})$", fontsize=18)
 
 plt.tight_layout()
+
 plt.show()
 </pyfig>
 
@@ -378,34 +395,9 @@ gbm = boost(df, 'sqfeet', 'rent', splits, eta, M)
   
 fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(11.1, 3.5))
 
-def plot_composite(ax, stage):
-    line1, = ax.plot(df.sqfeet,df.rent, 'o')
-
-    sqfeet_range = np.arange(700-10,950+10,.2)
-    y_pred = []
-    for x in sqfeet_range:
-        delta = 0.0
-        for t in gbm.stubs[0:stage]:
-            delta += eta * t.l1predict(x)
-        y_pred.append( f0 + delta )
-    line2, = ax.plot(sqfeet_range, y_pred, linewidth=.8, linestyle='--', c='k')
-    labs = ['\Delta_1', '\Delta_2', '\Delta_3']
-    if stage==1:
-        label = r"$f_0 + \eta \Delta_1$"
-    else:
-        label=r"$f_0 + \eta("+'+'.join(labs[:stage])+")$"
-
-    ax.legend(handles=[line2], fontsize=16,
-              loc='center left', 
-              labelspacing=.1,
-              handletextpad=.2,
-              handlelength=.7,
-              frameon=True,
-              labels=[label])
-
-plot_composite(axes[0], 1)
-plot_composite(axes[1], 2)
-plot_composite(axes[2], 3)
+plot_composite(axes[0], gbm, 1)
+plot_composite(axes[1], gbm, 2)
+plot_composite(axes[2], gbm, 3)
 
 plt.tight_layout()
 plt.show()
