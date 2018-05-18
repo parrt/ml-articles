@@ -241,8 +241,8 @@ Just to drive this home, MSE trains on residual vectors and the leaves predict t
 
 weight 15 for the left leaf and 175 for the second leaf:
 
-<pyfig label=examples hide=true width="35%">
-fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(4.5,3))
+<pyfig label=examples hide=true width="40%">
+fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(5,3.8))
 
 plot_composite(ax, gbm, 1, legend=False)
 
@@ -255,6 +255,9 @@ for x,d0,delta in zip(df.sqfeet,df[f'F0'],df[f'F1']):
 ax.text(708, 1250, r"$f_0 + \Delta_1({\bf x}; {\bf w}_1)$", fontsize=18)
 ax.text(708, 1215, r"${\bf w}_1 = [15, 175]$", fontsize=16)
 ax.text(900, f0-20, r"$f_0({\bf x})$", fontsize=18)
+
+ax.set_ylabel(r"Rent ($y$)", fontsize=14)
+ax.set_xlabel(r"SqFeet (${\bf x}$)", fontsize=14)
 
 plt.tight_layout()
 
