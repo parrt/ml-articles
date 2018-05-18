@@ -55,13 +55,13 @@ bookcolors = {'crimson': '#a50026', 'red': '#d73027', 'redorange': '#f46d43',
               'babyblue': '#abd9e9', 'lightblue': '#74add1', 'blue': '#4575b4',
               'purple': '#313695'}
 
-def draw_vector(ax, x, y, dx, dy, yrange):
-    ax.plot([x,x+dx], [y,y+dy], c='r', linewidth=.8)
+def draw_vector(ax, x, y, dx, dy, yrange, c=bookcolors['red']):
+    ax.plot([x,x+dx], [y,y+dy], c=c, linewidth=.8)
     ay = y+dy
     yrange *= 0.03
     ad = -yrange if dy>=0 else yrange
-    ax.plot([x+dx-4,x+dx], [ay+ad,ay], c='r', linewidth=.8)
-    ax.plot([x+dx,x+dx+4], [ay,ay+ad], c='r', linewidth=.8)
+    ax.plot([x+dx-4,x+dx], [ay+ad,ay], c=c, linewidth=.8)
+    ax.plot([x+dx,x+dx+4], [ay,ay+ad], c=c, linewidth=.8)
     
 def data():
     df = pd.DataFrame(data={"sqfeet":[700,950,800,900,750]})
@@ -166,9 +166,87 @@ plt.tight_layout()
 plt.show()
 </pyfig>
 
-But, without the distance to the target as part of our sign vector, the $(\hat y - F_{m-1}(X))$ steps towards $\vec y$ would move very slowly. We need to weight the $\Delta_m$ predictions so that the algorithm takes bigger steps. Unfortunately, we can't use a single weight, like $w_m \Delta_m(\vec x)$, because it might force the composite model predictions to oscillate around, but never reach, an accurate prediction. A global weight per stage is just too coarse to allow tight convergence to $\vec y$ for all $y_i$ simultaneously.  When using the residual vector, each data point gets a "weight", $y_i - F_{m-1}(\vec x_i)$, tailored to its distance to the target. So, the solution is to use a different weight for each group of similar feature vectors.
+But, without the distance to the target as part of our sign vector, the $(\hat y - F_{m-1}(X))$ steps towards $\vec y$ would move very slowly. We need to weight the $\Delta_m$ predictions so that the algorithm takes bigger steps. Unfortunately, we can't use a single weight, like $w_m \Delta_m(\vec x)$, because it might force the composite model predictions to oscillate around, but never reach, an accurate prediction. A global weight per stage is just too coarse to allow tight convergence to $\vec y$ for all $y_i$ simultaneously. For example, if we set $w_1=100$ to get the fourth and fifth data points from 1150 to 1250 in one step, that would also push the other points very far below their true targets. Let's assume a split of 850 for the $\Delta_1$ regression stub because that groups the $y$ values into two similar groups (lower and higer values). That stub predicts -1 for $\vec x<850$ and 1 for $\vec x>=850$, then we scale by $w_1 = 100$ and get the following steps shown as red arrows:
 
-Because we're using weak models based upon regression trees stubs, each stub leaf gets its own weight. If we manually pick some nice weight vectors, $\vec w_1=[20,100]$, $\vec w_2=[5,30]$, and $\vec w_3=[5,20]$, then we get the following table of partial results (with $\eta=1$):
+<pyfig label=examples hide=true width="32%">
+f0 = df.rent.median()
+fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(4, 3.5), sharey=True)
+
+
+ax = axes
+line1, = ax.plot(df.sqfeet,df.rent,'o', linewidth=.8, markersize=4, label="$y$")
+# fake a line to get smaller red dot
+line2, = ax.plot([0,0],[0,0], c='r', markersize=4, label=r"$100 \Delta_1({\bf x})$", linewidth=.8)
+ax.plot([df.sqfeet.min()-10,df.sqfeet.max()+10], [f0,f0],
+         linewidth=.8, linestyle='--', c='k')
+ax.set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
+ax.set_ylim(df.rent.min()-100, df.rent.max()+20)
+ax.text(815, f0+10, r"$f_0({\bf x})$", fontsize=18)
+
+ax.set_ylabel(r"Rent ($y$)", fontsize=14)
+ax.set_xlabel(r"SqFeet (${\bf x}$)", fontsize=14)
+
+# draw arrows
+for x,y,yhat in zip(df.sqfeet,df.rent,df.F0):
+    draw_vector(ax, x, yhat, 0, (np.sign(y-yhat) if y-yhat>0 else -1)*100, df.rent.max()-df.rent.min())
+    
+ax.legend(handles=[line2], fontsize=16,
+          loc='upper left', 
+          labelspacing=.1,
+          handletextpad=.2,
+          handlelength=.7,
+          frameon=True)
+
+plt.tight_layout()
+plt.show()
+</pyfig>
+
+When training weak models on the residual vector, each observation residual vector element gets its own "weight", $y_i - F_{m-1}(\vec x_i)$, tailored to its distance to the target. That suggests we a solution that uses multiple weights. If we compute a weight for each observation, then we're right back to the residual vector solution from the first article. So, let's try computing a weight for each group of similar feature vectors.  Since we're using regression tree stabs for our weak models, we can give each stub leaf its own weight. To get $\Delta_1$ we train it on $sign(y_i - F_0)$ and let's  pick $\vec x$=850 as the split point 
+
+.  The stub would predict -1 for values less than 850 and 1 for values greater than 850 Instead of a single weight scaling both group predictions, here are the steps we would take with weight 15 for the left leaf and 175 for the second leaf:
+
+<pyfig label=examples hide=true width="32%">
+f0 = df.rent.median()
+fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(4, 3.5), sharey=True)
+
+ax = axes
+line1, = ax.plot(df.sqfeet,df.rent,'o', linewidth=.8, markersize=4, label="$y$")
+# fake a line to get smaller red dot
+line2, = ax.plot([0,0],[0,0], c=bookcolors['red'], markersize=4, label=r"$15sign(y-f_0({\bf x}))$", linewidth=.8)
+line3, = ax.plot([0,0],[0,0], c=bookcolors['orange'], markersize=4, label=r"$175sign(y-f_0({\bf x}))$", linewidth=.8)
+ax.plot([df.sqfeet.min()-10,df.sqfeet.max()+10], [f0,f0],
+         linewidth=.8, linestyle='--', c='k')
+ax.set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
+ax.set_ylim(df.rent.min()-10, df.rent.max()+20)
+ax.text(815, f0+10, r"$f_0({\bf x})$", fontsize=18)
+
+ax.set_ylabel(r"Rent ($y$)", fontsize=14)
+ax.set_xlabel(r"SqFeet (${\bf x}$)", fontsize=14)
+print(splits)
+# draw arrows
+for x,y,yhat in zip(df.sqfeet,df.rent,df.F0):
+    if x<splits[1]:
+        draw_vector(ax, x, yhat, 0, np.sign(y-yhat)*15, df.rent.max()-df.rent.min())
+
+for x,y,yhat in zip(df.sqfeet,df.rent,df.F0):
+    if x>=splits[1]:
+        draw_vector(ax, x, yhat, 0, np.sign(y-yhat)*175, df.rent.max()-df.rent.min(),
+                   c=bookcolors['orange'])
+
+ax.legend(handles=[line2,line3], fontsize=16,
+          loc='center left', 
+          labelspacing=.1,
+          handletextpad=.2,
+          handlelength=.7,
+          frameon=True)
+
+plt.tight_layout()
+plt.show()
+</pyfig>
+
+Let's eyeball two weights we need for the first weak model 
+
+, $\vec w_1=[20,100]$, $\vec w_2=[5,30]$, and $\vec w_3=[5,20]$, then we get the following table of partial results (with $\eta=1$):
 
 <!--
 <pyeval label="examples" hide=true>
@@ -203,7 +281,7 @@ $\Delta_1$ & $F_1$ & $\vec y$-$F_1$ & $\vec y$-$F_1$ & $\Delta_2$ & $F_2$ & $\ve
 }
 }}
 
-(with stub split points chosen manually as 850, 850, 725):
+(with stub split points chosen manually as 850, 925, 725):
 
 
 The blue dots are the sign vector elements used to train $\Delta_m$ weak models, the dashed lines are the predictions made by $\Delta_m$, and the dotted line is the origin at 0. The $\Delta_m$  models have a hard time predicting the sign vectors, as you can see, because the sign vector elements are dissimilar in one leaf of each stub. Here are the stubs that generate those dashed lines:
