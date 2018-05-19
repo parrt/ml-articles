@@ -138,7 +138,7 @@ From this data, we'd like to build a GBM to predict rent price given square foot
 Let's use the mean (average) of the rent prices as our initial model: $F_0(\vec x_i)$ = $f_0(\vec x_i)$ = 1200 for all $i$: $F_0(X) = 1200$. We use the mean because that is the single value that minimizes the mean squared error between it and the $y_i$ values. (We'll seen shortly that GBMs nudging by residual vectors optimize mean squared error.) Once we have $F_0$, we compute $F_1$ by subtracting the previous estimate from the target, $\vec y - F_0$ to get the first residual vector:
 
 <pyeval label="examples" hide=true>
-def stub_predict(x_train, y_train, split):
+def stump_predict(x_train, y_train, split):
     left = y_train[x_train<split]
     right = y_train[x_train>split]
     lmean = np.mean(left)
@@ -159,7 +159,7 @@ def boost(df, xcol, ycol, splits, eta, stages):
 
     for s in range(1,stages):
         df[f'dir{s}'] = df[ycol] - df[f'F{s-1}']
-        df[f'delta{s}'] = stub_predict(df[xcol], df[f'dir{s}'], splits[s])
+        df[f'delta{s}'] = stump_predict(df[xcol], df[f'dir{s}'], splits[s])
         df[f'F{s}'] = df[f'F{s-1}'] + eta * df[f'delta{s}']
 
     mse = [mean_squared_error(df[ycol], df['F'+str(s)]) for s in range(stages)]
@@ -248,7 +248,7 @@ $\Delta_1$ & $F_1$ & $\vec y$-$F_1$ & $\Delta_2$ & $F_2$ & $\vec y$ - $F_2$ & $\
 It helps to keep in mind that we are always training on the residual vector $\vec y - F_{m-1}$ but get imperfect model $\Delta_m$. The best way to visualize the learning of $\vec y-F_{m-1}$ residual vectors by weak models, $\Delta_m$, is by looking at the residual vectors and model predictions horizontally on the same scale Y-axis:
 
 <pyfig label=examples hide=true width="90%">
-def draw_stub(ax, x_train, y_train, y_pred, split, stage):
+def draw_stump(ax, x_train, y_train, y_pred, split, stage):
     line1, = ax.plot(x_train, y_train, 'o',
                      markersize=4,
                      label=f"$y-F_{stage-1}$")
@@ -283,13 +283,13 @@ for a in range(3):
     axes[a].set_xlabel(r"SqFeet", fontsize=14)
     axes[a].set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
     
-draw_stub(axes[0], df.sqfeet, df.dir1, df.delta1, splits[1], stage=1)
+draw_stump(axes[0], df.sqfeet, df.dir1, df.delta1, splits[1], stage=1)
 #draw_residual(axes[0], df.sqfeet,df.dir1,df.delta1)
 
-draw_stub(axes[1], df.sqfeet, df.dir2, df.delta2, splits[2], stage=2)
+draw_stump(axes[1], df.sqfeet, df.dir2, df.delta2, splits[2], stage=2)
 #draw_residual(axes[1], df.sqfeet,df.dir2,df.delta2)
 
-draw_stub(axes[2], df.sqfeet, df.dir3, df.delta3, splits[3], stage=3)
+draw_stump(axes[2], df.sqfeet, df.dir3, df.delta3, splits[3], stage=3)
 #draw_residual(axes[2], df.sqfeet,df.dir3,df.delta3)
 
 plt.tight_layout()
@@ -298,12 +298,12 @@ plt.show()
 
 The blue dots are the residual vector elements used to train $\Delta_m$ weak models, the dashed lines are the predictions made by $\Delta_m$, and the dotted line is the origin at 0.  Notice how the residual vector elements get smaller as we add more weak models.
 
-The predictions are step functions because we've used a *regression tree stub* as our base weak model with manually-selected split points (850, 850, and 925). Here are the three stubs implementing our $\Delta_m$ weak models:
+The predictions are step functions because we've used a *regression tree stump* as our base weak model with manually-selected split points (850, 850, and 925). Here are the three stumps implementing our $\Delta_m$ weak models:
 
 <img src="images/stubs-mse.svg" width="90%">
 
-<aside title="Regression tree stubs">
-A regression tree stub is a regression tree with a single root and two children that splits on a single variable, which is what we have here, at a single threshold. (If we had more than a single value in our feature vectors, we'd have to build a taller tree that tested more variables; to avoid over fitting, we don't want very tall trees, however.) If a test value is less than the threshold, the model yields the average of the training samples in the left leaf. If the test value is greater than or equal to the threshold, the model yields the average of the train examples in the right leaf. 
+<aside title="Regression tree stumps">
+A regression tree stump is a regression tree with a single root and two children that splits on a single variable, which is what we have here, at a single threshold. (If we had more than a single value in our feature vectors, we'd have to build a taller tree that tested more variables; to avoid over fitting, we don't want very tall trees, however.) If a test value is less than the threshold, the model yields the average of the training samples in the left leaf. If the test value is greater than or equal to the threshold, the model yields the average of the train examples in the right leaf. 
 
 \todo{why those splits?}
 

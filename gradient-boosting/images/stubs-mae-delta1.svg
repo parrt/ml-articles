@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:xl="http://www.w3.org/1999/xlink" version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="-76.25 1671 275.77083 128.7" width="275.77083" height="128.7">
+<svg xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:xl="http://www.w3.org/1999/xlink" version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="-86.25 1932.5 275.77083 128.7" width="275.77083" height="128.7">
   <defs>
     <font-face font-family="Times New Roman" font-size="18" panose-1="2 2 5 3 5 4 5 9 3 4" units-per-em="1000" underline-position="-108.88672" underline-thickness="48.828125" slope="-907.3885" x-height="430.1758" cap-height="662.1094" ascent="891.1133" descent="-216.3086" font-style="italic" font-weight="400">
       <font-face-src>
@@ -39,73 +39,73 @@
     </font-face>
   </defs>
   <metadata> Produced by OmniGraffle 7.7.1 
-    <dc:date>2018-05-19 16:29:33 +0000</dc:date>
+    <dc:date>2018-05-19 18:01:32 +0000</dc:date>
   </metadata>
   <g id="Canvas_1" fill-opacity="1" stroke-dasharray="none" stroke="none" stroke-opacity="1" fill="none">
     <title>Canvas 1</title>
-    <rect fill="white" x="-76.25" y="1671" width="275.77083" height="128.7"/>
+    <rect fill="white" x="-86.25" y="1932.5" width="275.77083" height="128.7"/>
     <g id="Canvas_1: Layer 1">
       <title>Layer 1</title>
       <g id="Graphic_175">
-        <rect x="75.27083" y="1747.3631" width="124" height="49.5" fill="#feffcd"/>
-        <rect x="75.27083" y="1747.3631" width="124" height="49.5" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
+        <rect x="65.27083" y="2008.8631" width="124" height="49.5" fill="#feffcd"/>
+        <rect x="65.27083" y="2008.8631" width="124" height="49.5" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
       </g>
       <g id="Graphic_174">
-        <rect x="17.5" y="1677.6323" width="86.60182" height="39" fill="#feffcd"/>
-        <rect x="17.5" y="1677.6323" width="86.60182" height="39" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
+        <rect x="7.5" y="1939.1323" width="86.60182" height="39" fill="#feffcd"/>
+        <rect x="7.5" y="1939.1323" width="86.60182" height="39" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
       </g>
       <g id="Graphic_173">
-        <text transform="translate(-39 1714.6258)" fill="black">
+        <text transform="translate(-49 1976.1258)" fill="black">
           <tspan font-family="Times New Roman" font-size="18" font-style="italic" font-weight="400" fill="black" x="2.4296875" y="16">x</tspan>
           <tspan font-family="Times New Roman" font-size="18" font-weight="400" fill="black" y="16">&lt;850</tspan>
           <tspan font-family="Times New Roman" font-size="18" font-style="italic" font-weight="400" fill="black" y="16"> </tspan>
         </text>
       </g>
       <g id="Graphic_172">
-        <text transform="translate(116.1 1714.5208)" fill="black">
+        <text transform="translate(106.1 1976.0208)" fill="black">
           <tspan font-family="Times New Roman" font-size="18" font-style="italic" font-weight="400" fill="black" x="2.354004" y="16">x</tspan>
           <tspan font-family="Times New Roman" font-size="18" font-weight="400" fill="black" y="16">&gt;=850</tspan>
           <tspan font-family="Times New Roman" font-size="18" font-style="italic" font-weight="400" fill="black" y="16"> </tspan>
         </text>
       </g>
       <g id="Graphic_171">
-        <rect x="-76" y="1747.3631" width="124" height="49.5" fill="#feffcd"/>
-        <rect x="-76" y="1747.3631" width="124" height="49.5" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
+        <rect x="-86" y="2008.8631" width="124" height="49.5" fill="#feffcd"/>
+        <rect x="-86" y="2008.8631" width="124" height="49.5" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
       </g>
       <g id="Graphic_170">
-        <text transform="translate(-47.5 1747.0752)" fill="black">
+        <text transform="translate(-57.5 2008.5752)" fill="black">
           <tspan font-family="Times New Roman" font-size="20" font-weight="400" fill="black" x=".1796875" y="18">[-1,0,-1]</tspan>
         </text>
       </g>
       <g id="Graphic_169">
-        <text transform="translate(117.77083 1747.0752)" fill="black">
+        <text transform="translate(107.77083 2008.5752)" fill="black">
           <tspan font-family="Times New Roman" font-size="20" font-weight="400" fill="black" x=".33984375" y="18">[1,1]</tspan>
         </text>
       </g>
       <g id="Graphic_168">
-        <text transform="translate(-55.5 1772.7964)" fill="black">
+        <text transform="translate(-65.5 2034.2964)" fill="black">
           <tspan font-family="Times New Roman" font-size="19" font-weight="400" fill="black" x=".2668457" y="17">median=-1</tspan>
         </text>
       </g>
       <g id="Graphic_167">
-        <text transform="translate(98.77083 1772.7964)" fill="black">
+        <text transform="translate(88.77083 2034.2964)" fill="black">
           <tspan font-family="Times New Roman" font-size="19" font-weight="400" fill="black" x=".4304199" y="17">median</tspan>
           <tspan font-family="Times New Roman" font-size="19" font-weight="400" fill="black" y="17">=1</tspan>
         </text>
       </g>
       <g id="Line_166">
-        <line x1="38.604307" y1="1703.1532" x2=".6057222" y2="1742.8947" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".5"/>
+        <line x1="28.604307" y1="1964.6532" x2="-9.394278" y2="2004.3947" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".5"/>
       </g>
       <g id="Line_165">
-        <line x1="86.87185" y1="1703.6532" x2="124.87948" y2="1743.596" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
+        <line x1="76.87185" y1="1965.1532" x2="114.87948" y2="2005.096" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
       </g>
       <g id="Graphic_164">
-        <text transform="translate(67.81667 1689.3602)" fill="black">
+        <text transform="translate(57.816674 1950.8602)" fill="black">
           <tspan font-family="Times New Roman" font-size="16" font-weight="400" fill="black" x="0" y="14">1</tspan>
         </text>
       </g>
       <g id="Graphic_163">
-        <text transform="translate(55.3 1677)" fill="black">
+        <text transform="translate(45.3 1938.5)" fill="black">
           <tspan font-family="STIXGeneral" font-size="20" font-weight="400" fill="black" x=".09" y="21">𝚫</tspan>
         </text>
       </g>
