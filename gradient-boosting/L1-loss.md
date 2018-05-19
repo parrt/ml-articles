@@ -4,6 +4,8 @@
 
 In our previous article, <a href="L2-loss.html">Gradient boosting: Distance to target</a>, our model took steps towards the target $\vec y$ based upon the residual vector, $\vec y-F_{m-1}(X)$, which includes the magnitude not just the direction of $\vec y$ from our the previous composite model's prediction, $F_{m-1}(X)$. The residual vector makes composite models converge rapidly towards $\vec y$.  The negative, of course, is that using the magnitude makes the composite model chase outliers.   This occurs because mean computations are easily skewed by outliers and our regression tree stumps yield predictions using the mean of all target values in a leaf.  For noisy target variables, it makes more sense to focus on the *direction* of $\vec y$ from $F_{m-1}$ rather than the magnitude and direction. 
 
+## Chasing the sign vector
+
 This brings us to the second commonly-used vector with gradient boosting, which we can call the *sign vector*: $sign(y_i-F_{m-1}(\vec x_i))$. The sign vector elements are either -1, 0, or +1, one value for each observation $\vec x_i$.   No matter how distant the true target is from our current prediction, we'll train weak models using direction info without the magnitude.  This sign vector is a bit weird, though, because the vector elements are limited to -1, 0, or +1.  In two dimensions, for example, such vectors can only point at multiples of 45 degrees (0, 45, 90, 135, ...) and so the sign vector will rarely point directly at the target. Just to be clear, the sign vector is not the unit vector in the direction of $y_i-F_{m-1}(\vec x_i)$.
 
 If there are outliers in the target variable that we cannot remove, using just the direction is better than both direction and magnitude. We'll show in <a href="descent.html">Gradient boosting performs gradient descent</a> that using $sign(y-F_{m-1}(\vec x_i))$ as our step vector leads to a solution that optimizes the model according to the mean absolute value (MAE) or $L_1$  *loss function*: $\sum_{i=1}^{N} |y_i - F_M(\vec x_i)|$ for $N$ observations. 
@@ -190,6 +192,8 @@ plt.tight_layout()
 plt.show()
 </pyfig>
 
+## Two perspectives on training weak models for L1 loss
+
 <img style="float:right;margin:0px 0px 0px 0;" src="images/stubs-mae-delta1.svg" width="30%">  As we did in the first article, our goal is to create a series of nudges, $\Delta_m$, that gradually shift our initial approximation, $f_0(X)$, towards the true target rent vector, $\vec y$. The first stump, $\Delta_1$, should be trained on $sign(\vec y - F_0(X))$, as opposed to the residual vector itself, and let's choose a split point of 850 because that groups the sign values into two similar (low variance) groups, $[-1, 0, 1]$ and $[1,1]$. Because we are dealing with $L_1$ absolute difference and not $L_2$ squared difference, stumps should predict the median, not the mean, of the observations in each leaf. That means $\Delta_1$ would predict  -1 for $\vec x$\<850 and 1 for $\vec x$>=850.
 
 Without the distance to the target as part of our $\Delta_m$ nudges, however, the composite model $F_m(X)$ would step towards rent target vector $\vec y$ very slowly, one dollar at a time per observation. We need to weight the $\Delta_m$ predictions so that the algorithm takes bigger steps. Unfortunately, we can't use a single weight per stage, like $w_m \Delta_m(\vec x)$, because it might force the composite model predictions to oscillate around but never reach an accurate prediction. A global weight per stage is just too coarse to allow tight convergence to $\vec y$ for all $\hat y_i$ simultaneously. For example, if we set $w_1=100$ to get the fourth and fifth data points from 1150 to 1250 in one step, that would also push the other points very far below their true targets:
@@ -235,9 +239,9 @@ plt.show()
 
 When training weak models on the residual vector, in the first article, each regression tree leaf predicted the average residual for observations in that leaf. Such a prediction tries to place the next $F_m$ output in the middle of the $y_i$ of those observations.  That gives us a hint that we should use a weight per leaf to scale the predictions trained on the sign vector, but how do we compute those weights? 
 
-The graph of rent versus sqfeet clearly shows that we need a small weight for the left stump leaf and a much larger weight for the right stump leaf. The goal should be to have the next $F_1$ model step into the middle of the $y$ rent values in each group (leaf) of observations, which means jumping to the median $y$ in each group. Again, we use the media not the mean because our overall model is trying to minimize the $L_1$ loss. The weight we need for each leaf is the magnitude of the difference between $f_0$ and the median $y$ for each leaf group. This value is the median of the $abs(y_i - f_0(\vec x_i))$ residuals restricted to observations $i$ in the leaf. The sign vector already has the direction, which is why we use the absolute value of the median (our weights in this case are always positive). 
+The graph of rent versus sqfeet clearly shows that we need a small weight for the left stump leaf and a much larger weight for the right stump leaf. The goal should be to have the next $F_1$ model step into the middle of the $y$ rent values in each group (leaf) of observations, which means jumping to the median $y$ in each group. Again, we use the median not the mean because our overall model is trying to minimize the $L_1$ loss. The weight we need for each leaf is the magnitude of the difference between $f_0$ and the median $y$ for each leaf group. This value is the median of the $abs(y_i - f_0(\vec x_i))$ residuals restricted to observations $i$ in the leaf. The sign vector already has the direction, which is why we use the absolute value of the median (our weights in this case are always positive). 
 
-Equivalently, we can think of this process as having each stump leaf predict the median residual of the observations in that leaf (in which case we don't need the absolute value). This fact makes the MSE and MAE approaches seem nearly identical. That's a bit weird and an incredibly subtle point, so let's emphasize it in a callout:
+Equivalently, we can think of this process as having each stump leaf predict the median residual of the observations in that leaf (in which case we don't need the absolute value). Without alteration, the stump leaves would predict the average residual as usual, not the median. This fact makes the MSE and MAE approaches seem nearly identical. That's a bit weird and an incredibly subtle point, so let's emphasize it in a callout:
 
 <aside title="The difference between MSE and MAE GBM trees">
 
@@ -418,5 +422,30 @@ L(\vec y,F_M(X)) = \frac{1}{N} \sum_{i=1}^{N} |y_i - F_M(\vec x_i)|
 \]
 
 (Using vector operations, that summation is the $L_1$ norm: $||\vec y-F_M(X)||_1$).
+
+## GBM algorithm to minimize L1 loss
+
+\latex{{
+\setlength{\algomargin}{3pt}
+\SetAlCapSkip{-10pt}
+\begin{algorithm}[]
+\LinesNumbered
+\SetAlgorithmName{Algorithm}{List of Algorithms}
+\SetAlgoSkip{}
+\SetInd{.5em}{.5em}
+\TitleOfAlgo{{\em l1boost}($X$,$\vec y$,$M$,$\eta$) {\bf returns} model $F_M$}
+Let $F_0(X) = median(\vec y)\\
+\For{$m$ = 1 \KwTo $M$}{
+	Let $\delta_m = \vec y - F_{m-1}(X)$ be the residual vector\\
+	Let ${\bf sign}_m = sign(\delta_m)$ be the sign vector\\
+	Train regression tree $\Delta_m$ on ${\bf sign}_m$, minimizing squared error\\
+	\ForEach{leaf $l \in \Delta_m$}{
+		Alter $l$ to predict median (not mean) of $y_i - F_{m-1}(x_i)$ for obs. $i$ in $l$\\
+	}
+	$F_m(X) = F_{m-1}(X) + \eta \Delta_m(X)$\\
+}
+\Return{$F_M$}\\
+\end{algorithm}
+}}
 
 Ok, so now we've looked at two similar GBM construction approaches, one that trains weak models on residual vectors and the other that trains weak models on sign vectors. The former predicts the average residual value for observations in the leaf associated with an unknown $\vec x$ whereas the latter predicts the median residual value. The effect of these differences is that the former optimizes the mean squared error and the latter optimizes the mean absolute error over the training set. Why this is true is the focus of the next article and final article, [Gradient boosting performs gradient descent](descent.html).

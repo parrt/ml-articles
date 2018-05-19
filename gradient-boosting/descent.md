@@ -136,13 +136,17 @@ gradient descent does parameter optimization normally but we are now doing funct
 \SetInd{.5em}{.5em}
 \TitleOfAlgo{{\em boost}($X$,$\vec y$,$M$,$\eta$)}
 \KwResult{model $F_M$}
-Let $F_0(X)$ be value $v$ that minimizes $\sum_{i=1}^N L(y_i, v)$, the loss across all observations\\
+Let $F_0(X)$ be value $v$ minimizing $\sum_{i=1}^N L(y_i, v)$, loss across all observations\\
 \For{$m$ = 1 \KwTo $M$}{
-	Let $\delta_m = \frac{\partial L(\vec y,~ F_{m-1}(X))}{\partial F_{m-1}(X)}$, the gradient of $L$ with respect to $F_{m-1}(X)$\\
+	Let $\delta_m = \frac{\partial L(\vec y,~ \vec f(X))}{\partial \vec f(X)}\big\rvert_{\vec f=F_{m-1}}$, gradient of $L$ w.r.t. $\vec f$ evaluated at $F_{m-1}$\\
 	Train regression tree $\Delta_m$ on $\delta_m$, minimizing squared error\\
-	Let $w_l$ be $w$ that minimizes $L(y_i, F_{m-1}(\vec x_i) + w)$ for $\vec x_i$ in leaf $l$\\
-	$F_m(X) = F_{m-1}(X) + \eta \Delta_m(X; \vec w)$\\
+	\ForEach{leaf $l \in \Delta_m$}{
+		Let $w$ be value minimizing $L(y_i, F_{m-1}(\vec x_i) + w)$ for obs. $i$ in leaf $l$\\
+		Alter $l$ to predict $w$ (not  $mean(y_i)$)\\
+	}
+	$F_m(X) = F_{m-1}(X) + \eta \Delta_m(X)$\\
 }
+\Return{$F_M$}\\
 \end{algorithm}
 }}
 
