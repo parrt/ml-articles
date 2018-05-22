@@ -132,7 +132,7 @@ Let $F_0(X)$ be value $v$ minimizing $\sum_{i=1}^N L(y_i, v)$, loss across all o
 
 <aside title="Why does chasing the sign vector minimize MAE?">
 
-The critical difference is training on the direction only not the magnitude, which gives different groupings.  show a single stump where grouping is different radically because the directions make all of the values look the same.
+The critical difference is training on the direction only not the magnitude, which gives different groupings. mse makes tree really want to handle the outlier properly. show a single stump where grouping is different radically because the directions make all of the values look the same.
 See dev-descent  notebook. I created data that gets radically different trees according to what they're trained on.
 
 
