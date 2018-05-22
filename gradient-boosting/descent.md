@@ -186,6 +186,26 @@ plt.show()
 
 Scitkit decision tree gives split point of 975 for training on residual but split of 825 for sign vector. So MSE chases the 800, grouping all others whereas sign vector shows an equal split then takes median. So right leaf for MSE is 800 but is median of 0, 80, 110, 800 = 95. So we aren't taking major steps towards the outlier. First, we're grouping by up/down which ignores magnitude of outlier then we take median which won't let us jump too far towards that. So this is optimizing the abs diff and not giving special emphasis to obs far from median.
 
+modified to have different data. show that mse trajectory is different in L1 than in L2.
+
+```
+Opt MSE
+RMSE: [322.949  30.557  19.563  17.055  11.956   9.353] (RMSE)
+MAE:  [257.2    23.     16.833  13.     11.014   8.035] (RMSE)
+
+MSE drops fast at first when optimizing it. But, doesn't move much at
+first when optimizing MAE:
+
+Opt MAE
+RMSE: [359.089 336.188 334.606  23.365  22.408  22.792]
+MAE:  [183.    163.    161.5    12.25   11.125  10.75 ]
+
+shows opt MAE must be not chasing RMSE.
+```
+
+Hmm...maybe we need to do on a bigger data set vaguely linear then add noise and see difference. this is too unstable.
+
+
 </aside>
 
 ## Junk drawer
