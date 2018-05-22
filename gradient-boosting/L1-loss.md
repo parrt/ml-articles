@@ -194,7 +194,9 @@ plt.show()
 
 ## Two perspectives on training weak models for L1 loss
 
-<img style="float:right;margin:0px 0px 0px 0;" src="images/stubs-mae-delta1.svg" width="30%">  As we did in the first article, our goal is to create a series of nudges, $\Delta_m$, that gradually shift our initial approximation, $f_0(X)$, towards the true target rent vector, $\vec y$. The first stump, $\Delta_1$, should be trained on $sign(\vec y - F_0(X))$, as opposed to the residual vector itself, and let's choose a split point of 850 because that groups the sign values into two similar (low variance) groups, $[-1, 0, 1]$ and $[1,1]$. Because we are dealing with $L_1$ absolute difference and not $L_2$ squared difference, stumps should predict the median, not the mean, of the observations in each leaf. That means $\Delta_1$ would predict  -1 for $\vec x$\<850 and 1 for $\vec x$>=850.
+As we did in the first article, our goal is to create a series of nudges, $\Delta_m$, that gradually shift our initial approximation, $f_0(X)$, towards the true target rent vector, $\vec y$. The first stump, $\Delta_1$, should be trained on $sign(\vec y - F_0(X))$, as opposed to the residual vector itself, and let's choose a split point of 850 because that groups the sign values into two similar (low variance) groups, $[-1, 0, 1]$ and $[1,1]$. Because we are dealing with $L_1$ absolute difference and not $L_2$ squared difference, stumps should predict the median, not the mean, of the observations in each leaf. That means $\Delta_1$ would predict -1 for $\vec x$\<850 and 1 for $\vec x$>=850:
+	
+<img src="images/stubs-mae-delta1.svg" width="30%">  
 
 Without the distance to the target as part of our $\Delta_m$ nudges, however, the composite model $F_m(X)$ would step towards rent target vector $\vec y$ very slowly, one dollar at a time per observation. We need to weight the $\Delta_m$ predictions so that the algorithm takes bigger steps. Unfortunately, we can't use a single weight per stage, like $w_m \Delta_m(\vec x)$, because it might force the composite model predictions to oscillate around but never reach an accurate prediction. A global weight per stage is just too coarse to allow tight convergence to $\vec y$ for all $\hat y_i$ simultaneously. For example, if we set $w_1=100$ to get the fourth and fifth data points from 1150 to 1250 in one step, that would also push the other points very far below their true targets:
 
@@ -428,13 +430,13 @@ L(\vec y,F_M(X)) = \frac{1}{N} \sum_{i=1}^{N} |y_i - F_M(\vec x_i)|
 \latex{{
 \setlength{\algomargin}{3pt}
 \SetAlCapSkip{-10pt}
-\begin{algorithm}[]
+\begin{algorithm}[H]
 \LinesNumbered
 \SetAlgorithmName{Algorithm}{List of Algorithms}
 \SetAlgoSkip{}
 \SetInd{.5em}{.5em}
 \TitleOfAlgo{{\em l1boost}($X$,$\vec y$,$M$,$\eta$) {\bf returns} model $F_M$}
-Let $F_0(X) = median(\vec y)\\
+Let $F_0(X) = median(\vec y)$\\
 \For{$m$ = 1 \KwTo $M$}{
 	Let $\delta_m = \vec y - F_{m-1}(X)$ be the residual vector\\
 	Let ${\bf sign}_m = sign(\delta_m)$ be the sign vector\\

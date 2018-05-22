@@ -8,9 +8,9 @@
 
 \todo{weights not needed in the L2 case because the tree is already picking those out as minimum L2}
 
-So far we've looked at GBMs that use two different direction vectors, the residual vector (<a href="L2-loss.html">Gradient boosting: Distance to target</a>) and the sign vector (<a href="L1.loss.html">Gradient boosting: Heading in the right direction</a>). It's natural to ask whether there are other direction vectors we can use and what effect they have on the final $F_M(X)$ predictions.  Your intuition probably told you that nudging the intermediate $\hat{\vec y}$ prediction towards target $\vec y$ gradually improves model performance, but would $\hat{\vec y}$ ever stop if we kept increasing $M$? If so, where would it stop? Is there something special or interesting about the sequence of vectors that $\hat{\vec y}$ passes through? Moreover, training a model on observations ($\vec x$, $y$) is a matter of finding a function, $F(\vec x)$, that optimizes some cost or loss function indicating how well $F$ performs. (The procedure is to tweak model $F$'s parameters until we minimize the loss function.) What is a GBM optimizing and what is the relationship with the choice of direction vector?
+So far we've looked at GBMs that use two different direction vectors, the residual vector (<a href="L2-loss.html">Gradient boosting: Distance to target</a>) and the sign vector (<a href="L1.loss.html">Gradient boosting: Heading in the right direction</a>). It's natural to ask whether there are other direction vectors we can use and what effect they have on the final $F_M(X)$ predictions.  Your intuition probably told you that nudging the intermediate $\hat{\vec y}$ prediction towards target $\vec y$ gradually improves model performance, but would $\hat{\vec y}$ ever stop if we kept increasing $M$? If so, where would it stop? Is there something special or interesting about the sequence of vectors that $\hat{\vec y}$ passes through? Moreover, training a model on observations ($\vec x$, $y$) is a matter of finding a function, $F(\vec x)$, that optimizes some cost or loss function indicating how well $F$ performs. (The procedure is to tweak model $F$'s parameters until we minimize the loss function.) What loss function is a GBM optimizing and what is the relationship with the choice of direction vector?
 
-To answer these questions, we're going to employ a mathematician's favorite trick: showing how our current problem is a flavor of another problem with a known solution and lots of useful results, such as proofs of correctness. Specifically, this article shows how gradient boosting machines perform an optimization technique from numerical methods called [gradient or steepest descent](https://en.wikipedia.org/wiki/Gradient_descent). We'll see that a GBM using residual vectors optimizes the mean squared error (MSE), the $L_2$ loss, between the true target $\vec y$ and the intermediate predictions, $\hat{\vec y} = F_m(X)$. A GBM that uses sign vectors optimizes the mean absolute error (MAE), the $L_1$ loss. (*Dramatic foreshadowing*.) The residual vector is the gradient (vector of partial derivatives) of the $L_2$ loss function and the sign vector is the gradient of the $L_1$ loss function. GBMs nudge $\hat{\vec y}$ at each stage in the direction of reduced loss.
+To answer these questions, we're going to employ a mathematician's favorite trick: showing how our current problem is a flavor of another problem with a known solution and lots of useful results. Specifically, this article shows how gradient boosting machines perform an optimization technique from numerical methods called [gradient or steepest descent](https://en.wikipedia.org/wiki/Gradient_descent). We'll see that a GBM training weak leaners on residual vectors optimizes the mean squared error (MSE), the $L_2$ loss, between the true target $\vec y$ and the intermediate predictions, $\hat{\vec y} = F_m(X)$. A GBM that trains weak learners on sign vectors optimizes the mean absolute error (MAE), the $L_1$ loss. 
 
 Before jumping into the mathematics, let's make some observations about the behavior of our gradient boosting machines based on the examples from the previous two articles.
  
@@ -74,6 +74,19 @@ o we can minimize any differentiable loss function
 
 o units are dollars of rent. (target space for each dim)
 
+## The intuition behind gradient descent
+
+what's a gradient?
+
+
+## Boosting as gradient descent in prediction space
+
+we would choose absolute value difference when we are worried about outliers.
+
+gradient descent does parameter optimization normally but we are now doing function space optimization. Gradient descent can't be doing parameter optimization because the different kinds of models would have different parameters.
+
+The residual vector is the gradient (vector of partial derivatives) of the $L_2$ loss function and the sign vector is the gradient of the $L_1$ loss function. GBMs nudge $\hat{\vec y}$ at each stage in the direction of reduced loss.
+
 
 \[
 \frac{\partial L(y_i, F(\vec x_i))}{\partial F(\vec x_i)}
@@ -90,6 +103,42 @@ o units are dollars of rent. (target space for each dim)
 How do you optimize a function? set the derivative to zero and solve for x.
  
 Friedman says '*... consider F(x) evaluated at each point $\vec x$ to be a "parameter"*'
+
+## General algorithm
+
+\latex{{
+\setlength{\algomargin}{3pt}
+\SetAlCapSkip{-10pt}
+\SetKwInput{kwReturns}{returns}
+\begin{algorithm}[H]
+\LinesNumbered
+\SetAlgorithmName{Algorithm}{List of Algorithms}
+\SetAlgoSkip{}
+\SetInd{.5em}{.5em}
+\TitleOfAlgo{{\em boost}($X$,$\vec y$,$M$,$\eta$) \kwReturns{model $F_M$}}
+Let $F_0(X)$ be value $v$ minimizing $\sum_{i=1}^N L(y_i, v)$, loss across all observations\\
+\For{$m$ = 1 \KwTo $M$}{
+	Let $\delta_m = \frac{\partial L(\vec y,~ \vec f(X))}{\partial \vec f(X)}\big\rvert_{\vec f=F_{m-1}}$, gradient of $L$ w.r.t. $\vec f$ evaluated at $F_{m-1}$\\
+	Train regression tree $\Delta_m$ on $\delta_m$, minimizing squared error\\
+	\ForEach{leaf $l \in \Delta_m$}{
+		Let $w$ be value minimizing $L(y_i, F_{m-1}(\vec x_i) + w)$ for obs. $i$ in leaf $l$\\
+		Alter $l$ to predict $w$ (not the usual $mean(y_i)$)\\
+	}
+	$F_m(X) = F_{m-1}(X) + \eta \Delta_m(X)$\\
+}
+\Return{$F_M$}\\
+\end{algorithm}
+}}
+
+<aside title="Why does chasing the sign vector minimize MAE?">
+
+The critical difference is training on the direction only not the magnitude, which gives different groupings.  show a single stump where grouping is different radically because the directions make all of the values look the same.
+See dev-descent  notebook. I created data that gets radically different trees according to what they're trained on.
+
+</aside>
+
+## Junk drawer
+
 
 Students ask the most natural but hard-to-answer questions:
 
@@ -113,42 +162,8 @@ That gives this either $L(\vec y, X) = \sum_{i=1}^{N} (y_i - F_M(\vec x_i))^2$ o
 Have you ever wondered why this technique is called *gradient* boosting? We're boosting gradients because our weak models learn sign vectors, and the other common term for "direction vector" is, drumroll please, *gradient*.  that leads us to optimization via gradient descent.
 
 
-## The intuition behind gradient descent
-
-what's a gradient?
 
 
-## Boosting as gradient descent in prediction space
-
-we would choose absolute value difference when we are worried about outliers.
-
-gradient descent does parameter optimization normally but we are now doing function space optimization. Gradient descent can't be doing parameter optimization because the different kinds of models would have different parameters.
-
-## General algorithm
-
-\latex{{
-\setlength{\algomargin}{3pt}
-\SetAlCapSkip{-10pt}
-\begin{algorithm}[]
-\LinesNumbered
-\SetAlgorithmName{Algorithm}{List of Algorithms}
-\SetAlgoSkip{}
-\SetInd{.5em}{.5em}
-\TitleOfAlgo{{\em boost}($X$,$\vec y$,$M$,$\eta$)}
-\KwResult{model $F_M$}
-Let $F_0(X)$ be value $v$ minimizing $\sum_{i=1}^N L(y_i, v)$, loss across all observations\\
-\For{$m$ = 1 \KwTo $M$}{
-	Let $\delta_m = \frac{\partial L(\vec y,~ \vec f(X))}{\partial \vec f(X)}\big\rvert_{\vec f=F_{m-1}}$, gradient of $L$ w.r.t. $\vec f$ evaluated at $F_{m-1}$\\
-	Train regression tree $\Delta_m$ on $\delta_m$, minimizing squared error\\
-	\ForEach{leaf $l \in \Delta_m$}{
-		Let $w$ be value minimizing $L(y_i, F_{m-1}(\vec x_i) + w)$ for obs. $i$ in leaf $l$\\
-		Alter $l$ to predict $w$ (not  $mean(y_i)$)\\
-	}
-	$F_m(X) = F_{m-1}(X) + \eta \Delta_m(X)$\\
-}
-\Return{$F_M$}\\
-\end{algorithm}
-}}
 
 only do for trees; then we are just tweaking the predictions in the leaf nodes; use mean of leaf elements already in L2 but tweak to use median in L1 case. Min $L(y_i, F_{m-1}(\vec x_i) + w)$ for $\vec x_i$ in leaf $l$. L2 case, we have $(y_i - F_{m-1}(\vec x_i) - w)^2$ and $y_i - F_{m-1}(\vec x_i)$ is just the residual so $w$ as mean minimizes that. That residual is what we are training on and as we discussed before, the initial value should be either the mean or the median because that minimizes those cost functions.
 
@@ -158,8 +173,7 @@ $\tilde{\vec y} = - \nabla_{F_{m-1}(X)} L(\vec y, F_{m-1}(X))$
 
 $\nabla_{\hat{\vec y}} L(\vec y,\hat{\vec y})$
 
-Let $F_0(X)$ be value $v$ that minimizes loss across all observations: $\sum_{i=1}^N L(y_i, v)$\\
-**for**  $m$ = 1 **to**  $M$:\\
+
 
 
 

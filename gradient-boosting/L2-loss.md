@@ -479,7 +479,7 @@ In the final article, <a href="descent.html">Gradient boosting performs gradient
 \latex{{
 \setlength{\algomargin}{3pt}
 \SetAlCapSkip{-10pt}
-\begin{algorithm}[]
+\begin{algorithm}[H]
 \LinesNumbered
 \SetAlgorithmName{Algorithm}{List of Algorithms}
 \SetAlgoSkip{}
@@ -497,7 +497,7 @@ Let $F_0(X) = \frac{1}{N}\sum_{i=1}^N y_i$, mean of target $\vec y$ across all o
 
 ## Choosing hyper-parameters
 
-We've discussed two GBM hyper-parameters in this article, the number of stages $M$ and the learning rate $\eta$.  Both affect model accuracy.  The more stages we use, the more accurate the model, but the more likely we are to be overfitting. The primary value of the learning rate, or "*shrinkage*" as some papers call it, is to reduce overfitting of the overall model. As Chen and Guestrin say in [XGBoost: A Scalable Tree Boosting System](https://arxiv.org/pdf/1603.02754.pdf), "*shrinkage reduces the influence of each individual tree and leaves space for future trees to improve the model.*" Friedman recommends a low learning rate like 0.1 and a larger number of stages. In practice, people do a grid search over the hyper-parameter space looking for the best model performance.  For example, see the article by Jason Brownlee called [Tune Learning Rate for Gradient Boosting with XGBoost in Python](https://machinelearningmastery.com/tune-learning-rate-for-gradient-boosting-with-xgboost-in-python). (Grid search can be very expensive given all of the model construction involved.) 
+We've discussed two GBM hyper-parameters in this article, the number of stages $M$ and the learning rate $\eta$.  Both affect model accuracy.  The more stages we use, the more accurate the model, but the more likely we are to be overfitting. The primary value of the learning rate, or "*shrinkage*" as some papers call it, is to reduce overfitting of the overall model. As Chen and Guestrin say in [XGBoost: A Scalable Tree Boosting System](https://arxiv.org/pdf/1603.02754.pdf), "*shrinkage reduces the influence of each individual tree and leaves space for future trees to improve the model.*" Friedman recommends a low learning rate like 0.1 and a larger number of stages. In practice, people do a grid search over the hyper-parameter space looking for the best model performance. (Grid search can be very expensive given all of the model construction involved.) For example, see the article by Aarshay Jain: [Complete Guide to Parameter Tuning in XGBoost](https://www.analyticsvidhya.com/blog/2016/03/complete-guide-parameter-tuning-xgboost-with-codes-python/) or the article by Jason Brownlee called [Tune Learning Rate for Gradient Boosting with XGBoost in Python](https://machinelearningmastery.com/tune-learning-rate-for-gradient-boosting-with-xgboost-in-python). 
 
 The following graph shows how the mean squared error changes as we add more weak models, illustrated with a few different learning rates.  
 
