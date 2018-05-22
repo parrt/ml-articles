@@ -135,6 +135,57 @@ Let $F_0(X)$ be value $v$ minimizing $\sum_{i=1}^N L(y_i, v)$, loss across all o
 The critical difference is training on the direction only not the magnitude, which gives different groupings.  show a single stump where grouping is different radically because the directions make all of the values look the same.
 See dev-descent  notebook. I created data that gets radically different trees according to what they're trained on.
 
+
+<pyeval label="minMAE" output="df" hide=true>
+import pandas as pd
+import matplotlib.pyplot as plt
+from matplotlib import rc
+import matplotlib
+import numpy as np
+from scipy.optimize import minimize_scalar
+from sklearn.metrics import mean_squared_error, mean_absolute_error
+#rc('text', usetex=True)
+matplotlib.rcParams['mathtext.fontset'] = 'cm'
+matplotlib.rcParams['mathtext.rm'] = 'serif'
+matplotlib.rc('xtick', labelsize=13) 
+matplotlib.rc('ytick', labelsize=13) 
+
+bookcolors = {'crimson': '#a50026', 'red': '#d73027', 'redorange': '#f46d43',
+              'orange': '#fdae61', 'yellow': '#fee090', 'sky': '#e0f3f8', 
+              'babyblue': '#abd9e9', 'lightblue': '#74add1', 'blue': '#4575b4',
+              'purple': '#313695'}
+
+df = pd.DataFrame(data={"sqfeet":[700, 750, 800, 850, 900,950,1000]})
+df["rent"] = pd.Series([1160, 1160, 1175, 1200, 1280,1310,2000])
+
+M = 1
+f0 = df.rent.median()
+df['F0'] = f0
+
+for s in range(1,M+1):
+    df[f'res{s}'] = df.rent - df[f'F{s-1}']
+    df[f'sign{s}'] = np.sign(df[f'res{s}'])
+	
+df = df.astype(int)
+</pyeval>
+
+<pyfig label=minMAE hide=true width="40%">
+plt.plot(df.sqfeet,df.rent,'o')
+
+m = df.rent.mean()
+mm = np.empty(len(df))
+mm.fill(m)
+plt.plot(df.sqfeet,mm)
+
+md = df.rent.median()
+md2 = np.empty(len(df))
+md2.fill(md)
+plt.plot(df.sqfeet,md2, linestyle=':')
+plt.show()
+</pyfig>
+
+Scitkit decision tree gives split point of 975 for training on residual but split of 825 for sign vector. So MSE chases the 800, grouping all others whereas sign vector shows an equal split then takes median. So right leaf for MSE is 800 but is median of 0, 80, 110, 800 = 95. So we aren't taking major steps towards the outlier. First, we're grouping by up/down which ignores magnitude of outlier then we take median which won't let us jump too far towards that. So this is optimizing the abs diff and not giving special emphasis to obs far from median.
+
 </aside>
 
 ## Junk drawer
