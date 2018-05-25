@@ -140,22 +140,59 @@ def l1boost(df, ycol, eta, M):
     return GBM(f0, stumps, eta)
 
 
-def draw_vector(ax, x, y, dx, dy, yrange):
+def draw_vector(ax, x, y, dx, dy, yrange, scale=0.03):
     ax.plot([x,x+dx], [y,y+dy], c='r', linewidth=.8)
     ay = y+dy
-    yrange *= 0.03
+    yrange *= scale
     ad = -yrange if dy>=0 else yrange
     ax.plot([x+dx-4,x+dx], [ay+ad,ay], c='r', linewidth=.8)
     ax.plot([x+dx,x+dx+4], [ay,ay+ad], c='r', linewidth=.8)
     
 
+def draw_stage_residual(ax, df, stage, scale=0.03):
+    for x,d0,delta in zip(df.sqfeet,df[f'F{stage-1}'],df[f'F{stage}']):
+        draw_vector(ax, x, d0, 0, delta-d0, df.rent.max()-df.rent.min(), scale=scale)
+
+        
+def draw_residual(ax, x_train, y_train, y_hat):
+    for x,y,yhat in zip(x_train, y_train, y_hat):
+        draw_vector(ax, x, yhat, 0, y-yhat, df.rent.max()-df.rent.min())
+
+        
+def plot_stump(ax, x_train, y_train, y_pred, split, stage):
+    line1, = ax.plot(x_train, y_train, 'o',
+                     markersize=4,
+                     label="$y-F_"+str(stage-1)+"({\\bf x})$")
+    label = r"$\Delta_"+str(stage)+r"({\bf x})$"
+    left = y_pred[x_train<split]
+    right = y_pred[x_train>split]
+    lmean = np.mean(left)
+    rmean = np.mean(right)
+    line2, = ax.plot([x_train.min()-10,split], [lmean,lmean],
+             linewidth=.8, linestyle='--', c='k', label=label)
+    ax.plot([split,x_train.max()+10], [rmean,rmean],
+             linewidth=.8, linestyle='--', c='k')
+    ax.plot([split,split], [lmean,rmean],
+             linewidth=.8, linestyle='--', c='k')
+    ax.plot([x_train.min()-10,x_train.max()+10], [0,0],
+             linewidth=.8, linestyle=':', c='k')
+    ax.legend(handles=[line1,line2], fontsize=16,
+              loc='upper left', 
+              labelspacing=.1,
+              handletextpad=.2,
+              handlelength=.7,
+              frameon=True)
+
 def plot_composite(ax, df, gbm, stage, eta=1.0, legend=True):
     line1, = ax.plot(df.sqfeet,df.rent, 'o')
 
-    sqfeet_range = np.arange(700-10,950+10,.2)
+    sqfeet_range = np.arange(df.sqfeet.min()-10,df.sqfeet.max()+10,.2)
     y_pred = []
     for x in sqfeet_range:
-        y_pred.append( gbm.predict(x) )
+        delta = 0.0
+        for t in gbm.stumps[0:stage]:
+            delta += eta * t.predict(x)
+        y_pred.append( gbm.f0 + delta )
     line2, = ax.plot(sqfeet_range, y_pred, linewidth=.8, linestyle='--', c='k')
     labs = ['\Delta_1', '\Delta_2', '\Delta_3']
     if stage==1:
@@ -176,7 +213,7 @@ def plot_composite(ax, df, gbm, stage, eta=1.0, legend=True):
 def plot_deltas(ax, df, gbm, stage, eta=1.0, legend=True):
     line1, = ax.plot(df.sqfeet,df.res1, 'o')
 
-    sqfeet_range = np.arange(700-10,950+10,.2)
+    sqfeet_range = np.arange(df.sqfeet.min()-10,df.sqfeet.max()+10,.2)
     y_pred = []
     for x in sqfeet_range:
         y_pred.append( gbm.predict(x) - gbm.f0 )
