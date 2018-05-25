@@ -52,8 +52,8 @@ class L2Stump:
         self.tree_ = tree.DecisionTreeRegressor(max_depth=1)
         self.tree_.fit(X.values.reshape(-1, 1), residual)
         self.split = self.tree_.tree_.threshold[0]
-        self.left = self.residual[self.X<self.split]
-        self.right = self.residual[self.X>=self.split]
+        self.left = self.residual[self.X<self.split].values
+        self.right = self.residual[self.X>=self.split].values
         
     def predict(self,x):
         if isinstance(x,np.ndarray) or isinstance(x,pd.Series):
@@ -75,8 +75,8 @@ class L1Stump:
         self.tree_ = tree.DecisionTreeRegressor(max_depth=1)
         self.tree_.fit(X.values.reshape(-1, 1), signs)
         self.split = self.tree_.tree_.threshold[0]
-        self.left = self.residual[self.X<self.split]
-        self.right = self.residual[self.X>=self.split]
+        self.left = self.residual[self.X<self.split].values
+        self.right = self.residual[self.X>=self.split].values
         
     def predict(self,x):
         if isinstance(x,np.ndarray) or isinstance(x,pd.Series):
@@ -101,6 +101,12 @@ class GBM:
         for t in self.stumps:
             s.append(t.split)
         return s
+
+    def __str__(self):
+        o = ""
+        for i,t in enumerate(self.stumps):
+            o += f"Tree {i}: split @ {t.split}; {t.left} | {t.right}\n"
+        return o
 
 
 def l2boost(df, ycol, eta, M):
@@ -167,3 +173,28 @@ def plot_composite(ax, df, gbm, stage, eta=1.0, legend=True):
                   labels=[label])
         
         
+def plot_deltas(ax, df, gbm, stage, eta=1.0, legend=True):
+    line1, = ax.plot(df.sqfeet,df.res1, 'o')
+
+    sqfeet_range = np.arange(700-10,950+10,.2)
+    y_pred = []
+    for x in sqfeet_range:
+        y_pred.append( gbm.predict(x) - gbm.f0 )
+    line2, = ax.plot(sqfeet_range, y_pred, linewidth=.8, linestyle='--', c='k')
+    labs = ['\Delta_1', '\Delta_2', '\Delta_3']
+    if stage==1:
+        label = r"$\eta \Delta_1$"
+    else:
+        label=r"$\eta("+'+'.join(labs[:stage])+")$"
+
+    ax.plot([df.sqfeet.min()-10,df.sqfeet.max()+10], [0,0],
+             linewidth=.8, linestyle=':', c='k')
+        
+    if legend:
+        ax.legend(handles=[line1,line2], fontsize=16,
+                  loc='center left', 
+                  labelspacing=.1,
+                  handletextpad=.2,
+                  handlelength=.7,
+                  frameon=True,
+                  labels=["$y-F_0$", label])
