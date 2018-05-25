@@ -216,7 +216,10 @@ def plot_deltas(ax, df, gbm, stage, eta=1.0, legend=True):
     sqfeet_range = np.arange(df.sqfeet.min()-10,df.sqfeet.max()+10,.2)
     y_pred = []
     for x in sqfeet_range:
-        y_pred.append( gbm.predict(x) - gbm.f0 )
+        delta = 0.0
+        for t in gbm.stumps[0:stage]:
+            delta += eta * t.predict(x)
+        y_pred.append( delta )
     line2, = ax.plot(sqfeet_range, y_pred, linewidth=.8, linestyle='--', c='k')
     labs = ['\Delta_1', '\Delta_2', '\Delta_3']
     if stage==1:
@@ -235,3 +238,10 @@ def plot_deltas(ax, df, gbm, stage, eta=1.0, legend=True):
                   handlelength=.7,
                   frameon=True,
                   labels=["$y-F_0$", label])
+
+        
+def mse(df, M):
+    return np.array([mean_squared_error(df.rent, df['F'+str(s)]) for s in range(M+1)])
+
+def mae(df, M):
+    return np.array([mean_absolute_error(df.rent, df['F'+str(s)]) for s in range(M+1)])

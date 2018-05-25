@@ -94,40 +94,7 @@ Let's walk through a concrete example to see what gradient boosting looks like o
 Imagine that we have square footage data on five apartments and their rent prices in dollars per month as our training data:
 
 <pyeval label="examples" hide=true>
-import pandas as pd
-import matplotlib.pyplot as plt
-from matplotlib import rc
-import matplotlib
-import numpy as np
-from scipy.optimize import minimize_scalar
-from sklearn.metrics import mean_squared_error, mean_absolute_error
-#rc('text', usetex=True)
-matplotlib.rcParams['mathtext.fontset'] = 'cm'
-matplotlib.rcParams['mathtext.rm'] = 'serif'
-matplotlib.rc('xtick', labelsize=13) 
-matplotlib.rc('ytick', labelsize=13) 
-
-bookcolors = {'crimson': '#a50026', 'red': '#d73027', 'redorange': '#f46d43',
-              'orange': '#fdae61', 'yellow': '#fee090', 'sky': '#e0f3f8', 
-              'babyblue': '#abd9e9', 'lightblue': '#74add1', 'blue': '#4575b4',
-              'purple': '#313695'}
-
-def draw_vector(ax, x, y, dx, dy, yrange):
-    ax.plot([x,x+dx], [y,y+dy], c='r', linewidth=.8)
-    ay = y+dy
-    yrange *= 0.03
-    ad = -yrange if dy>=0 else yrange
-    ax.plot([x+dx-4,x+dx], [ay+ad,ay], c='r', linewidth=.8)
-    ax.plot([x+dx,x+dx+4], [ay,ay+ad], c='r', linewidth=.8)
-</pyeval>
-
-<pyeval label="examples" output="df" hide=true>
-def data():
-    df = pd.DataFrame(data={"sqfeet":[700,950,800,900,750]})
-    df["rent"] = pd.Series([1125,1350,1135,1300,1150])
-    df = df.sort_values('sqfeet')
-    return df
-
+from support import *
 df = data()
 </pyeval>
 
@@ -138,35 +105,13 @@ From this data, we'd like to build a GBM to predict rent price given square foot
 Let's use the mean (average) of the rent prices as our initial model: $F_0(\vec x_i)$ = $f_0(\vec x_i)$ = 1200 for all $i$: $F_0(X) = 1200$. We use the mean because that is the single value that minimizes the mean squared error between it and the $y_i$ values. (We'll seen shortly that GBMs nudging by residual vectors optimize mean squared error.) Once we have $F_0$, we compute $F_1$ by subtracting the previous estimate from the target, $\vec y - F_0$ to get the first residual vector:
 
 <pyeval label="examples" hide=true>
-def stump_predict(x_train, y_train, split):
-    left = y_train[x_train<split]
-    right = y_train[x_train>split]
-    lmean = np.mean(left)
-    rmean = np.mean(right)    
-    return [lmean if x<split else rmean for x in x_train]
+eta = 1.0
+M = 3
+gbm = l2boost(df, 'rent', eta, M)
+splits = gbm.splits()
+#print(gbm.splits())
 
-eta = 0.70
-splits = [None,850, 850, 925] # manually pick them
-stages = 4
-
-def boost(df, xcol, ycol, splits, eta, stages):
-    """
-    Update df to have direction_i, delta_i, F_i.
-    Return MSE, MAE
-    """
-    f0 = df[ycol].mean()
-    df['F0'] = f0
-
-    for s in range(1,stages):
-        df[f'dir{s}'] = df[ycol] - df[f'F{s-1}']
-        df[f'delta{s}'] = stump_predict(df[xcol], df[f'dir{s}'], splits[s])
-        df[f'F{s}'] = df[f'F{s-1}'] + eta * df[f'delta{s}']
-
-    mse = [mean_squared_error(df[ycol], df['F'+str(s)]) for s in range(stages)]
-    mae = [mean_absolute_error(df[ycol], df['F'+str(s)]) for s in range(stages)]
-    return mse, mae
-
-mse,mae = boost(df, 'sqfeet', 'rent', splits, eta, stages)
+df['deltas'] = df[['delta1','delta2','delta3']].sum(axis=1) # sum deltas
 </pyeval>
 
 <!--
@@ -220,7 +165,7 @@ ax.set_xlabel(r"SqFeet (${\bf x}$)", fontsize=14)
 for x,y,yhat in zip(df.sqfeet,df.rent,df.F0):
     draw_vector(ax, x, yhat, 0, y-yhat, df.rent.max()-df.rent.min())
 
-plt.show() 
+plt.show()
 </pyfig>
 
 Next, we train a weak model, $\Delta_1$, to predict that  residual vector given $\vec x_i$ for all $i$ observations. A perfect model, $\Delta_1$, would yield exactly $\vec y-F_0(X)$, meaning that we'd be done after one step since $F_1(X)$ would be $F_1(X) = F_0(X) + (\vec y - F_0(X))$, or just $\vec y$. Because it imperfectly captures that difference, $F_1(X)$ is still not quite $\vec y$, so we need to keep going for a few stages. Our recurrence relation with learning rate, $\eta$, is:
@@ -248,49 +193,16 @@ $\Delta_1$ & $F_1$ & $\vec y$-$F_1$ & $\Delta_2$ & $F_2$ & $\vec y$ - $F_2$ & $\
 It helps to keep in mind that we are always training on the residual vector $\vec y - F_{m-1}$ but get imperfect model $\Delta_m$. The best way to visualize the learning of $\vec y-F_{m-1}$ residual vectors by weak models, $\Delta_m$, is by looking at the residual vectors and model predictions horizontally on the same scale Y-axis:
 
 <pyfig label=examples hide=true width="90%">
-def draw_stump(ax, x_train, y_train, y_pred, split, stage):
-    line1, = ax.plot(x_train, y_train, 'o',
-                     markersize=4,
-                     label=f"$y-F_{stage-1}$")
-    label = r"$\Delta_"+str(stage)+r"({\bf x})$"
-    left = y_pred[x_train<split]
-    right = y_pred[x_train>split]
-    lmean = np.mean(left)
-    rmean = np.mean(right)
-    line2, = ax.plot([x_train.min()-10,split], [lmean,lmean],
-             linewidth=.8, linestyle='--', c='k', label=label)
-    ax.plot([split,x_train.max()+10], [rmean,rmean],
-             linewidth=.8, linestyle='--', c='k')
-    ax.plot([split,split], [lmean,rmean],
-             linewidth=.8, linestyle='--', c='k')
-    ax.plot([x_train.min()-10,x_train.max()+10], [0,0],
-             linewidth=.8, linestyle=':', c='k')
-    ax.legend(handles=[line1,line2], fontsize=16,
-              loc='upper left', 
-              labelspacing=.1,
-              handletextpad=.2,
-              handlelength=.7,
-              frameon=True)
-
-def draw_residual(ax, x_train, y_train, y_hat):
-    for x,y,yhat in zip(x_train, y_train, y_hat):
-        draw_vector(ax, x, yhat, 0, y-yhat, df.rent.max()-df.rent.min())
-
 fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(10, 3.5), sharey=True)
 
 axes[0].set_ylabel(r"$y-\hat y$", fontsize=20)
 for a in range(3):
     axes[a].set_xlabel(r"SqFeet", fontsize=14)
     axes[a].set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
-    
-draw_stump(axes[0], df.sqfeet, df.dir1, df.delta1, splits[1], stage=1)
-#draw_residual(axes[0], df.sqfeet,df.dir1,df.delta1)
 
-draw_stump(axes[1], df.sqfeet, df.dir2, df.delta2, splits[2], stage=2)
-#draw_residual(axes[1], df.sqfeet,df.dir2,df.delta2)
-
-draw_stump(axes[2], df.sqfeet, df.dir3, df.delta3, splits[3], stage=3)
-#draw_residual(axes[2], df.sqfeet,df.dir3,df.delta3)
+plot_stump(axes[0], df.sqfeet, df.res1, df.delta1, splits[0], stage=1)
+plot_stump(axes[1], df.sqfeet, df.res2, df.delta2, splits[1], stage=2)
+plot_stump(axes[2], df.sqfeet, df.res3, df.delta3, splits[2], stage=3)
 
 plt.tight_layout()
 plt.show()
@@ -312,58 +224,9 @@ A regression tree stump is a regression tree with a single root and two children
 The composite model sums together all of the weak models so let's visualize the sum of the weak models:
 
 <pyeval label=examples hide=true>
-eta = 0.7
-df = data()
-mse,mae = boost(df, 'sqfeet', 'rent', splits, eta, stages)
-df = data()
-mse,mae = boost(df, 'sqfeet', 'rent', splits, 0.7, stages)
-df['deltas12'] = eta * df[['delta1','delta2']].sum(axis=1)
-df['deltas123'] = eta * df[['delta1','delta2','delta3']].sum(axis=1)
-df['deltas'] = eta * df[['delta1','delta2','delta3']].sum(axis=1) # sum deltas
-</pyeval>
-
-<pyfig label=examples hide=true width="32%">
 fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(4, 3))
 
-# plot deltas
-line1, = ax.plot(df.sqfeet,df.dir1, 'o', label=r'$y-f_0$')
-
-prevx = np.min(df.sqfeet)
-prevy = 0
-splitys = []
-for s in splits[1:]:
-    if s>prevx: # ignore splits at same spot for plotting
-        y = np.mean(df.deltas[(df.sqfeet>prevx)&(df.sqfeet<=s)]) # all same, get as one
-        splitys.append(y)
-        #print(prevx,s,"=>",y)
-        ax.plot([prevx,s], [y,y], linewidth=.8, linestyle='--', c='k')
-    # draw verticals
-    prevx = s
-    prevy = y
-
-last = np.max(df.sqfeet)
-y = np.mean(df.deltas[(df.sqfeet>prevx)&(df.sqfeet<=last)]) # all same, get as one
-#print(prev,last,"=>",y)
-splitys.append(y)
-line2, = ax.plot([prevx,last], [y,y], linewidth=.8, linestyle='--', c='k',
-                label=r"$\eta (\Delta_1+\Delta_2+\Delta_3)$")
-
-ax.plot([splits[1],splits[1]], [splitys[0], splitys[1]], linewidth=.8, linestyle='--', c='k')
-ax.plot([splits[3],splits[3]], [splitys[1], splitys[2]], linewidth=.8, linestyle='--', c='k')
-ax.plot([s,s], [prevy,y], linewidth=.8, linestyle='--', c='k')
-
-ax.set_ylabel(r"Sum $\Delta_i$ models", fontsize=16)
-ax.set_xlabel(r"SqFeet", fontsize=14)
-
-ax.set_yticks([-100,-50,0,50,100,150])
-ax.set_xticks([700,800,900])
-
-ax.legend(handles=[line1,line2], fontsize=15,
-          loc='center left', 
-          labelspacing=0,
-          handletextpad=.1,
-          handlelength=.7,
-          frameon=True)
+plot_deltas(ax, df, gbm, 3)
 
 plt.tight_layout()
 plt.show()
@@ -372,83 +235,11 @@ plt.show()
 If we add all of those weak models to the initial $f_0$ average model, we see that the full composite model is a very good predictor of the actual rent values:
 
 <pyfig label=examples hide=true width="90%">
-# Hideous manual computation of composite graph but...
+fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(11.1, 3.5))
 
-fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(11, 3), sharey=True)
-
-def gety(df,stage,a,b):
-    if stage==1:
-        return np.mean(df.F0+df.delta1[(df.sqfeet>a)&(df.sqfeet<=b)])
-    if stage==2:
-        return np.mean(df.F0+df.deltas12[(df.sqfeet>a)&(df.sqfeet<=b)])
-    if stage==3:
-        return np.mean(df.F0+df.deltas123[(df.sqfeet>a)&(df.sqfeet<=b)])
-    return None
-    
-def plot_composite(ax,stage):
-    # plot deltas
-    line1, = ax.plot(df.sqfeet,df.rent, 'o', label=r'$y$')
-
-    prevx = np.min(df.sqfeet)
-    prevy = df.F0
-    splitys = []
-    for s in splits[1:]:
-        if s>prevx: # ignore splits at same spot for plotting
-#             y = np.mean(df.F0+df[f'delta{stage}'][(df.sqfeet>prevx)&(df.sqfeet<=s)]) # all same, get as one
-            y = gety(df,stage,prevx,s)
-#             print(prevx,s,"=>",y)
-            splitys.append(y)
-            ax.plot([prevx,s], [y,y], linewidth=.8, linestyle='--', c='k')
-        # draw verticals
-        prevx = s
-        prevy = y
-
-    last = np.max(df.sqfeet)
-    y = gety(df,stage,prevx,last)
-#     y = np.mean(df.F0+df[f'delta{stage}'][(df.sqfeet>prevx)&(df.sqfeet<=last)]) # all same, get as one
-    #print(prev,last,"=>",y)
-    splitys.append(y)
-    line2, = ax.plot([prevx,last], [y,y], linewidth=.8, linestyle='--', c='k')
-
-    ax.plot([splits[1],splits[1]], [splitys[0], splitys[1]], linewidth=.8, linestyle='--', c='k')
-    ax.plot([splits[3],splits[3]], [splitys[1], splitys[2]], linewidth=.8, linestyle='--', c='k')
-    ax.plot([s,s], [prevy,y], linewidth=.8, linestyle='--', c='k')
-
-    ax.set_xlabel(r"SqFeet", fontsize=14)
-
-    #ax.set_yticks(np.arange(1150,1351,50))
-    ax.text(800,1325, f"$F_{stage}$", fontsize=16)
-
-ax = axes[0]
-ax.set_ylabel(r"Rent", fontsize=14)
-plot_composite(ax,1)
-ax.legend(handles=[line2], fontsize=16,
-          loc='center left', 
-          labelspacing=.1,
-          handletextpad=.2,
-          handlelength=.7,
-          frameon=True,
-          labels=[r"$f_0 + \eta \Delta_1$"])
-
-ax = axes[1]
-plot_composite(ax,2)
-ax.legend(handles=[line2], fontsize=16,
-          loc='center left', 
-          labelspacing=.1,
-          handletextpad=.2,
-          handlelength=.7,
-          frameon=True,
-          labels=[r"$f_0 + \eta (\Delta_1 + \Delta_2)$"])
-
-ax = axes[2]
-plot_composite(ax,3)
-ax.legend(handles=[line2], fontsize=16,
-          loc='center left', 
-          labelspacing=.1,
-          handletextpad=.2,
-          handlelength=.7,
-          frameon=True,
-          labels=[r"$f_0 + \eta (\Delta_1 + \Delta_2 + \Delta_3)$"])
+plot_composite(axes[0], df, gbm, 1)
+plot_composite(axes[1], df, gbm, 2)
+plot_composite(axes[2], df, gbm, 3)
 
 plt.tight_layout()
 plt.show()
