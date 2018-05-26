@@ -238,7 +238,7 @@ def plot_deltas(ax, df, gbm, stage, eta=1.0, legend=True):
         
     if legend:
         ax.legend(handles=[line1,line2], fontsize=16,
-                  loc='center left', 
+                  loc='upper left', 
                   labelspacing=.1,
                   handletextpad=.2,
                   handlelength=.7,

@@ -223,7 +223,7 @@ A regression tree stump is a regression tree with a single root and two children
 
 The composite model sums together all of the weak models so let's visualize the sum of the weak models:
 
-<pyeval label=examples hide=true>
+<pyfig label=examples hide=true width="30%">
 fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(4, 3))
 
 plot_deltas(ax, df, gbm, 3)
@@ -293,27 +293,27 @@ We've discussed two GBM hyper-parameters in this article, the number of stages $
 The following graph shows how the mean squared error changes as we add more weak models, illustrated with a few different learning rates.  
 
 <pyeval label="examples" hide=true>
-# Compute MSE
-stages = 4
-df = data() # fresh data
+M = 3
 
-df_mse = pd.DataFrame(data={"stage":range(stages)})
+max_eta = 1
+min_eta = .6
 
-for eta in np.arange(.5, 1, .1):
-    mse,mae = boost(df, 'sqfeet', 'rent', splits, eta, stages)
-    df_mse[f'mse_{eta:.2f}'] = mse
+df_mse = pd.DataFrame(data={"stage":range(M+1)})
 
-mse = [mean_squared_error(df.rent, df[f'F{s}']) for s in range(4)]
+for eta in np.arange(min_eta, max_eta, .1):
+    df = data() # fresh data
+    gbm = l2boost(df, 'rent', eta, M)
+    
+    df_mse[f'mse_{eta:.2f}'] = mse(df, M)
+
 df_mse
 </pyeval>
 
 <pyfig label=examples hide=true width="45%">
-fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(6, 4), sharex=True)
+fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(7, 6), sharex=True)
 
-maxy = 1500
+maxy = 20000
 
-max_eta = 1
-min_eta = .5
 mins = []
 for eta in np.arange(min_eta, max_eta, .1):
     mins.append( np.min(df_mse[f'mse_{eta:.2f}']) )
@@ -344,20 +344,20 @@ for eta in np.arange(min_eta, max_eta, .1):
             fontsize=16)
     i += 1
 
-plt.axis([0,stages-1,0,maxy])
+plt.axis([0,M,0,maxy])
 
 ax.set_ylabel(r"Mean Squared Error", fontsize=16)
 ax.set_xlabel(r"Number of stages $M$", fontsize=16)
 ax.set_title(r'Effect of learning rate $\eta$ on MSE of $F_M({\bf x})$', fontsize=16)
-ax.set_xticks(range(0,stages))
+ax.set_xticks(range(0,M+1))
 
 plt.tight_layout()
 plt.show()
 </pyfig>
 
-Ultimately, we picked $\eta=0.7$ as it looked like it reaches the minimum error at the last stage, $M=3$.
+A value of $\eta=0.8$ looks like it reaches the minimum error at the last stage, $M=3$, so that might be a good starting point for the learning rate.
 
-We stopped at $M=3$ for purposes of a simple explanation of how boosting works.  As we said, practitioners use a grid search to optimize hyper-parameters, such as $M$, but one could also keep adding stages until performance stops improving.  The risk in this case would be over fitting the model.
+We stopped at $M=3$ for purposes of a simple explanation of how boosting works.  As we said, practitioners often use a grid search to optimize hyper-parameters, such as $M$, but one could also keep adding stages until performance stops improving.  The risk in that case would be overfitting the model.
 
 As a side note, the idea of using a learning rate to reduce overfitting in models that optimize cost functions to learn, such as deep learning neural networks, is very common. Rather than using a constant learning rate, though, we can start the learning rate out energetically and gradually slow it down as the model approaches optimality; this proves very effective in practice.
 
