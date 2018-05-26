@@ -4,6 +4,8 @@
 
 \todo{can't proof that it converges or is correct... it's just a way to show that it can work with any differentiable loss function or equivalently direction vector}
 
+Prince says this is an important distinction for him to understand when I said it: chasing the residual vector chases the mean squared error versus chasing sign vector which does not. The gradient of L2 is the residual vector and we chase gradient in gradient descent.
+
 \todo{can't show that each direction vector gets us to lower cost because we might have a bad approximation of the week model}
 
 \todo{weights not needed in the L2 case because the tree is already picking those out as minimum L2}

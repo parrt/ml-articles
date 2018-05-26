@@ -39,200 +39,200 @@
     </font-face>
   </defs>
   <metadata> Produced by OmniGraffle 7.7.1 
-    <dc:date>2018-05-19 18:01:32 +0000</dc:date>
+    <dc:date>2018-05-26 20:35:37 +0000</dc:date>
   </metadata>
   <g id="Canvas_1" fill-opacity="1" stroke-dasharray="none" stroke="none" stroke-opacity="1" fill="none">
     <title>Canvas 1</title>
     <rect fill="white" x="-81.25" y="1597.5662" width="892.0869" height="128.95"/>
     <g id="Canvas_1: Layer 1">
       <title>Layer 1</title>
-      <g id="Graphic_220">
+      <g id="Graphic_41">
         <rect x="70.27083" y="1673.9293" width="124" height="52.33687" fill="#feffcd"/>
         <rect x="70.27083" y="1673.9293" width="124" height="52.33687" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
       </g>
-      <g id="Graphic_219">
+      <g id="Graphic_40">
         <rect x="12.5" y="1604.1985" width="86.60182" height="39" fill="#feffcd"/>
         <rect x="12.5" y="1604.1985" width="86.60182" height="39" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
       </g>
-      <g id="Graphic_218">
+      <g id="Graphic_39">
         <text transform="translate(-44 1641.192)" fill="black">
           <tspan font-family="Times New Roman" font-size="18" font-style="italic" font-weight="400" fill="black" x="2.4296875" y="16">x</tspan>
-          <tspan font-family="Times New Roman" font-size="18" font-weight="400" fill="black" y="16">&lt;850</tspan>
+          <tspan font-family="Times New Roman" font-size="18" font-weight="400" fill="black" y="16">&lt;825</tspan>
           <tspan font-family="Times New Roman" font-size="18" font-style="italic" font-weight="400" fill="black" y="16"> </tspan>
         </text>
       </g>
-      <g id="Graphic_217">
+      <g id="Graphic_38">
         <text transform="translate(111.1 1641.087)" fill="black">
           <tspan font-family="Times New Roman" font-size="18" font-style="italic" font-weight="400" fill="black" x="2.354004" y="16">x</tspan>
-          <tspan font-family="Times New Roman" font-size="18" font-weight="400" fill="black" y="16">&gt;=850</tspan>
+          <tspan font-family="Times New Roman" font-size="18" font-weight="400" fill="black" y="16">&gt;=825</tspan>
           <tspan font-family="Times New Roman" font-size="18" font-style="italic" font-weight="400" fill="black" y="16"> </tspan>
         </text>
       </g>
-      <g id="Graphic_216">
+      <g id="Graphic_37">
         <rect x="-81" y="1673.9293" width="124" height="52.33687" fill="#feffcd"/>
         <rect x="-81" y="1673.9293" width="124" height="52.33687" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
       </g>
-      <g id="Graphic_215">
-        <text transform="translate(-62.5 1673.6414)" fill="black">
-          <tspan font-family="Times New Roman" font-size="20" font-weight="400" fill="black" x=".1796875" y="18">[-25,0,-15]</tspan>
+      <g id="Graphic_36">
+        <text transform="translate(-60 1673.6414)" fill="black">
+          <tspan font-family="Times New Roman" font-size="20" font-weight="400" fill="black" x=".1796875" y="18">[-120,-80]</tspan>
         </text>
       </g>
-      <g id="Graphic_214">
-        <text transform="translate(92.77083 1673.6414)" fill="black">
-          <tspan font-family="Times New Roman" font-size="20" font-weight="400" fill="black" x=".33984375" y="18">[150,200]</tspan>
+      <g id="Graphic_35">
+        <text transform="translate(85.27083 1673.6414)" fill="black">
+          <tspan font-family="Times New Roman" font-size="20" font-weight="400" fill="black" x=".33984375" y="18">[0,170,720]</tspan>
         </text>
       </g>
-      <g id="Graphic_213">
-        <text transform="translate(-65 1699.3626)" fill="black">
-          <tspan font-family="Times New Roman" font-size="19" font-weight="400" fill="black" x=".016845703" y="17">median=-15</tspan>
+      <g id="Graphic_34">
+        <text transform="translate(-70 1699.3626)" fill="black">
+          <tspan font-family="Times New Roman" font-size="19" font-weight="400" fill="black" x=".2668457" y="17">median=-100</tspan>
         </text>
       </g>
-      <g id="Graphic_212">
+      <g id="Graphic_33">
         <text transform="translate(84.27083 1699.3626)" fill="black">
           <tspan font-family="Times New Roman" font-size="19" font-weight="400" fill="black" x=".4304199" y="17">median</tspan>
-          <tspan font-family="Times New Roman" font-size="19" font-weight="400" fill="black" y="17">=175</tspan>
+          <tspan font-family="Times New Roman" font-size="19" font-weight="400" fill="black" y="17">=170</tspan>
         </text>
       </g>
-      <g id="Line_211">
+      <g id="Line_32">
         <line x1="33.604307" y1="1629.7193" x2="-4.394278" y2="1669.4609" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".5"/>
       </g>
-      <g id="Line_210">
+      <g id="Line_31">
         <line x1="81.87185" y1="1630.2193" x2="119.87948" y2="1670.1622" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
       </g>
-      <g id="Graphic_209">
+      <g id="Graphic_30">
         <text transform="translate(62.81667 1615.9263)" fill="black">
           <tspan font-family="Times New Roman" font-size="16" font-weight="400" fill="black" x="0" y="14">1</tspan>
         </text>
       </g>
-      <g id="Graphic_208">
+      <g id="Graphic_29">
         <text transform="translate(50.3 1603.5662)" fill="black">
           <tspan font-family="STIXGeneral" font-size="20" font-weight="400" fill="black" x=".09" y="21">𝚫</tspan>
         </text>
       </g>
-      <g id="Graphic_207">
-        <rect x="390.37024" y="1673.9293" width="124" height="52.33687" fill="#feffcd"/>
-        <rect x="390.37024" y="1673.9293" width="124" height="52.33687" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
+      <g id="Graphic_28">
+        <rect x="379.37024" y="1673.9293" width="135" height="52.33687" fill="#feffcd"/>
+        <rect x="379.37024" y="1673.9293" width="135" height="52.33687" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
       </g>
-      <g id="Graphic_206">
+      <g id="Graphic_27">
         <rect x="332.5994" y="1604.1985" width="86.60182" height="39" fill="#feffcd"/>
         <rect x="332.5994" y="1604.1985" width="86.60182" height="39" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
       </g>
-      <g id="Graphic_205">
+      <g id="Graphic_26">
         <text transform="translate(276.0994 1641.192)" fill="black">
           <tspan font-family="Times New Roman" font-size="18" font-style="italic" font-weight="400" fill="black" x="2.4296875" y="16">x</tspan>
-          <tspan font-family="Times New Roman" font-size="18" font-weight="400" fill="black" y="16">&lt;925</tspan>
+          <tspan font-family="Times New Roman" font-size="18" font-weight="400" fill="black" y="16">&lt;775</tspan>
           <tspan font-family="Times New Roman" font-size="18" font-style="italic" font-weight="400" fill="black" y="16"> </tspan>
         </text>
       </g>
-      <g id="Graphic_204">
+      <g id="Graphic_25">
         <text transform="translate(431.1994 1641.087)" fill="black">
           <tspan font-family="Times New Roman" font-size="18" font-style="italic" font-weight="400" fill="black" x="2.354004" y="16">x</tspan>
-          <tspan font-family="Times New Roman" font-size="18" font-weight="400" fill="black" y="16">&gt;=925</tspan>
+          <tspan font-family="Times New Roman" font-size="18" font-weight="400" fill="black" y="16">&gt;=775</tspan>
           <tspan font-family="Times New Roman" font-size="18" font-style="italic" font-weight="400" fill="black" y="16"> </tspan>
         </text>
       </g>
-      <g id="Graphic_203">
+      <g id="Graphic_24">
         <rect x="221.63391" y="1673.9293" width="143.4655" height="52.33687" fill="#feffcd"/>
         <rect x="221.63391" y="1673.9293" width="143.4655" height="52.33687" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
       </g>
-      <g id="Graphic_202">
-        <text transform="translate(237.36666 1673.6414)" fill="black">
-          <tspan font-family="Times New Roman" font-size="20" font-weight="400" fill="black" x=".1796875" y="18">[-10,15,0,-25]</tspan>
+      <g id="Graphic_23">
+        <text transform="translate(273.36666 1673.6414)" fill="black">
+          <tspan font-family="Times New Roman" font-size="20" font-weight="400" fill="black" x=".009765625" y="18">[-20]</tspan>
         </text>
       </g>
-      <g id="Graphic_201">
-        <text transform="translate(435.37024 1673.6414)" fill="black">
-          <tspan font-family="Times New Roman" font-size="20" font-weight="400" fill="black" x=".33984375" y="18">[25]</tspan>
+      <g id="Graphic_22">
+        <text transform="translate(384.87024 1673.6414)" fill="black">
+          <tspan font-family="Times New Roman" font-size="20" font-weight="400" fill="black" x=".009765625" y="18">[20,-170,0,550]</tspan>
         </text>
       </g>
-      <g id="Graphic_200">
-        <text transform="translate(253.04166 1699.3626)" fill="black">
-          <tspan font-family="Times New Roman" font-size="19" font-weight="400" fill="black" x=".2668457" y="17">median</tspan>
-          <tspan font-family="Times New Roman" font-size="19" font-weight="400" fill="black" y="17">=-5</tspan>
+      <g id="Graphic_21">
+        <text transform="translate(248.54166 1699.3626)" fill="black">
+          <tspan font-family="Times New Roman" font-size="19" font-weight="400" fill="black" x=".016845703" y="17">median</tspan>
+          <tspan font-family="Times New Roman" font-size="19" font-weight="400" fill="black" y="17">=-20</tspan>
         </text>
       </g>
-      <g id="Graphic_199">
+      <g id="Graphic_20">
         <text transform="translate(409.37024 1699.3626)" fill="black">
           <tspan font-family="Times New Roman" font-size="19" font-weight="400" fill="black" x=".18041992" y="17">median</tspan>
           <tspan font-family="Times New Roman" font-size="19" font-weight="400" fill="black" y="17">=25</tspan>
         </text>
       </g>
-      <g id="Line_198">
+      <g id="Line_19">
         <line x1="353.7037" y1="1629.7193" x2="315.70513" y2="1669.4609" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".5"/>
       </g>
-      <g id="Line_197">
+      <g id="Line_18">
         <line x1="401.97126" y1="1630.2193" x2="439.9789" y2="1670.1622" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
       </g>
-      <g id="Graphic_196">
+      <g id="Graphic_17">
         <text transform="translate(382.9161 1615.9263)" fill="black">
           <tspan font-family="Times New Roman" font-size="16" font-weight="400" fill="black" x="0" y="14">2</tspan>
         </text>
       </g>
-      <g id="Graphic_195">
+      <g id="Graphic_16">
         <text transform="translate(370.3994 1603.5662)" fill="black">
           <tspan font-family="STIXGeneral" font-size="20" font-weight="400" fill="black" x=".09" y="21">𝚫</tspan>
         </text>
       </g>
-      <g id="Graphic_194">
+      <g id="Graphic_15">
         <rect x="686.5869" y="1673.9293" width="124" height="52.33687" fill="#feffcd"/>
         <rect x="686.5869" y="1673.9293" width="124" height="52.33687" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
       </g>
-      <g id="Graphic_193">
+      <g id="Graphic_14">
         <rect x="626.8161" y="1604.1985" width="86.60182" height="39" fill="#feffcd"/>
         <rect x="626.8161" y="1604.1985" width="86.60182" height="39" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
       </g>
-      <g id="Graphic_192">
+      <g id="Graphic_13">
         <text transform="translate(570.3161 1641.192)" fill="black">
           <tspan font-family="Times New Roman" font-size="18" font-style="italic" font-weight="400" fill="black" x="2.4296875" y="16">x</tspan>
-          <tspan font-family="Times New Roman" font-size="18" font-weight="400" fill="black" y="16">&lt;725</tspan>
+          <tspan font-family="Times New Roman" font-size="18" font-weight="400" fill="black" y="16">&lt;925</tspan>
           <tspan font-family="Times New Roman" font-size="18" font-style="italic" font-weight="400" fill="black" y="16"> </tspan>
         </text>
       </g>
-      <g id="Graphic_191">
+      <g id="Graphic_12">
         <text transform="translate(725.4161 1641.087)" fill="black">
           <tspan font-family="Times New Roman" font-size="18" font-style="italic" font-weight="400" fill="black" x="2.354004" y="16">x</tspan>
-          <tspan font-family="Times New Roman" font-size="18" font-weight="400" fill="black" y="16">&gt;=725</tspan>
+          <tspan font-family="Times New Roman" font-size="18" font-weight="400" fill="black" y="16">&gt;=925</tspan>
           <tspan font-family="Times New Roman" font-size="18" font-style="italic" font-weight="400" fill="black" y="16"> </tspan>
         </text>
       </g>
-      <g id="Graphic_190">
+      <g id="Graphic_11">
         <rect x="544.0833" y="1673.9293" width="124" height="52.33687" fill="#feffcd"/>
         <rect x="544.0833" y="1673.9293" width="124" height="52.33687" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
       </g>
-      <g id="Graphic_189">
-        <text transform="translate(592.0204 1672.6414)" fill="black">
-          <tspan font-family="Times New Roman" font-size="20" font-weight="400" fill="black" x=".009765625" y="18">[-5]</tspan>
+      <g id="Graphic_10">
+        <text transform="translate(546.0204 1672.6414)" fill="black">
+          <tspan font-family="Times New Roman" font-size="20" font-weight="400" fill="black" x=".1796875" y="18">[0,10,-180,-10]</tspan>
         </text>
       </g>
-      <g id="Graphic_188">
-        <text transform="translate(701.0869 1673.6414)" fill="black">
-          <tspan font-family="Times New Roman" font-size="20" font-weight="400" fill="black" x=".009765625" y="18">[20,5,-20,0]</tspan>
+      <g id="Graphic_9">
+        <text transform="translate(726.5869 1673.6414)" fill="black">
+          <tspan font-family="Times New Roman" font-size="20" font-weight="400" fill="black" x=".33984375" y="18">[540]</tspan>
         </text>
       </g>
-      <g id="Graphic_187">
+      <g id="Graphic_8">
         <text transform="translate(566.6192 1698.3626)" fill="black">
           <tspan font-family="Times New Roman" font-size="19" font-weight="400" fill="black" x=".2668457" y="17">median</tspan>
           <tspan font-family="Times New Roman" font-size="19" font-weight="400" fill="black" y="17">=-5</tspan>
         </text>
       </g>
-      <g id="Graphic_186">
-        <text transform="translate(700.0869 1699.3626)" fill="black">
-          <tspan font-family="Times New Roman" font-size="19" font-weight="400" fill="black" x=".1418457" y="17">median</tspan>
-          <tspan font-family="Times New Roman" font-size="19" font-weight="400" fill="black" y="17">=-2.5</tspan>
+      <g id="Graphic_7">
+        <text transform="translate(700.5869 1699.3626)" fill="black">
+          <tspan font-family="Times New Roman" font-size="19" font-weight="400" fill="black" x=".4304199" y="17">median</tspan>
+          <tspan font-family="Times New Roman" font-size="19" font-weight="400" fill="black" y="17">=540</tspan>
         </text>
       </g>
-      <g id="Line_185">
+      <g id="Line_6">
         <line x1="647.9204" y1="1629.7193" x2="609.9218" y2="1669.4609" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".5"/>
       </g>
-      <g id="Line_184">
+      <g id="Line_5">
         <line x1="696.1879" y1="1630.2193" x2="734.19555" y2="1670.1622" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
       </g>
-      <g id="Graphic_183">
+      <g id="Graphic_4">
         <text transform="translate(677.13274 1615.9263)" fill="black">
           <tspan font-family="Times New Roman" font-size="16" font-weight="400" fill="black" x="0" y="14">3</tspan>
         </text>
       </g>
-      <g id="Graphic_182">
+      <g id="Graphic_3">
         <text transform="translate(664.6161 1603.5662)" fill="black">
           <tspan font-family="STIXGeneral" font-size="20" font-weight="400" fill="black" x=".09" y="21">𝚫</tspan>
         </text>

@@ -137,11 +137,11 @@ print("F3 MSE", mean_squared_error(df.rent, df.F3), "MAE", mean_absolute_error(d
 \begin{tabular}[t]{rrrr}
 {\bf sqfeet} & {\bf rent} & $F_0$ & $\vec y-F_0$ \\
 \hline
-700 & 1125 & 1212 & -87 \\
-750 & 1150 & 1212 & -62 \\
-800 & 1135 & 1212 & -77 \\
-900 & 1300 & 1212 & 88 \\
-950 & 1350 & 1212 & 138 \\
+750 & 1160 & 1418 & -258 \\
+800 & 1200 & 1418 & -218 \\
+850 & 1280 & 1418 & -138 \\
+900 & 1450 & 1418 & 32 \\
+950 & 2000 & 1418 & 582 \\
 \end{tabular}
 }
 }}
@@ -181,11 +181,11 @@ We'll discuss the learning rate below, but for now, please assume that our learn
 \begin{tabular}[t]{rrrrrrrr}
 $\Delta_1$ & $F_1$ & $\vec y$-$F_1$ & $\Delta_2$ & $F_2$ & $\vec y$ - $F_2$ & $\Delta_3$ & $F_3$\\
 \hline
--75 & 1159 & -34 & -22 & 1143 & -18 & -8 & 1137 \\
--75 & 1159 & -9 & -22 & 1143 & 6 & -8 & 1137 \\
--75 & 1159 & -24 & -22 & 1143 & -8 & -8 & 1137 \\
-113 & 1291 & 8 & 33 & 1314 & -14 & -8 & 1308 \\
-113 & 1291 & 58 & 33 & 1314 & 35 & 35 & 1339 \\
+-145 & 1272 & -112 & -92 & 1180 & -20 & 15 & 1195 \\
+-145 & 1272 & -72 & -92 & 1180 & 20 & 15 & 1195 \\
+-145 & 1272 & 7 & 61 & 1334 & -54 & 15 & 1349 \\
+-145 & 1272 & 177 & 61 & 1334 & 115 & 15 & 1349 \\
+582 & 2000 & 0 & 61 & 2061 & -61 & -61 & 2000 \\
 \end{tabular}
 }
 }}
@@ -210,7 +210,7 @@ plt.show()
 
 The blue dots are the residual vector elements used to train $\Delta_m$ weak models, the dashed lines are the predictions made by $\Delta_m$, and the dotted line is the origin at 0.  Notice how the residual vector elements get smaller as we add more weak models.
 
-The predictions are step functions because we've used a *regression tree stump* as our base weak model with manually-selected split points (850, 850, and 925). Here are the three stumps implementing our $\Delta_m$ weak models:
+The predictions are step functions because we've used a *regression tree stump* as our base weak model with split points 925, 825, and 925. Here are the three stumps implementing our $\Delta_m$ weak models:
 
 <img src="images/stubs-mse.svg" width="90%">
 
@@ -346,7 +346,7 @@ You might've heard that gradient boosting is very complex mathematically, but th
 
 ## GBM algorithm to minimize L2 loss
 
-For completeness, here is the boosting algorithm that optimizes the $L_2$ loss function:
+For completeness, here is the boosting algorithm that optimizes the $L_2$ loss function using regression tree stumps:
 
 \latex{{
 \setlength{\algomargin}{3pt}

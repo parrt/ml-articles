@@ -28,11 +28,11 @@ Here is the rental data again along with the initial $F_0$ model (median of $\ve
 \begin{tabular}[t]{rrrrr}
 {\bf sqfeet} & {\bf rent} & $F_0$ & $\vec y$-$F_0$ & $sign(\vec y$-$F_0)$ \\
 \hline
-700 & 1125 & 1150 & -25 & -1\\
-750 & 1150 & 1150 & 0 & 0\\
-800 & 1135 & 1150 & -15 & -1\\
-900 & 1300 & 1150 & 150 & 1\\
-950 & 1350 & 1150 & 200 & 1\\
+750 & 1160 & 1280 & -120 & -1\\
+800 & 1200 & 1280 & -80 & -1\\
+850 & 1280 & 1280 & 0 & 0\\
+900 & 1450 & 1280 & 170 & 1\\
+950 & 2000 & 1280 & 720 & 1\\
 \end{tabular}
 }
 }}
@@ -66,15 +66,20 @@ line2, = ax.plot([0,0],[0,0], c='r', markersize=4, label=r"$sign(y-f_0({\bf x}))
 ax.plot([df.sqfeet.min()-10,df.sqfeet.max()+10], [f0,f0],
          linewidth=.8, linestyle='--', c='k')
 ax.set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
-ax.set_ylim(df.rent.min()-10, df.rent.max()+20)
-ax.text(808, f0+30, r"$f_0({\bf x})$", fontsize=18)
+ax.set_ylim(df.rent.min()-30, df.rent.max()+30)
+ax.text(830, f0-80, r"$f_0({\bf x})$", fontsize=18)
 
 ax.set_ylabel(r"Rent ($y$)", fontsize=14)
 ax.set_xlabel(r"SqFeet (${\bf x}$)", fontsize=14)
 
 # draw arrows
 for x,y,yhat in zip(df.sqfeet,df.rent,df.F0):
-    draw_vector(ax, x, yhat, 0, np.sign(y-yhat)*2, df.rent.max()-df.rent.min())
+    if np.sign(y-yhat)==0:
+        # draw up/down to get X on 0
+        draw_vector(ax, x, yhat, 0, -2, df.rent.max()-df.rent.min())
+        draw_vector(ax, x, yhat, 0, 2, df.rent.max()-df.rent.min())
+    else:
+        draw_vector(ax, x, yhat, 0, np.sign(y-yhat)*2, df.rent.max()-df.rent.min())
     
 ax.legend(handles=[line2], fontsize=16,
           loc='upper left', 
@@ -89,7 +94,7 @@ plt.show()
 
 ## Two perspectives on training weak models for L1 loss
 
-As we did in the first article, our goal is to create a series of nudges, $\Delta_m$, that gradually shift our initial approximation, $f_0(X)$, towards the true target rent vector, $\vec y$. The first stump, $\Delta_1$, should be trained on $sign(\vec y - F_0(X))$, as opposed to the residual vector itself, and let's choose a split point of 850 because that groups the sign values into two similar (low variance) groups, $[-1, 0, 1]$ and $[1,1]$. Because we are dealing with $L_1$ absolute difference and not $L_2$ squared difference, stumps should predict the median, not the mean, of the observations in each leaf. That means $\Delta_1$ would predict -1 for $\vec x$\<850 and 1 for $\vec x$>=850:
+As we did in the first article, our goal is to create a series of nudges, $\Delta_m$, that gradually shift our initial approximation, $f_0(X)$, towards the true target rent vector, $\vec y$. The first stump, $\Delta_1$, should be trained on $sign(\vec y - F_0(X))$, as opposed to the residual vector itself, and let's choose a split point of 850 because that groups the sign values into two similar (low variance) groups, $[-1, 0, 1]$ and $[1,1]$. Because we are dealing with $L_1$ absolute difference and not $L_2$ squared difference, stumps should predict the median, not the mean, of the observations in each leaf. That means $\Delta_1$ would predict -1 for $\vec x$\<825 and 1 for $\vec x$>=825:
 	
 <img src="images/stubs-mae-delta1.svg" width="30%">  
 
@@ -182,23 +187,6 @@ This graph uses notation that assumes an interpretation of weighted stump leaves
 
 Here are the intermediate results of residuals and weak learners for the $M=3$ case (with learning rate $\eta=1$):
 
-<!--
-<pyeval label="examples" hide=true>
-#print(df)
-# manually print table in python
-# for small phone, make 2 tables
-o = ""
-for i in range(len(df)):
-    o += " & ".join([f"{v:.2f}" for v in df.iloc[i,:][['sqfeet','rent','F0','dir1']]]) + "\\" + "\n"
-
-for i in range(len(df)):
-    o += " & ".join([f"{v:.2f}" for v in df.iloc[i,4:15]]) + r"\\"+ "\n"
-
-o = o.replace(".00", "")
-print(o)
-</pyeval>
--->
-
 \latex{{
 {\small
 \setlength{\tabcolsep}{0.5em}
@@ -206,16 +194,16 @@ print(o)
 &&& $sign$ &&&& $sign$\vspace{-1mm}\\  
 $\Delta_1$ & $F_1$ & $\vec y$-$F_1$ & $\vec y$-$F_1$ & $\Delta_2$ & $F_2$ & $\vec y$-$F_2$ & $\vec y$-$F_2$ & $\Delta_3$ & $F_3$\\
 \hline
--15 & 1135 & -10 & -1 & -5 & 1130 & -5 & -1 & -5 & 1125\\
--15 & 1135 & 15 & 1 & -5 & 1130 & 20 & 1 & 2.50 & 1132.50\\
--15 & 1135 & 0 & 0 & -5 & 1130 & 5 & 1 & 2.50 & 1132.50\\
-175 & 1325 & -25 & -1 & -5 & 1320 & -20 & -1 & 2.50 & 1322.50\\
-175 & 1325 & 25 & 1 & 25 & 1350 & 0 & 0 & 2.50 & 1352.50\\
+-100 & 1180 & -20 & -1 & -20 & 1160 & 0 & 0 & -5 & 1155\\
+-100 & 1180 & 20 & 1 & 10 & 1190 & 10 & 1 & -5 & 1185\\
+170 & 1450 & -170 & -1 & 10 & 1460 & -180 & -1 & -5 & 1455\\
+170 & 1450 & 0 & 0 & 10 & 1460 & -10 & -1 & -5 & 1455\\
+170 & 1450 & 550 & 1 & 10 & 1460 & 540 & 1 & 540 & 2000\\
 \end{tabular}
 }
 }}
 
-The split points are 850, 925, 725 for the $\Delta_m$ models. Here are the resulting stumps:
+The split points are 825, 775, 925 for the $\Delta_m$ models. Here are the resulting stumps:
 
 <img src="images/stubs-mae.svg" width="90%">
 
@@ -281,7 +269,7 @@ Ok, so now we've looked at two similar GBM construction approaches, one that tra
 
 ## GBM algorithm to minimize L1 loss
 
-For completeness, here is the boosting algorithm that optimizes the $L_1$ loss function:
+For completeness, here is the boosting algorithm that optimizes the $L_1$ loss function using regression tree stumps:
 
 \latex{{
 \setlength{\algomargin}{3pt}
