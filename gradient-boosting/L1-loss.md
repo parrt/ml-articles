@@ -284,7 +284,7 @@ Let $F_0(X) = median(\vec y)$\\
 \For{$m$ = 1 \KwTo $M$}{
 	Let $\delta_m = \vec y - F_{m-1}(X)$ be the residual vector\\
 	Let ${\bf sign}_m = sign(\delta_m)$ be the sign vector\\
-	Train regression tree $\Delta_m$ on ${\bf sign}_m$, minimizing squared error\\
+	Train regression tree $\Delta_m$ on ${\bf sign}_m$, minimizing \underline{squared error}\\
 	\ForEach{leaf $l \in \Delta_m$}{
 		Alter $l$ to predict median (not mean) of $y_i - F_{m-1}(x_i)$ for obs. $i$ in $l$\\
 	}
@@ -293,4 +293,6 @@ Let $F_0(X) = median(\vec y)$\\
 \Return{$F_M$}\\
 \end{algorithm}
 }}
+
+That is not a typo that we train regression trees using the standard mechanism that minimizes the squared error when choosing splits.  The regression tree is trained on sign vectors, which is the key goal. We could probably alter the regression tree training to use absolute error, but this usually takes longer (at least in scikit's implementation) than training using squared error.
 
