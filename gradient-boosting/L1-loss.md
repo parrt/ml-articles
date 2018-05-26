@@ -39,123 +39,18 @@ Here is the rental data again along with the initial $F_0$ model (median of $\ve
 
 
 <pyeval label="examples" hide=true>
-import pandas as pd
-import matplotlib.pyplot as plt
-from matplotlib import rc
-import matplotlib
-import numpy as np
-from scipy.optimize import minimize_scalar
-from sklearn.metrics import mean_squared_error, mean_absolute_error
-#rc('text', usetex=True)
-matplotlib.rcParams['mathtext.fontset'] = 'cm'
-matplotlib.rcParams['mathtext.rm'] = 'serif'
-matplotlib.rc('xtick', labelsize=13) 
-matplotlib.rc('ytick', labelsize=13) 
-
-bookcolors = {'crimson': '#a50026', 'red': '#d73027', 'redorange': '#f46d43',
-              'orange': '#fdae61', 'yellow': '#fee090', 'sky': '#e0f3f8', 
-              'babyblue': '#abd9e9', 'lightblue': '#74add1', 'blue': '#4575b4',
-              'purple': '#313695'}
-
-def draw_vector(ax, x, y, dx, dy, yrange, c=bookcolors['red']):
-    ax.plot([x,x+dx], [y,y+dy], c=c, linewidth=.8)
-    ay = y+dy
-    yrange *= 0.03
-    ad = -yrange if dy>=0 else yrange
-    ax.plot([x+dx-4,x+dx], [ay+ad,ay], c=c, linewidth=.8)
-    ax.plot([x+dx,x+dx+4], [ay,ay+ad], c=c, linewidth=.8)
-    
-def data():
-    df = pd.DataFrame(data={"sqfeet":[700,950,800,900,750]})
-    df["rent"] = pd.Series([1125,1350,1135,1300,1150])
-    df = df.sort_values('sqfeet')
-    return df
-
-class Stump:
-    def __init__(self, X, residual, split):
-        """
-        We train on the residual or the sign vector but only to get
-        the regions in the leaves with y_i. Then we grab mean/median
-        of residual, y_i - F_{m-1}, in that region (L2/L1).
-        """
-        self.X, self.residual, self.split = X, residual, split
-        self.left = self.residual[self.X<self.split]
-        self.right = self.residual[self.X>=self.split]
-        
-    def l2predict(self,x):
-        lmean = np.mean(self.left)
-        rmean = np.mean(self.right)
-        return lmean if x < self.split else rmean
-        
-    def l1predict(self,x):
-        lmed = np.median(self.left)
-        rmed = np.median(self.right)
-        return lmed if x < self.split else rmed
-    
-class GBM:
-    def __init__(self, f0, stumps, eta):
-        self.f0, self.stumps, self.eta = f0, stumps, eta
-        
-    def l1predict(self, x):
-        delta = 0.0
-        for t in self.stumps:
-            delta += eta * t.l1predict(x)
-        return self.f0 + delta
-
-def plot_composite(ax, gbm, stage, legend=True):
-    line1, = ax.plot(df.sqfeet,df.rent, 'o')
-
-    sqfeet_range = np.arange(700-10,950+10,.2)
-    y_pred = []
-    for x in sqfeet_range:
-        delta = 0.0
-        for t in gbm.stumps[0:stage]:
-            delta += eta * t.l1predict(x)
-        y_pred.append( f0 + delta )
-    line2, = ax.plot(sqfeet_range, y_pred, linewidth=.8, linestyle='--', c='k')
-    labs = ['\Delta_1', '\Delta_2', '\Delta_3']
-    if stage==1:
-        label = r"$f_0 + \eta \Delta_1$"
-    else:
-        label=r"$f_0 + \eta("+'+'.join(labs[:stage])+")$"
-
-    if legend:
-        ax.legend(handles=[line2], fontsize=16,
-                  loc='center left', 
-                  labelspacing=.1,
-                  handletextpad=.2,
-                  handlelength=.7,
-                  frameon=True,
-                  labels=[label])
-				  		
+from support import *		  		
 df = data()
-
-def boost(df, xcol, ycol, splits, eta, stages):
-    """
-    Update df to have direction_i, delta_i, F_i.
-    Return MSE, MAE
-    """
-    f0 = df[ycol].median()
-    df['F0'] = f0
-
-    stumps = []
-    for s in range(1,M+1):
-        df[f'res{s}'] = df[ycol] - df[f'F{s-1}']
-        df[f'sign{s}'] = np.sign(df[f'res{s}'])
-        t = Stump(df.sqfeet, df[f'res{s}'], splits[s])
-        stumps.append(t)
-        df[f'delta{s}'] = [t.l1predict(x) for x in df[xcol]]
-        df[f'F{s}'] = df[f'F{s-1}'] + eta * df[f'delta{s}']
-
-    return GBM(f0, stumps, eta)
 
 M = 3
 eta = 1
-splits = [None,850, 925, 725] # manually pick them
-gbm = boost(df, 'sqfeet', 'rent', splits, eta, M)
+gbm = l1boost(df, 'rent', eta, M)
+splits = gbm.splits()
 
 mse = [mean_squared_error(df.rent, df['F'+str(s)]) for s in range(M+1)]
 mae = [mean_absolute_error(df.rent, df['F'+str(s)]) for s in range(M+1)]
+#print(mse)
+#print(mae)
 </pyeval>
 
 Visually, we can see that the first sign vector has components pointing in the right direction of the true target elements, $y_i$, from $f_0(X)$:
@@ -172,7 +67,7 @@ ax.plot([df.sqfeet.min()-10,df.sqfeet.max()+10], [f0,f0],
          linewidth=.8, linestyle='--', c='k')
 ax.set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
 ax.set_ylim(df.rent.min()-10, df.rent.max()+20)
-ax.text(815, f0+10, r"$f_0({\bf x})$", fontsize=18)
+ax.text(808, f0+30, r"$f_0({\bf x})$", fontsize=18)
 
 ax.set_ylabel(r"Rent ($y$)", fontsize=14)
 ax.set_xlabel(r"SqFeet (${\bf x}$)", fontsize=14)
@@ -204,7 +99,6 @@ Without the distance to the target as part of our $\Delta_m$ nudges, however, th
 f0 = df.rent.median()
 fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(4, 3.5), sharey=True)
 
-
 ax = axes
 line1, = ax.plot(df.sqfeet,df.rent,'o', linewidth=.8, markersize=4, label="$y$")
 # fake a line to get smaller red dot
@@ -212,14 +106,11 @@ line2, = ax.plot([0,0],[0,0], c='r', markersize=4, label=r"$100 \Delta_1({\bf x}
 ax.plot([df.sqfeet.min()-10,df.sqfeet.max()+10], [f0,f0],
          linewidth=.8, linestyle='--', c='k')
 ax.set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
-ax.set_ylim(df.rent.min()-100, df.rent.max()+20)
-ax.text(815, f0+10, r"$f_0({\bf x})$", fontsize=18)
+ax.set_ylim(df.rent.min()-150, df.rent.max()+20)
+ax.text(800, f0+30, r"$f_0({\bf x})$", fontsize=18)
 
-ax.arrow(830,1050, -20, 0, linewidth=.8, head_width=6, head_length=4)
-ax.text(834, 1050-8, "Oops!", fontsize=14)
-
-ax.arrow(870,1250, 20, 0, linewidth=.8, head_width=6, head_length=4)
-ax.text(820, 1250-8, "Yay!", fontsize=14)
+ax.arrow(880,f0-100, -20, 0, linewidth=.8, head_width=6, head_length=4)
+ax.text(883, f0-100-15, "Oops!", fontsize=12)
 
 ax.set_ylabel(r"Rent ($y$)", fontsize=14)
 ax.set_xlabel(r"SqFeet (${\bf x}$)", fontsize=14)
@@ -255,10 +146,17 @@ Just to drive this home, MSE trains on residual vectors and the leaves predict t
 
 Let's figure out the weights for the leaves of $F_1$'s stump. The residual vector $\vec y - F_0$ has values -25, 0, -15 for the left leaf, which has a median of 15, so that is the weight for the left leaf. The right leaf has residuals 150 and 200, so the weight of the right leaf is 175.  The dashed line in the following graph shows composite model $F_1$.
 
-<pyfig label=examples hide=true width="40%">
-fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(5,3.8))
+<pyeval label=examples hide=true>
+# get left/right median to use as weights
+t1 = gbm.stumps[0]
+w1 = int(np.abs(t1.predict(t1.split-1)))
+w2 = int(np.abs(t1.predict(t1.split+1)))
+</pyeval>
 
-plot_composite(ax, gbm, 1, legend=False)
+<pyfig label=examples hide=true width="40%">
+fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(5,4))
+
+plot_composite(ax, df, gbm, 1, eta=1.0, legend=False)
 
 ax.plot([df.sqfeet.min()-10,df.sqfeet.max()+10], [f0,f0],
          linewidth=.8, linestyle=':', c='k')
@@ -266,13 +164,15 @@ ax.plot([df.sqfeet.min()-10,df.sqfeet.max()+10], [f0,f0],
 for x,d0,delta in zip(df.sqfeet,df[f'F0'],df[f'F1']):
     draw_vector(ax, x, d0, 0, delta-d0, df.rent.max()-df.rent.min())
 
-ax.text(700-10, 1340, r"$F_0 = f_0 + \Delta_1({\bf x}; {\bf w}_1)$", fontsize=18)
-ax.text(700-10, 1315, r"${\bf w}_1 = [15, 175]$", fontsize=16)
-ax.text(900, f0-20, r"$f_0({\bf x})$", fontsize=18)
+ax.text(750, 1800, r"$F_1 = f_0 + \Delta_1({\bf x}; {\bf w}_1)$", fontsize=18)
+ax.text(750, 1710, r"${\bf w}_1 = ["+str(w1)+","+str(w2)+"]$", fontsize=16)
+ax.text(910, f0-60, r"$f_0({\bf x})$", fontsize=18)
 
 ax.set_ylabel(r"Rent ($y$)", fontsize=14)
 ax.set_xlabel(r"SqFeet (${\bf x}$)", fontsize=14)
+ax.set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
 
+ax.text(810,1980, "$\Delta_1$ for $L_1$ ignores outlier", fontsize=14)
 plt.tight_layout()
 
 plt.show()
@@ -322,76 +222,18 @@ We have manually chosen split points of 850, 925, 725 for the $\Delta_m$ models.
 Despite the imprecision of the weak models, the weighted $\Delta_m$ predictions nudge $\hat{\vec y}$ closer and closer to the true $\vec y$. The following figure illustrates the three predicted $\Delta_m$ vectors (in red) versus the true $\vec y$ target (blue dots).
 
 <pyfig label=examples hide=true width="90%">
-fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(11, 4), sharey=True)
+fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(10, 3.5), sharey=True)
 
-def draw_stage_residual(ax, df, stage):
-    for x,d0,delta in zip(df.sqfeet,df[f'F{stage-1}'],df[f'F{stage}']):
-        draw_vector(ax, x, d0, 0, delta-d0, df.rent.max()-df.rent.min())
+axes[0].set_ylabel(r"$y-\hat y$", fontsize=20)
+for a in range(3):
+    axes[a].set_xlabel(r"SqFeet", fontsize=14)
+    axes[a].set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
 
-# PLOT 1
+plot_stump(axes[0], df.sqfeet, df.res1, df.delta1, splits[0], stage=1)
 
-ax = axes[0]
-f0 = df.rent.median()
-line1, = ax.plot(df.sqfeet,df.rent,'o', linewidth=.8, markersize=4, label="$y$")
-draw_stage_residual(ax, df, stage=1)
-# fake a line to get smaller red dot
-line2, = ax.plot(700,1000,linewidth=.8, c='r', markersize=4)
-ax.plot([df.sqfeet.min()-10,df.sqfeet.max()+10], [f0,f0],
-         linewidth=.8, linestyle='--', c='k')
-ax.text(815, f0+10, r"$f_0({\bf x})$", fontsize=18)
-ax.set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
-ax.set_ylim(df.rent.min()-10, df.rent.max()+10)
-ax.set_xlabel(r"SqFeet", fontsize=14)
-ax.set_ylabel(r"Rent", fontsize=14)
-ax.legend(handles=[line2], fontsize=15,
-          loc='upper left', 
-          labelspacing=.1,
-          handletextpad=.2,
-          handlelength=.7,
-          frameon=True,
-          labels=["$\Delta_1({\\bf x})$"])
+plot_stump(axes[1], df.sqfeet, df.res2, df.delta2, splits[1], stage=2)
 
-# PLOT 2
-
-ax = axes[1]
-line1, = ax.plot(df.sqfeet,df.rent,'o', linewidth=.8, markersize=4, label="$y$")
-draw_stage_residual(ax, df, stage=2)
-# fake a line to get smaller red dot
-line2, = ax.plot(700,1000,linewidth=.8, c='r', markersize=4)
-ax.plot([df.sqfeet.min()-10,df.sqfeet.max()+10], [f0,f0],
-         linewidth=.8, linestyle='--', c='k')
-ax.text(815, f0+10, r"$f_0({\bf x})$", fontsize=18)
-ax.set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
-ax.set_ylim(df.rent.min()-10, df.rent.max()+10)
-ax.set_xlabel(r"SqFeet", fontsize=14)
-ax.legend(handles=[line2], fontsize=15,
-          loc='upper left', 
-          labelspacing=.1,
-          handletextpad=.2,
-          handlelength=.7,
-          frameon=True,
-          labels=["$\Delta_2({\\bf x})$"])
-
-# PLOT 3
-
-ax = axes[2]
-line1, = ax.plot(df.sqfeet,df.rent,'o', linewidth=.8, markersize=4, label="$y$")
-draw_stage_residual(ax, df, stage=3)
-# fake a line to get smaller red dot
-line2, = ax.plot(700,1000,linewidth=.8, c='r', markersize=4)
-ax.plot([df.sqfeet.min()-10,df.sqfeet.max()+10], [f0,f0],
-         linewidth=.8, linestyle='--', c='k')
-ax.text(815, f0+10, r"$f_0({\bf x})$", fontsize=18)
-ax.set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
-ax.set_ylim(df.rent.min()-10, df.rent.max()+10)
-ax.set_xlabel(r"SqFeet", fontsize=14)
-ax.legend(handles=[line2], fontsize=15,
-          loc='upper left', 
-          labelspacing=.1,
-          handletextpad=.2,
-          handlelength=.7,
-          frameon=True,
-          labels=["$\Delta_3({\\bf x})$"])
+plot_stump(axes[2], df.sqfeet, df.res3, df.delta3, splits[2], stage=3)
 
 plt.tight_layout()
 plt.show()
@@ -404,14 +246,16 @@ It's also helpful to look at a sequence of diagrams showing the composite model 
 <!-- composite model -->
 
 <pyfig label=examples hide=true width="90%">
-df = data()
-gbm = boost(df, 'sqfeet', 'rent', splits, eta, M)
-  
-fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(11.1, 3.5))
+fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(11.1, 3.5), sharey=True)
 
-plot_composite(axes[0], gbm, 1)
-plot_composite(axes[1], gbm, 2)
-plot_composite(axes[2], gbm, 3)
+axes[0].set_ylabel(r"Rent", fontsize=14)
+for a in range(3):
+    axes[a].set_xlabel(r"SqFeet", fontsize=14)
+    axes[a].set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
+
+plot_composite(axes[0], df, gbm, 1)
+plot_composite(axes[1], df, gbm, 2)
+plot_composite(axes[2], df, gbm, 3)
 
 plt.tight_layout()
 plt.show()
