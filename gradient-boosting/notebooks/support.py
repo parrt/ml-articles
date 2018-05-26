@@ -22,10 +22,16 @@ bookcolors = {'crimson': '#a50026', 'red': '#d73027', 'redorange': '#f46d43',
               'purple': '#313695'}
 
 def data():
+# original
 #     df = pd.DataFrame(data={"sqfeet":[700, 750, 800, 850, 900,950,1000]})
 #     df["rent"] = pd.Series([1160, 1160, 1175, 1200, 1280,1310,2000])
+# 2nd try with outlier
+#    df = pd.DataFrame(data={"sqfeet":[750, 800, 850, 900,950]})
+#    df["rent"] = pd.Series([1160, 1175, 1200, 1250,2000])
+    
     df = pd.DataFrame(data={"sqfeet":[750, 800, 850, 900,950]})
-    df["rent"] = pd.Series([1160, 1175, 1200, 1250,2000])
+    df["rent"] = pd.Series([1160, 1200, 1280, 1450,2000])
+    
     df = df.sort_values('sqfeet')
     return df
 
