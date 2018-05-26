@@ -172,7 +172,7 @@ ax.set_ylabel(r"Rent ($y$)", fontsize=14)
 ax.set_xlabel(r"SqFeet (${\bf x}$)", fontsize=14)
 ax.set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
 
-ax.text(810,1980, "$\Delta_1$ for $L_1$ ignores outlier", fontsize=14)
+ax.text(800,1980, "$\Delta_1$ for $L_1$ ignores outlier", fontsize=14)
 plt.tight_layout()
 
 plt.show()
@@ -215,12 +215,16 @@ $\Delta_1$ & $F_1$ & $\vec y$-$F_1$ & $\vec y$-$F_1$ & $\Delta_2$ & $F_2$ & $\ve
 }
 }}
 
-We have manually chosen split points of 850, 925, 725 for the $\Delta_m$ models. Here are the resulting stumps:
+The split points are 850, 925, 725 for the $\Delta_m$ models. Here are the resulting stumps:
 
 <img src="images/stubs-mae.svg" width="90%">
 
-Despite the imprecision of the weak models, the weighted $\Delta_m$ predictions nudge $\hat{\vec y}$ closer and closer to the true $\vec y$. The following figure illustrates the three predicted $\Delta_m$ vectors (in red) versus the true $\vec y$ target (blue dots).
+Let's look at the $y - F_m$ residuals and the $\Delta_m$ models trained on the sign vectors and weighted by the median of the residuals in the enclosing leaf node.
 
+<table>
+<tr><th>$\Delta_m$ for MAE $L_1$ optimization
+<tr>
+<td>
 <pyfig label=examples hide=true width="90%">
 fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(10, 3.5), sharey=True)
 
@@ -230,18 +234,24 @@ for a in range(3):
     axes[a].set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
 
 plot_stump(axes[0], df.sqfeet, df.res1, df.delta1, splits[0], stage=1)
-
 plot_stump(axes[1], df.sqfeet, df.res2, df.delta2, splits[1], stage=2)
-
 plot_stump(axes[2], df.sqfeet, df.res3, df.delta3, splits[2], stage=3)
 
 plt.tight_layout()
 plt.show()
 </pyfig>
+</table>
 
-As the weak model predictions get better, the algorithm takes smaller steps to zero in on the best prediction.
+The blue dots are the residual vector elements whose sign value is used to train $\Delta_m$ weak models, the dashed lines are the predictions made by $\Delta_m$, and the dotted line is the origin at 0. The residual vector elements get closer to zero in general as they did in the previous article (that trained on the residual not sign vector). In this case, however, the weak models are clearly not chasing the outlier with prejudice, which is finally dealt with using $\Delta_3$. In contrast, the $L_2$-optimizing model from the previous article used $\Delta_1$ to immediately bring that outlier residual to 0 (as shown in $y-F_1$ residual):
 
-It's also helpful to look at a sequence of diagrams showing the composite model predictions as we add weak models:
+<table>
+<tr><th>$\Delta_m$ for MSE $L_2$ optimization
+<tr>
+<td>
+<img src="images/L2-deltas.svg" width="90%">
+</table>
+
+Despite the imprecision of the weak models, the weighted $\Delta_m$ predictions nudge $\hat{\vec y}$ closer and closer to the true $\vec y$. It's also helpful to look at a sequence of diagrams showing the composite model predictions as we add weak models:
 
 <!-- composite model -->
 
@@ -267,9 +277,11 @@ How accurate is $F_M(\vec x)$? As in the previous article, we can use a loss fun
 L(\vec y,F_M(X)) = \frac{1}{N} \sum_{i=1}^{N} |y_i - F_M(\vec x_i)|
 \]
 
-(Using vector operations, that summation is the $L_1$ norm: $||\vec y-F_M(X)||_1$).
+Ok, so now we've looked at two similar GBM construction approaches, one that trains weak models on residual vectors and the other that trains weak models on sign vectors. The former predicts the average residual value for observations in the leaf associated with an unknown $\vec x$ whereas the latter predicts the median residual value. The effect of these differences is that the former optimizes the mean squared error and the latter optimizes the mean absolute error over the training set. Why this is true is the focus of the next article and final article, [Gradient boosting performs gradient descent](descent.html).
 
 ## GBM algorithm to minimize L1 loss
+
+For completeness, here is the boosting algorithm that optimizes the $L_1$ loss function:
 
 \latex{{
 \setlength{\algomargin}{3pt}
@@ -294,4 +306,3 @@ Let $F_0(X) = median(\vec y)$\\
 \end{algorithm}
 }}
 
-Ok, so now we've looked at two similar GBM construction approaches, one that trains weak models on residual vectors and the other that trains weak models on sign vectors. The former predicts the average residual value for observations in the leaf associated with an unknown $\vec x$ whereas the latter predicts the median residual value. The effect of these differences is that the former optimizes the mean squared error and the latter optimizes the mean absolute error over the training set. Why this is true is the focus of the next article and final article, [Gradient boosting performs gradient descent](descent.html).
