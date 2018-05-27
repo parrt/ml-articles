@@ -3,7 +3,7 @@
 \author{[Terence Parr](http://parrt.cs.usfca.edu) and [Jeremy Howard](http://www.fast.ai/about/#jeremy)}
 
 
-## A review of additive modeling 
+## An introduction to additive modeling 
 
 Before we get into boosting, let's look at an example of what mathematicians call *additive modeling* because it is the foundation of boosting. The idea is quite simple: we are going to add a bunch of simple terms together to create a a more complicated expression. In the machine learning world, that expression (function) represents a model mapping some observation feature, $x$, to a target value, $y$. It's a useful technique because we can often conjure up the simple terms more easily than cracking the overall function in one go.  Consider the following curve that shows $y$ as some unknown but nontrivial function of $x$.
 
@@ -118,30 +118,22 @@ More generally, mathematicians describe the decomposition of a function into the
 F_M(\vec x) = f_1(\vec x) + ...  + f_M(\vec x) = \sum_{m=1}^M f_m(\vec x)
 \]
 
-Even though we are just adding terms together, such "additive modeling" is a powerful modeling technique as we'll see below.
+The sigma $\sum$ notation is a `for`-loop that iterates $m$ from 1 to $M$, accumulating the sum of the subfunction, $f_m$, results.
+
+In the machine learning world, we're given a set of $(x,y)$ data points rather than a continuous function, as we have here.  The goal is to create a function that draws a nice curve through the data points. We call that function a *model* and it maps $x$ to $y$, thus, making predictions given some unknown $x$.   Adding up a bunch of subfunctions to create a composite function that models some data points is then called *additive modeling*. Gradient boosting machines use additive modeling to gradually nudge an approximate model towards a really good model, by adding simple submodels to a composite model.
 
 ## An introduction to boosted regression
 
 [Boosting](https://en.wikipedia.org/wiki/Boosting_\(meta-algorithm\)) is a loosely-defined strategy that combines multiple simple models into a single composite model. The idea is that, as we introduce more simple models, the overall model becomes a stronger and stronger predictor. In boosting terminology, the simple models are called *weak models* or *weak learners*.
 
-In the context of regression, we make numerical predictions, such as rent prices, based upon information about an entity (an *observation*).  To keep things simple in this article, let's work with a single feature per entity and call it $x$. Given $x$, we'd like to learn target value $y$ for a bunch of $(x,y)$ pairs. If we plot $y$ versus $x$, it often looks just like the plot of a function
-
-
-Training a regression model is a matter of fitting a function through the data points $(x,y)$ as best we can. Let's imagine that the blue line in the graph represents the function we like to approximate
-
-
-
-In these articles, we're going to stick with a single feature for each observation
-
-for combining the efforts of multiple weak models into a single, strong meta-model or composite model.   Mathematicians represent both the weak and composite models as functions, but in practice the models can be anything including k-nearest-neighbors or regression trees.  Since everyone uses trees for boosting, we'll focus on implementations that use regression trees for weak models, which also happens greatly simplifies the mathematics. Given a single feature vector $\vec x$ and scalar target value $y$ from a single observation, we can express a meta-model that predicts $\hat y$ as the addition of $M$ weak models $f_m(\vec x)$:
+In the context of regression, we make numerical predictions, such as rent prices, based upon information, such as square footage, about an entity (an *observation*).  To keep things simple in this article, we'll work with a single feature per entity but, in general, each observation has a vector of features; let's call it $\vec x$. Given $\vec x$, we'd like to learn scalar target value $y$ for a bunch of $(\vec x_i,y_i)$ pairs.  Training a regression model is a matter of fitting a function through the data points $(\vec x,y)$ as best we can.  Given a single feature vector $\vec x$ and scalar target value $y$ for a single observation, we can express a  composite model that predicts $\hat y$ as the addition of $M$ weak models $f_m(\vec x)$:
 
 \[
-\hat y = F_M(\vec x) = f_1(\vec x) + ...  + f_M(\vec x) = \sum_{m=1}^M f_m(\vec x)
+\hat y = \sum_{m=1}^M f_m(\vec x)
 \]
 
-In practice, we always have more than one observation, ($\vec x_i$, $y_i$), but it's easier to start out thinking about how to deal with a single observation. Later, we'll stack $N$ feature vectors as rows in a matrix, $X = [\vec x_1, \vec x_2, ..., \vec x_N]$, and targets into a vector, $\vec y = [y_1, y_2, ..., y_N]$ for $N$ observations.
 
-
+Mathematicians represent both the weak and composite models as functions, but in practice the models can be anything including k-nearest-neighbors or regression trees.  Since everyone uses trees for boosting, we'll focus on implementations that use regression trees for weak models, which also happens greatly simplifies the mathematics.   Later, we'll stack $N$ feature vectors as rows in a matrix, $X = [\vec x_1, \vec x_2, ..., \vec x_N]$, and targets into a vector, $\vec y = [y_1, y_2, ..., y_N]$ for $N$ observations.
 
 It's often the case that an additive model can build the individual $f_m(\vec x)$ terms independently and in parallel, but that's not the case for boosting. Boosting constructs and adds weak models in a stage-wise fashion, one after the other, each one chosen to improve the overall model performance. The boosting strategy is greedy in the sense that choosing $f_m(\vec x)$ never alters previous functions. We could choose to stop adding weak models when $\hat y = F_M(\vec x)$'s performance is good enough or when $f_m(\vec x)$ doesn't add anything.   In practice, we choose the number of stages, $M$, as a hyper-parameter of the overall model. Allowing $M$ to grow arbitrarily increases the risk of over fitting.
 
