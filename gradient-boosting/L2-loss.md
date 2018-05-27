@@ -2,9 +2,138 @@
 
 \author{[Terence Parr](http://parrt.cs.usfca.edu) and [Jeremy Howard](http://www.fast.ai/about/#jeremy)}
 
+
+## A review of additive modeling 
+
+Before we get into boosting, let's look at an example of what mathematicians call *additive modeling* because it is the foundation of boosting. The idea is quite simple: we are going to add a bunch of simple terms together to create a a more complicated expression. In the machine learning world, that expression (function) represents a model mapping some observation feature, $x$, to a target value, $y$. It's a useful technique because we can often conjure up the simple terms more easily than cracking the overall function in one go.  Consider the following curve that shows $y$ as some unknown but nontrivial function of $x$.
+
+<pyeval label="additive" hide=true>
+import matplotlib.pyplot as plt
+import numpy as np
+import matplotlib
+matplotlib.rcParams['mathtext.fontset'] = 'cm'
+matplotlib.rcParams['mathtext.rm'] = 'serif'
+matplotlib.rc('xtick', labelsize=13) 
+matplotlib.rc('ytick', labelsize=13) 
+
+bookcolors = {'crimson': '#a50026', 'red': '#d73027', 'redorange': '#f46d43',
+              'orange': '#fdae61', 'yellow': '#fee090', 'sky': '#e0f3f8', 
+              'babyblue': '#abd9e9', 'lightblue': '#74add1', 'blue': '#4575b4',
+              'purple': '#313695'}
+</pyeval>
+
+<pyfig label="additive" hide=true width="30%">
+fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(5,4.5))
+a,b=-10*np.pi,10*np.pi
+x = np.arange(a,b,0.01)
+y = x+np.sin(x)+30
+line, = ax.plot(x,y)
+ax.plot(x,np.zeros(len(x)), linestyle=":", c='k')
+ax.set_ylabel("$y$", fontsize=20)
+ax.set_xlabel("$x$", fontsize=20)
+ax.set_xticks(np.arange(-30,31,10))
+ax.set_xlim(a,b)
+
+ax.legend(handles=[line], fontsize=18,
+              loc='upper left', 
+              labelspacing=.1,
+              handletextpad=.2,
+              handlelength=.7,
+              frameon=True,
+              labels=['$y=???$'])
+			  
+plt.tight_layout()
+plt.show()
+</pyfig>
+
+Let's assume that the function is composed of several simple terms and try to guess what they are.  After adding each term, we can reassess the situation to help us figure out the next term to add by considering the difference between the current combined function and the desired target function.
+
+Our first approximation might be the line $y=x$ (with slope 60/60=1) that runs through the squiggly target function. Check out the first plot in the following graph sequence. Naturally, the $y$-intercept is wrong so we should add 30 to force $y$ to be 0 at $x$=-30 like the target function, as shown in the second graph.  It turns out that the squiggly bit comes from our friend the sine function so we can add that term, which leads us to the final plot matching our target function:
+
+<pyfig label="additive" hide=true width="90%">
+fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(13.5, 4))
+
+axes[0].set_ylabel("$y$", fontsize=18)
+for i in range(3):
+    axes[i].set_xlim(a,b)
+    axes[i].set_xlabel("$x$", fontsize=18)
+    axes[i].set_xticks(np.arange(-30,31,10))
+
+y = x
+line, = axes[0].plot(x,y,c=bookcolors['lightblue'])
+axes[0].plot(x,np.zeros(len(x)), linestyle=":", c='k')
+axes[0].legend(handles=[line], fontsize=18,
+              loc='upper left', 
+              labelspacing=.1,
+              handletextpad=.2,
+              handlelength=.7,
+              frameon=True,
+              labels=['$y=x$'])
+
+y = x + 30
+line, = axes[1].plot(x,y,c=bookcolors['lightblue'])
+axes[1].plot(x,np.zeros(len(x)), linestyle=":", c='k')
+axes[1].legend(handles=[line], fontsize=18,
+              loc='upper left', 
+              labelspacing=.1,
+              handletextpad=.2,
+              handlelength=.7,
+              frameon=True,
+              labels=['$y=x + 30$'])
+
+y = x + np.sin(x) + 30
+line, = axes[2].plot(x,y,c=bookcolors['lightblue'])
+axes[2].plot(x,np.zeros(len(x)), linestyle=":", c='k')
+axes[2].legend(handles=[line], fontsize=18,
+              loc='upper left', 
+              labelspacing=.1,
+              handletextpad=.2,
+              handlelength=.7,
+              frameon=True,
+              labels=['$y=x + 30 + sin(x)$'])
+
+plt.tight_layout()
+plt.show()
+</pyfig>
+
+Decomposing a complicated function into simpler subfunctions is nothing more than the divide and conquer strategy that we programmers use all the time. In this case, we are dividing a potentially very complicated function into smaller, more manageable bits.  For example, let's call our target function $F(x)$ then we have $y = F(x) = x + 30 + sin(x)$ and can abstract away the individual terms, also as functions, giving us the addition of three subfunctions:
+
+\[
+F(x) &=& f_1(x) + f_2(x) + f_3(x) \\
+\]
+
+where:
+
+\latex{{
+\begin{eqnarray*}
+f_1(x) &=& x\\
+f_2(x) &=& 30\\
+f_3(x) &=& sin(x)\\
+\end{eqnarray*}
+}}
+
+More generally, mathematicians describe the decomposition of a function into the addition of $M$ subfunctions like this:
+
+\[
+F_M(\vec x) = f_1(\vec x) + ...  + f_M(\vec x) = \sum_{m=1}^M f_m(\vec x)
+\]
+
+Even though we are just adding terms together, such "additive modeling" is a powerful modeling technique as we'll see below.
+
 ## An introduction to boosted regression
 
-[Boosting](https://en.wikipedia.org/wiki/Boosting_\(meta-algorithm\)) is a loosely-defined strategy for combining the efforts of multiple weak models into a single, strong meta-model or composite model.   Mathematicians represent both the weak and composite models as functions, but in practice the models can be anything including k-nearest-neighbors or regression trees.  Since everyone uses trees for boosting, we'll focus on implementations that use regression trees for weak models, which also happens greatly simplifies the mathematics. Given a single feature vector $\vec x$ and scalar target value $y$ from a single observation, we can express a meta-model that predicts $\hat y$ as the addition of $M$ weak models $f_m(\vec x)$:
+[Boosting](https://en.wikipedia.org/wiki/Boosting_\(meta-algorithm\)) is a loosely-defined strategy that combines multiple simple models into a single composite model. The idea is that, as we introduce more simple models, the overall model becomes a stronger and stronger predictor. In boosting terminology, the simple models are called *weak models* or *weak learners*.
+
+In the context of regression, we make numerical predictions, such as rent prices, based upon information about an entity (an *observation*).  To keep things simple in this article, let's work with a single feature per entity and call it $x$. Given $x$, we'd like to learn target value $y$ for a bunch of $(x,y)$ pairs. If we plot $y$ versus $x$, it often looks just like the plot of a function
+
+
+Training a regression model is a matter of fitting a function through the data points $(x,y)$ as best we can. Let's imagine that the blue line in the graph represents the function we like to approximate
+
+
+
+In these articles, we're going to stick with a single feature for each observation
+
+for combining the efforts of multiple weak models into a single, strong meta-model or composite model.   Mathematicians represent both the weak and composite models as functions, but in practice the models can be anything including k-nearest-neighbors or regression trees.  Since everyone uses trees for boosting, we'll focus on implementations that use regression trees for weak models, which also happens greatly simplifies the mathematics. Given a single feature vector $\vec x$ and scalar target value $y$ from a single observation, we can express a meta-model that predicts $\hat y$ as the addition of $M$ weak models $f_m(\vec x)$:
 
 \[
 \hat y = F_M(\vec x) = f_1(\vec x) + ...  + f_M(\vec x) = \sum_{m=1}^M f_m(\vec x)
@@ -12,7 +141,7 @@
 
 In practice, we always have more than one observation, ($\vec x_i$, $y_i$), but it's easier to start out thinking about how to deal with a single observation. Later, we'll stack $N$ feature vectors as rows in a matrix, $X = [\vec x_1, \vec x_2, ..., \vec x_N]$, and targets into a vector, $\vec y = [y_1, y_2, ..., y_N]$ for $N$ observations.
 
-Mathematicians call this "additive modeling" and electrical engineers use it for decomposing signals into a collection of sine waves representing the frequency components (insert terrifying flashback to Fourier analysis here.) 
+
 
 It's often the case that an additive model can build the individual $f_m(\vec x)$ terms independently and in parallel, but that's not the case for boosting. Boosting constructs and adds weak models in a stage-wise fashion, one after the other, each one chosen to improve the overall model performance. The boosting strategy is greedy in the sense that choosing $f_m(\vec x)$ never alters previous functions. We could choose to stop adding weak models when $\hat y = F_M(\vec x)$'s performance is good enough or when $f_m(\vec x)$ doesn't add anything.   In practice, we choose the number of stages, $M$, as a hyper-parameter of the overall model. Allowing $M$ to grow arbitrarily increases the risk of over fitting.
 
@@ -93,7 +222,7 @@ Let's walk through a concrete example to see what gradient boosting looks like o
 
 Imagine that we have square footage data on five apartments and their rent prices in dollars per month as our training data:
 
-<pyeval label="examples" hide=true>
+<pyeval label="examples" hide=true output="df">
 from support import *
 df = data()
 </pyeval>
