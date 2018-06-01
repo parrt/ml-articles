@@ -5,7 +5,7 @@
 
 ## An introduction to additive modeling 
 
-Before we get into boosting, let's look at an example of what mathematicians call *additive modeling* because it is the foundation of boosting. The idea is quite simple: we are going to add a bunch of simple terms together to create a a more complicated expression. In the machine learning world, that expression (function) represents a model mapping some observation feature, $x$, to a target value, $y$. It's a useful technique because we can often conjure up the simple terms more easily than cracking the overall function in one go.  Consider the following curve that shows $y$ as some unknown but nontrivial function of $x$.
+Before we get into boosting, let's look at an example of what mathematicians call *additive modeling* because it is the foundation of boosting. The idea is quite simple: we are going to add a bunch of simple terms together to create a a more complicated expression. In the machine learning world, that expression (function) represents a model mapping some observation's feature, $x$, to a scalar target value, $y$. It's a useful technique because we can often conjure up the simple terms more easily than cracking the overall function in one go.  Consider the following curve that shows $y$ as some unknown but nontrivial function of $x$.
 
 <pyeval label="additive" hide=true>
 import matplotlib.pyplot as plt

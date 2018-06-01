@@ -6,77 +6,81 @@
 
 Prince says this is an important distinction for him to understand when I said it: chasing the residual vector chases the mean squared error versus chasing sign vector which does not. The gradient of L2 is the residual vector and we chase gradient in gradient descent.
 
-\todo{can't show that each direction vector gets us to lower cost because we might have a bad approximation of the week model}
-
-\todo{weights not needed in the L2 case because the tree is already picking those out as minimum L2}
-
 So far we've looked at GBMs that use two different direction vectors, the residual vector (<a href="L2-loss.html">Gradient boosting: Distance to target</a>) and the sign vector (<a href="L1.loss.html">Gradient boosting: Heading in the right direction</a>). It's natural to ask whether there are other direction vectors we can use and what effect they have on the final $F_M(X)$ predictions.  Your intuition probably told you that nudging the intermediate $\hat{\vec y}$ prediction towards target $\vec y$ gradually improves model performance, but would $\hat{\vec y}$ ever stop if we kept increasing $M$? If so, where would it stop? Is there something special or interesting about the sequence of vectors that $\hat{\vec y}$ passes through? Moreover, training a model on observations ($\vec x$, $y$) is a matter of finding a function, $F(\vec x)$, that optimizes some cost or loss function indicating how well $F$ performs. (The procedure is to tweak model $F$'s parameters until we minimize the loss function.) What loss function is a GBM optimizing and what is the relationship with the choice of direction vector?
 
-To answer these questions, we're going to employ a mathematician's favorite trick: showing how our current problem is a flavor of another problem with a known solution and lots of useful results. Specifically, this article shows how gradient boosting machines perform an optimization technique from numerical methods called [gradient or steepest descent](https://en.wikipedia.org/wiki/Gradient_descent). We'll see that a GBM training weak leaners on residual vectors optimizes the mean squared error (MSE), the $L_2$ loss, between the true target $\vec y$ and the intermediate predictions, $\hat{\vec y} = F_m(X)$. A GBM that trains weak learners on sign vectors optimizes the mean absolute error (MAE), the $L_1$ loss. 
+To answer these questions, we're going to employ a mathematician's favorite trick: showing how our current problem is just a flavor of another well-known problem for which we have lots of useful results. Specifically, this article shows how gradient boosting machines perform an optimization technique from numerical methods called [gradient or steepest descent](https://en.wikipedia.org/wiki/Gradient_descent). We'll see that a GBM training weak leaners on residual vectors optimizes the mean squared error (MSE), the $L_2$ loss, between the true target $\vec y$ and the intermediate predictions, $\hat{\vec y} = F_m(X)$. A GBM that trains weak learners on sign vectors optimizes the mean absolute error (MAE), the $L_1$ loss. 
 
 Before jumping into the mathematics, let's make some observations about the behavior of our gradient boosting machines based on the examples from the previous two articles.
  
-## foo
-
-Let's revisit the rent data and look at the sequence of approximate prediction vectors from the first article that used residual vectors to nudge $\hat{\vec y}$ towards $\vec y$:
+## Comparing drop in MSE when chasing residual vs sign vectors
+ 
+Let's revisit the $\hat y = F_m(\vec x)$ intermediate model predictions for both the weak learners trained on residual vectors and those trained on sign vectors.  We can empirically verify that training $\Delta_m$ weak models on the residual vector drops the MSE loss dramatically faster than training $\Delta_m$ on the sign vector. Here is the data pulled from the first article with the MSE and MAE tacked on:
 
 \latex{{
 {\small
 \setlength{\tabcolsep}{0.5em}
 \begin{tabular}[t]{rrrrrrr}
-&$\vec x~~~$ & $y~~~$ & \multicolumn{4}{c}{$~\hat y$}\vspace{-1mm}\\
+\multicolumn{7}{c}{$\Delta_m$ {\bf trained on residual vector} $\vec y - \hat{\vec y}$}\\
+&$\vec x~~~$ & $\vec y~~~$ & \multicolumn{4}{c}{...$~\hat{\vec y}$~...}\vspace{-1mm}\\
 &{\bf SqFeet} & {\bf Rent} & $F_0(\vec x)$ & $F_1(\vec x)$ & $F_2(\vec x)$ & $F_3(\vec x)$\\
 \hline
-& 700 & 1125 & 1212 & 1159 & 1143 & 1137 \\
-& 750 & 1150 & 1212 & 1159 & 1143 & 1137 \\
-& 800 & 1135 & 1212 & 1159 & 1143 & 1137 \\
-& 900 & 1300 & 1212 & 1291 & 1314 & 1308 \\
-& 950 & 1350 & 1212 & 1291 & 1314 & 1339\\
+& 750 & 1160 & 1418 & 1272 & 1180 & 1195 \\
+& 800 & 1200 & 1418 & 1272 & 1180 & 1195 \\
+& 850 & 1280 & 1418 & 1272 & 1334 & 1349 \\
+& 900 & 1450 & 1418 & 1272 & 1334 & 1349 \\
+& 950 & 2000 & 1418 & 2000 & 2061 & 2000 \\
 \hline
 \vspace{-4mm}\\
-{\bf MSE}&\multicolumn{2}{l}{$\frac{1}{N}\sum_i^N(y_i-F_m(\vec x_i))^2$} & 8826 & 1079.5 & 382.3 & 100.9\\
+{\bf MSE}&\multicolumn{2}{l}{$\frac{1}{N}\sum_i^N(y_i-F_m(\vec x_i))^2$} & 94576 & 9895 & 4190.8 & 3240.1\\
+{\bf MAE}&\multicolumn{2}{l}{$\frac{1}{N}\sum_i^N|y_i-F_m(\vec x_i)|$} & 246 & 74 & 54 & 42
 \end{tabular}
 }
 }}
 
-The units of the mean squared error (MSE) is squared rent-dollars and the units of each $\hat y$ is rent-dollars, so $\hat{\vec y}$ is a vector of dollar values in $N$-space (here, $N=5$). That means that the $F_m$ predictions are vectors sweeping through $N$-space as we increase $m$. Notice that the MSE drops monotonically as we add more stages. 
-
-We get similar behavior from the GBM in the second article that used sign vectors to nudge $\hat{\vec y}$:
+and here is the data pulled from the second article with the MSE and MAE tacked on:
 
 \latex{{
 {\small
 \setlength{\tabcolsep}{0.5em}
 \begin{tabular}[t]{rrrrrrr}
-&$\vec x~~~$ & $y~~~$ & \multicolumn{4}{c}{$~\hat y$}\vspace{-1mm}\\
+\multicolumn{7}{c}{$\Delta_m$ {\bf trained on sign vector} $sign(\vec y - \hat{\vec y})$}\\
+&$\vec x~~~$ & $\vec y~~~$ & \multicolumn{4}{c}{...$~\hat{\vec y}$~...}\vspace{-1mm}\\
 & {\small\bf SqFeet} & {\bf Rent} & $F_0(\vec x)$ & $F_1(\vec x)$ & $F_2(\vec x)$ & $F_3(\vec x)$\\
 \hline
-& 700 & 1125 & 1150 & 1136 & 1135 & 1130 \\
-& 750 & 1150 & 1150 & 1136 & 1135 & 1150 \\
-& 800 & 1135 & 1150 & 1136 & 1135 & 1150 \\
-& 900 & 1300 & 1150 & 1250 & 1280 & 1295 \\
-& 950 & 1350 & 1150 & 1250 & 1280 & 1295 \\
+& 750 & 1160 & 1280 & 1180 & 1160 & 1155 \\
+& 800 & 1200 & 1280 & 1180 & 1190 & 1185 \\
+& 850 & 1280 & 1280 & 1450 & 1460 & 1455 \\
+& 900 & 1450 & 1280 & 1450 & 1460 & 1455 \\
+& 950 & 2000 & 1280 & 1450 & 1460 & 2000 \\
 \hline
 \vspace{-4mm}\\
-{\bf MAE}&\multicolumn{2}{l}{$\frac{1}{N}\sum_i^N|y_i-F_m(\vec x_i)|$} & 78 & 35.3 & 23 & 16 \\
+{\bf MSE}&\multicolumn{2}{l}{$\frac{1}{N}\sum_i^N(y_i-F_m(\vec x_i))^2$} & 113620 & 66440 & 64840 & 6180\\
+{\bf MAE}&\multicolumn{2}{l}{$\frac{1}{N}\sum_i^N|y_i-F_m(\vec x_i)|$} & 218 & 152 & 148 & 40 \\
 \end{tabular}
 }
 }}
 
-Here, again, the $F_m$ predictions are vectors sweeping through dollars $N$-space and the mean absolute error (MAE) falls as we add more weak models. Though it falls more slowly than the MSE, the MAE is also monotonically decreasing. Note that we can drop the "mean" part to get the same the total squared or total absolute error by dropping the $\frac{1}{N}$.
+There are a number of interesting things going on here. First, recall that we used the average for the $f_0$ model in the first article and the median in the second article because the average minimizes the MSE and the median minimizes the MAE.  The data confirms this: The MSE from the first article is smaller than the second and that the MAE is higher in the first article than the second. Our choice of $f_0$ in each case was, therefore, a good one.
 
-Minimizing some function $f(x)$ will always give the same $x$ as minimizing the same function scaled by constant, $cf(x)$.
+Next, look at the trajectory of the MSE for both models. For $\Delta_m$ trained on residual vectors, the MSE immediately drops by 10x because the regression tree stump for $\Delta_1$ immediately took off after the outlier at $\vec x$=950. The residual from the average to \$2000 rent is so large that the regression tree stump splits the outlier into its own group.  In contrast, the $\Delta_1$ trained on the sign vector splits the observations in between the second and third because the sign vector is $[-1, -1, 0, 1, 1]$. The regression tree chooses to group $[-1, -1]$ together because they are identical values, leaving $[0, 1, 1]$ as the other group. Instead of the magnitude, sign vectors treat anything above the mean as the same value, 1. Here are the $\Delta_1$ predictions again for both composite models:
 
-The error measures in both cases never go up because we are specifically choosing to nudge the approximation in the direction of lower cost, which we call the direction vector.  Another way to say "direction of lower cost" is "gradient of the loss function," which is where the "gradient" in gradient boosting comes from. Shortly, we'll show that it's also the gradient in gradient descent.
- 
-Using the mean by dividing by $N$ is the same as measuring the total squared air or total absolute error because the number of observations is a constant once we start training. It's a constant scalar factor that can be ignored because it doesn't change the shape of the error curve. 
+<table>
+<tr>
+<th>$\Delta_1$ trained on residual vector
+<th>$\Delta_1$ trained on sign vector
+<tr>
+<td><img src="images/L2-delta1.png" width="70%">
+<td><img src="images/L1-delta1.png" width="70%">
+</table>
 
-o key insight is the direction vector versus plain residual signal
+The MSE for weak models trained on the sign vector does not drop dramatically until $\Delta_3$ finally goes after the outlier to yield $F_3$. In fact, the MSE does not budge in between the second and third weak models.  Empirically at least, training $\Delta_m$ on sign vectors does not seem to be optimizing the MSE very well whereas training $\Delta_m$ on residual vectors does optimize MSE well.  In general, we should see the MSE and MAE decrease monotonically but, given the weak approximations of our $\Delta_m$, monotonicity is not guaranteed. The MSE/MAE could bounce around a bit on its way down.
 
-o we can minimize any differentiable loss function
+Finally, let's make some observations about the intermediate $\hat{\vec y} = F_m(\vec x)$ model predictions.  The units of each $\hat y$ is rent-dollars, so $\hat{\vec y}$ is a vector of dollar values in $N$-space (here, $N=5$). That means that the $F_m$ predictions are vectors sweeping through $N$-space as we increase $m$.   This is an important concept that we'll rely on below to show GBM is performing gradient descent. When papers use the term "*function space*," they just mean the $N$-space of predictions: a vector of $N$ target values predicted by some $F_m(\vec x)$.
 
-o units are dollars of rent. (target space for each dim)
 
 ## The intuition behind gradient descent
+
+Terence and Jeremy both have a story where they had to make their way down a mountain in the pitch black of night or dense fog. (*Spoiler alert*: we both make it back!) Obviously, the way to get down is to keep going downhill until you reach the bottom. More mathematically speaking, we should take steps to the left, right, or at an angle in order to minimize the "elevation function." Rather than trying to find the best angle to step, we can treat each direction forward/backward and left/right separately and then combine them. Swing your foot  forwards and backwards to figure out which way is downhill in that direction then swing your foot left and right to figure out which way is downhill in that direction. If forward and right go downhill, then take a step in the direction of vector $[ forward, right ]$.
 
 what's a gradient?
 
@@ -211,6 +215,19 @@ Hmm...maybe we need to do on a bigger data set vaguely linear then add noise and
 </aside>
 
 ## Junk drawer
+
+Nudging $\hat{\vec y}$ towards target $\vec y$ means nudging $\hat{\vec y}$ in the direction of lower cost, which is "gradient of the loss function," which is where the "gradient" in gradient boosting comes from. Shortly, we'll show that it's also the gradient in gradient descent.
+
+ $\hat{\vec y}$.
+
+Here, again, the $F_m$ predictions are vectors sweeping through dollars $N$-space and the mean absolute error (MAE) falls as we add more weak models. Though it falls more slowly than the MSE, the MAE is also monotonically decreasing. Note that we can drop the "mean" part to get the same the total squared or total absolute error by dropping the $\frac{1}{N}$.
+
+The error measures in both cases never go up because we are specifically choosing to nudge the approximation in the direction of lower cost, which we call the direction vector.  
+ 
+Using the mean by dividing by $N$ is the same as measuring the total squared air or total absolute error because the number of observations is a constant once we start training. It's a constant scalar factor that can be ignored because it doesn't change the shape of the error curve. 
+
+Minimizing some function $f(x)$ will always give the same $x$ as minimizing the same function scaled by constant, $cf(x)$.
+
 
 
 Students ask the most natural but hard-to-answer questions:
