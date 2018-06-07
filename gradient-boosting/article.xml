@@ -1,0 +1,12 @@
+<article>
+<!--
+<article title="How to explain gradient boosting"
+      author={[Terence Parr](http://parrt.cs.usfca.edu) and [Jeremy Howard](http://www.fast.ai/about/#jeremy)}>
+-->
+
+<include file="L1-loss.xml">
+<include file="L2-loss.xml">
+<include file="descent.xml">
+
+<data dir="/Users/parrt/github/ml-articles/data">
+<notebook-support file="notebooks/support.py">

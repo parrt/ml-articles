@@ -1,22 +1,21 @@
-# Gradient boosting performs gradient descent
-
-\author{[Terence Parr](http://parrt.cs.usfca.edu) and [Jeremy Howard](http://www.fast.ai/about/#jeremy)}
+<chapter title="Gradient boosting performs gradient descent"
+	 author={[Terence Parr](http://parrt.cs.usfca.edu) and [Jeremy Howard](http://www.fast.ai/about/#jeremy)}>
 
 \todo{can't proof that it converges or is correct... it's just a way to show that it can work with any differentiable loss function or equivalently direction vector}
 
 Prince says this is an important distinction for him to understand when I said it: chasing the residual vector chases the mean squared error versus chasing sign vector which does not. The gradient of L2 is the residual vector and we chase gradient in gradient descent.
 
-So far we've looked at GBMs that use two different direction vectors, the residual vector (<a href="L2-loss.html">Gradient boosting: Distance to target</a>) and the sign vector (<a href="L1.loss.html">Gradient boosting: Heading in the right direction</a>). It's natural to ask whether there are other direction vectors we can use and what effect they have on the final $F_M(X)$ predictions.  Your intuition probably told you that nudging the intermediate $\hat{\vec y}$ prediction towards target $\vec y$ gradually improves model performance, but would $\hat{\vec y}$ ever stop if we kept increasing $M$? If so, where would it stop? Is there something special or interesting about the sequence of vectors that $\hat{\vec y}$ passes through? Moreover, training a model on observations ($\vec x$, $y$) is a matter of finding a function, $F(\vec x)$, that optimizes some cost or loss function indicating how well $F$ performs. (The procedure is to tweak model $F$'s parameters until we minimize the loss function.) What loss function is a GBM optimizing and what is the relationship with the choice of direction vector?
+So far we've looked at GBMs that use two different direction vectors, the residual vector ([Gradient boosting: Distance to target](L2-loss.htm)) and the sign vector ([Gradient boosting: Heading in the right direction](L1-loss.htm)). It's natural to ask whether there are other direction vectors we can use and what effect they have on the final $F_M(X)$ predictions.  Your intuition probably told you that nudging the intermediate $\hat{\vec y}$ prediction towards target $\vec y$ gradually improves model performance, but would $\hat{\vec y}$ ever stop if we kept increasing $M$? If so, where would it stop? Is there something special or interesting about the sequence of vectors that $\hat{\vec y}$ passes through? Moreover, training a model on observations ($\vec x$, $y$) is a matter of finding a function, $F(\vec x)$, that optimizes some cost or loss function indicating how well $F$ performs. (The procedure is to tweak model $F$'s parameters until we minimize the loss function.) What loss function is a GBM optimizing and what is the relationship with the choice of direction vector?
 
 To answer these questions, we're going to employ a mathematician's favorite trick: showing how our current problem is just a flavor of another well-known problem for which we have lots of useful results. Specifically, this article shows how gradient boosting machines perform an optimization technique from numerical methods called [gradient or steepest descent](https://en.wikipedia.org/wiki/Gradient_descent). We'll see that a GBM training weak leaners on residual vectors optimizes the mean squared error (MSE), the $L_2$ loss, between the true target $\vec y$ and the intermediate predictions, $\hat{\vec y} = F_m(X)$. A GBM that trains weak learners on sign vectors optimizes the mean absolute error (MAE), the $L_1$ loss. 
 
 Before jumping into the mathematics, let's make some observations about the behavior of our gradient boosting machines based on the examples from the previous two articles.
  
-## Comparing drop in MSE when chasing residual vs sign vectors
+<section title="Comparing drop in MSE when chasing residual vs sign vectors">
  
 Let's revisit the $\hat y = F_m(\vec x)$ intermediate model predictions for both the weak learners trained on residual vectors and those trained on sign vectors.  We can empirically verify that training $\Delta_m$ weak models on the residual vector drops the MSE loss dramatically faster than training $\Delta_m$ on the sign vector. Here is the data pulled from the first article with the MSE and MAE tacked on:
 
-\latex{{
+<latex>
 {\small
 \setlength{\tabcolsep}{0.5em}
 \begin{tabular}[t]{rrrrrrr}
@@ -35,11 +34,11 @@ Let's revisit the $\hat y = F_m(\vec x)$ intermediate model predictions for both
 {\bf MAE}&\multicolumn{2}{l}{$\frac{1}{N}\sum_i^N|y_i-F_m(\vec x_i)|$} & 246 & 74 & 54 & 42
 \end{tabular}
 }
-}}
+</latex>
 
 and here is the data pulled from the second article with the MSE and MAE tacked on:
 
-\latex{{
+<latex>
 {\small
 \setlength{\tabcolsep}{0.5em}
 \begin{tabular}[t]{rrrrrrr}
@@ -58,7 +57,7 @@ and here is the data pulled from the second article with the MSE and MAE tacked 
 {\bf MAE}&\multicolumn{2}{l}{$\frac{1}{N}\sum_i^N|y_i-F_m(\vec x_i)|$} & 218 & 152 & 148 & 40 \\
 \end{tabular}
 }
-}}
+</latex>
 
 There are a number of interesting things going on here. First, recall that we used the average for the $f_0$ model in the first article and the median in the second article because the average minimizes the MSE and the median minimizes the MAE.  The data confirms this: The MSE from the first article is smaller than the second and that the MAE is higher in the first article than the second. Our choice of $f_0$ in each case was, therefore, a good one.
 
@@ -78,14 +77,14 @@ The MSE for weak models trained on the sign vector does not drop dramatically un
 Finally, let's make some observations about the intermediate $\hat{\vec y} = F_m(\vec x)$ model predictions.  The units of each $\hat y$ is rent-dollars, so $\hat{\vec y}$ is a vector of dollar values in $N$-space (here, $N=5$). That means that the $F_m$ predictions are vectors sweeping through $N$-space as we increase $m$.   This is an important concept that we'll rely on below to show GBM is performing gradient descent. When papers use the term "*function space*," they just mean the $N$-space of predictions: a vector of $N$ target values predicted by some $F_m(\vec x)$.
 
 
-## The intuition behind gradient descent
+<section title="The intuition behind gradient descent">
 
 Terence and Jeremy both have a story where they had to make their way down a mountain in the pitch black of night or dense fog. (*Spoiler alert*: we both make it back!) Obviously, the way to get down is to keep going downhill until you reach the bottom. More mathematically speaking, we should take steps to the left, right, or at an angle in order to minimize the "elevation function." Rather than trying to find the best angle to step, we can treat each direction forward/backward and left/right separately and then combine them. Swing your foot  forwards and backwards to figure out which way is downhill in that direction then swing your foot left and right to figure out which way is downhill in that direction. If forward and right go downhill, then take a step in the direction of vector $[ forward, right ]$.
 
 what's a gradient?
 
 
-## Boosting as gradient descent in prediction space
+<section title="Boosting as gradient descent in prediction space">
 
 we would choose absolute value difference when we are worried about outliers.
 
@@ -110,9 +109,9 @@ How do you optimize a function? set the derivative to zero and solve for x.
  
 Friedman says '*... consider F(x) evaluated at each point $\vec x$ to be a "parameter"*'
 
-## General algorithm
+<section title="General algorithm">
 
-\latex{{
+<latex>
 \setlength{\algomargin}{3pt}
 \SetAlCapSkip{-10pt}
 \SetKwInput{kwReturns}{returns}
@@ -134,7 +133,7 @@ Let $F_0(X)$ be value $v$ minimizing $\sum_{i=1}^N L(y_i, v)$, loss across all o
 }
 \Return{$F_M$}\\
 \end{algorithm}
-}}
+</latex>
 
 <aside title="Why does chasing the sign vector minimize MAE?">
 
@@ -214,7 +213,7 @@ Hmm...maybe we need to do on a bigger data set vaguely linear then add noise and
 
 </aside>
 
-## Junk drawer
+<section title="Junk drawer">
 
 Nudging $\hat{\vec y}$ towards target $\vec y$ means nudging $\hat{\vec y}$ in the direction of lower cost, which is "gradient of the loss function," which is where the "gradient" in gradient boosting comes from. Shortly, we'll show that it's also the gradient in gradient descent.
 
@@ -233,12 +232,12 @@ Minimizing some function $f(x)$ will always give the same $x$ as minimizing the 
 Students ask the most natural but hard-to-answer questions:
 
 <ol>
-<li>Why is it called <i>gradient</i> boosting?		</li>
-<li>What is &ldquo;function space&rdquo;?</li>
-<li>Why is it called &ldquo;gradient descent in function space&rdquo;?</li>
+<li>Why is it called *gradient* boosting?
+<li>What is "function space"?
+<li>Why is it called "gradient descent in function space"?
 </ol>
 
-The third question is the hardest to explain. As Gorman points out, &ldquo;<i>This is the part that gets butchered by a lot of gradient boosting explanations</i>.&rdquo; (His blog post does a good job of explaining it, but I thought I would give my own perspective here.)
+The third question is the hardest to explain. As Gorman points out, "*This is the part that gets butchered by a lot of gradient boosting explanations*." (His blog post does a good job of explaining it, but I thought I would give my own perspective here.)
 
 
 How good is that model? To answer that, we need a loss or cost function, $L(y,\hat y)$, that computes the cost of predicting $\hat y$ instead of $y$.  The squared error, $L(y,\hat y) = (y-\hat y)^2$ is the most common, but sometimes we care more about the absolute difference, $L(y,\hat y) = |y-\hat y|$. The loss across all observations is just the sum (or the average if you want to divide by $N$) of all the individual observation losses:
@@ -267,7 +266,7 @@ $\nabla_{\hat{\vec y}} L(\vec y,\hat{\vec y})$
 
 
 
-## Common points of confusion
+<section title="Common points of confusion">
 
 picking weights is also an optimization problem.
 
@@ -328,9 +327,9 @@ to find $x$ that minimizes $f(x)$.   When using it to train a model, $x$ is the 
 
 pikes peak metaphor: elevation function is model, x is location. shift x until elevation is minimized.  that is one model  called elevation. x is parameter.  with boosting, get a starting elevation (the summit?) then ask which direction we should take a step to head towards lower elevation at a specific x location.  hmm...maybe it's like we know the elevation at bottom, 6000' (vs 14110' at summit).  We ask, is current elevation 6000? No, need another step so drop elevation by 1 unit. this would be simulating one $\vec x$ and one $y$ target...too easy to move one person downhill. but it's like start at some elevation, now go down until bottom (cost is 0 when we reach bottom). duh. ok, extend so there are 20 kids on trip and all at different starting points. Now pretend they are all at average elevation.  Boosting tweaks not the x location of each kid, but sends a "go down or go up or stop moving signal".   The updated prediction of kid elevations is initial guess of average and then tweaks giving instructions to head up/down to reach same base camp at bottom. (some might have gotten lost and ended up below base camp). Hmm...actually, no. we send park rangers, one per kid, starting at basecamp looking to reach each kid. initial guess basecamp.  Then ask for ranger i, is kid i above/below/same. Tell ranger to move. Ranger elevation is initial + all tweaks. when tweak vector goes to all 0s, rangers have reached all kids. how does x location come into play?  training ranger to move elevation up/down might involve shifting in x/y plane to get single elevation value.
 
-\todo{ To get really fancy, we can even add momentum <a href="https://arxiv.org/abs/1803.02042">Accelerated Gradient Boosting</a> can mention momentum instead of or in addition to leaf weights.  see accelerated gradient boosting paper recently.}
+\todo{ To get really fancy, we can even add momentum [Accelerated Gradient Boosting](https://arxiv.org/abs/1803.02042) can mention momentum instead of or in addition to leaf weights.  see accelerated gradient boosting paper recently.}
 
-## Summary
+<section title="Summary">
 
 foo
 
@@ -339,11 +338,11 @@ foo
 **A**. We're boosting gradients because the weak models learn direction vectors, and the other common term for "direction vector" is, drumroll please, *gradient*. Yup, simple as that.
 </aside>
 
-## Notation translation to Friedman's paper
+<section title="Notation translation to Friedman's paper">
 
 foo
 
-## Resources
+<section title="Resources">
 
 Vincent and Bengio [http://www-labs.iro.umontreal.ca/~vincentp/Publications/kmp_mlj.pdf](http://www-labs.iro.umontreal.ca/~vincentp/Publications/kmp_mlj.pdf)
 
@@ -351,7 +350,7 @@ Vincent and Bengio [http://www-labs.iro.umontreal.ca/~vincentp/Publications/kmp_
 
 The $w_m$ weights are computed by finding the weight that optimizes the mean squared error of the true target $\vec y$ and the proposed $F_m(X)$ model weighted by $w_m$.
 
-The weights, $w_m$, don't appear in the model equations in these graphs because we used weight $w_m = 1$ for simplicity. But, a GBM implementation would choose the optimal weight $w_m$ so as to minimize the squared difference between $\vec y$ and the prediction of the new composite model $F_m(X)$ that used $w_m$. So, first we choose the new weak model $\Delta_m$ then try out different weights, looking for the one that makes best use of this new model.  See page 8 of <a href="https://statweb.stanford.edu/~jhf/ftp/trebst.pdf">Friedman's paper</a> for the form of the equation (Friedman's equation 12) that, when minimized, yields the appropriate weight for stage $m$. In our notation, the minimization is:
+The weights, $w_m$, don't appear in the model equations in these graphs because we used weight $w_m = 1$ for simplicity. But, a GBM implementation would choose the optimal weight $w_m$ so as to minimize the squared difference between $\vec y$ and the prediction of the new composite model $F_m(X)$ that used $w_m$. So, first we choose the new weak model $\Delta_m$ then try out different weights, looking for the one that makes best use of this new model.  See page 8 of [Friedman's paper](https://statweb.stanford.edu/~jhf/ftp/trebst.pdf) for the form of the equation (Friedman's equation 12) that, when minimized, yields the appropriate weight for stage $m$. In our notation, the minimization is:
 
 \[
 w_m = argmin_w \sum_{i=1}^{N} (y_i - (F_{m-1}(\vec x_i) + w \Delta_m(\vec x_i)))^2
