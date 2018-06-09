@@ -9,4 +9,5 @@
 <include file="descent.xml">
 
 <data dir="/Users/parrt/github/ml-articles/data">
+</data>
 <notebook-support file="notebooks/support.py">
