@@ -5,7 +5,7 @@
 
 <section title="An introduction to additive modeling">
 
-Before we get into boosting, let's look at an example of what mathematicians call *additive modeling* because it is the foundation of boosting. The idea is quite simple: we are going to add a bunch of simple terms together to create a a more complicated expression. In the machine learning world, that expression (function) represents a model mapping some observation's feature, $x$, to a scalar target value, $y$. It's a useful technique because we can often conjure up the simple terms more easily than cracking the overall function in one go.  Consider the following curve that shows $y$ as some unknown but nontrivial function of $x$.
+Before we get into boosting, let's look at an example of what mathematicians call *additive modeling* because it is the foundation of boosting. The idea is quite simple: we are going to add a bunch of simple terms together to create a more complicated expression. In the machine learning world, that expression (function) represents a model mapping some observation's feature, $x$, to a scalar target value, $y$. It's a useful technique because we can often conjure up the simple terms more easily than cracking the overall function in one go.  Consider the following curve that shows $y$ as some unknown but nontrivial function of $x$.
 
 <pyeval label="additive" hide=true>
 import matplotlib.pyplot as plt
@@ -28,11 +28,11 @@ a,b=-10*np.pi,10*np.pi
 x = np.arange(a,b,0.01)
 y = x+np.sin(x)+30
 line, = ax.plot(x,y)
-ax.plot(x,np.zeros(len(x)), linestyle=":", c='k')
 ax.set_ylabel("$y$", fontsize=20)
 ax.set_xlabel("$x$", fontsize=20)
 ax.set_xticks(np.arange(-30,31,10))
 ax.set_xlim(a,b)
+ax.set_ylim(0,60)
 
 ax.legend(handles=[line], fontsize=18,
               loc='upper left', 
@@ -48,55 +48,53 @@ plt.show()
 
 Let's assume that the function is composed of several simple terms and try to guess what they are.  After adding each term, we can reassess the situation to help us figure out the next term to add by considering the difference between the current combined function and the desired target function.
 
-Our first approximation might be the line $y=x$ (with slope 60/60=1) that runs through the squiggly target function. Check out the first plot in the following graph sequence. Naturally, the $y$-intercept is wrong so we should add 30 to force $y$ to be 0 at $x$=-30 like the target function, as shown in the second graph.  It turns out that the squiggly bit comes from our friend the sine function so we can add that term, which leads us to the final plot matching our target function:
+Our first approximation might be the horizontal line $y$=30 because we can see that the $y$-intercept (at $x$=0) is 30. Check out the first plot in the following graph sequence. Naturally, the slope is wrong so we should add in the 45 degree line $y=x$ (with slope 60/60=1) that runs through the squiggly target function, which gives us the second graph.  It turns out that the squiggly bit comes from our friend the sine function so we can add that term, which leads us to the final plot matching our target function:
 
 <pyfig label="additive" hide=true width="90%">
-fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(13.5, 4))
+fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(13.5, 4), sharey=True)
 
 axes[0].set_ylabel("$y$", fontsize=18)
+axes[0].set_ylim(0,60)
 for i in range(3):
     axes[i].set_xlim(a,b)
     axes[i].set_xlabel("$x$", fontsize=18)
     axes[i].set_xticks(np.arange(-30,31,10))
 
-y = x
+y = np.full((len(x),1),30)
 line, = axes[0].plot(x,y,c=bookcolors['lightblue'])
-axes[0].plot(x,np.zeros(len(x)), linestyle=":", c='k')
 axes[0].legend(handles=[line], fontsize=18,
               loc='upper left', 
               labelspacing=.1,
               handletextpad=.2,
               handlelength=.7,
               frameon=True,
-              labels=['$y=x$'])
+              labels=['$y=30$'])
 
-y = x + 30
+y = 30 + x
 line, = axes[1].plot(x,y,c=bookcolors['lightblue'])
-axes[1].plot(x,np.zeros(len(x)), linestyle=":", c='k')
 axes[1].legend(handles=[line], fontsize=18,
               loc='upper left', 
               labelspacing=.1,
               handletextpad=.2,
               handlelength=.7,
               frameon=True,
-              labels=['$y=x + 30$'])
+              labels=['$y=30 + x$'])
 
-y = x + np.sin(x) + 30
+y = 30 + x + np.sin(x)
 line, = axes[2].plot(x,y,c=bookcolors['lightblue'])
-axes[2].plot(x,np.zeros(len(x)), linestyle=":", c='k')
 axes[2].legend(handles=[line], fontsize=18,
               loc='upper left', 
               labelspacing=.1,
               handletextpad=.2,
               handlelength=.7,
               frameon=True,
-              labels=['$y=x + 30 + sin(x)$'])
+              labels=['$y=30 + x + sin(x)$'])
 
 plt.tight_layout()
 plt.show()
 </pyfig>
 
-Decomposing a complicated function into simpler subfunctions is nothing more than the divide and conquer strategy that we programmers use all the time. In this case, we are dividing a potentially very complicated function into smaller, more manageable bits.  For example, let's call our target function $F(x)$ then we have $y = F(x) = x + 30 + sin(x)$ and can abstract away the individual terms, also as functions, giving us the addition of three subfunctions:
+Decomposing a complicated function into simpler subfunctions is nothing more than the divide and conquer strategy that we programmers use all the time. In this case, we are dividing a potentially very complicated function into smaller, more manageable bits.  For example, let's call our target function $F(x)$ then we have $y = F(x) = 30 + x + sin(x)$ and can abstract away the individual terms, also as functions, giving us the addition of three subfunctions:
 
 \[
 F(x) &=& f_1(x) + f_2(x) + f_3(x) \\
@@ -106,8 +104,8 @@ where:
 
 <latex>
 \begin{eqnarray*}
-f_1(x) &=& x\\
-f_2(x) &=& 30\\
+f_1(x) &=& 30\\
+f_2(x) &=& x\\
 f_3(x) &=& sin(x)\\
 \end{eqnarray*}
 </latex>
@@ -126,7 +124,7 @@ In the machine learning world, we're given a set of $(x,y)$ data points rather t
 
 [Boosting](https://en.wikipedia.org/wiki/Boosting_\(meta-algorithm\)) is a loosely-defined strategy that combines multiple simple models into a single composite model. The idea is that, as we introduce more simple models, the overall model becomes a stronger and stronger predictor. In boosting terminology, the simple models are called *weak models* or *weak learners*.
 
-In the context of regression, we make numerical predictions, such as rent prices, based upon information, such as square footage, about an entity (an *observation*).  To keep things simple in this article, we'll work with a single feature per entity but, in general, each observation has a vector of features; let's call it $\vec x$. Given $\vec x$, we'd like to learn scalar target value $y$ for a bunch of $(\vec x_i,y_i)$ pairs.  Training a regression model is a matter of fitting a function through the data points $(\vec x,y)$ as best we can.  Given a single feature vector $\vec x$ and scalar target value $y$ for a single observation, we can express a  composite model that predicts $\hat y$ as the addition of $M$ weak models $f_m(\vec x)$:
+In the context of regression, we make numerical predictions, such as rent prices, based upon information, such as square footage, about an entity (an *observation*).  To keep things simple in this article, we'll work with a single feature per entity but, in general, each observation has a vector of features; let's call it $\vec x$. Given $\vec x$, we'd like to learn scalar target value $y$ for a bunch of $(\vec x_i,y_i)$ pairs.  Training a regression model is a matter of fitting a function through the data points $(\vec x_i,y_i)$ as best we can.  Given a single feature vector $\vec x$ and scalar target value $y$ for a single observation, we can express a  composite model that predicts (approximates) $\hat y$ as the addition of $M$ weak models $f_m(\vec x)$:
 
 \[
 \hat y = \sum_{m=1}^M f_m(\vec x)

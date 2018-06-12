@@ -3,9 +3,7 @@
 
 \todo{can't proof that it converges or is correct... it's just a way to show that it can work with any differentiable loss function or equivalently direction vector}
 
-Prince says this is an important distinction for him to understand when I said it: chasing the residual vector chases the mean squared error versus chasing sign vector which does not. The gradient of L2 is the residual vector and we chase gradient in gradient descent.
-
-So far we've looked at GBMs that use two different direction vectors, the residual vector ([Gradient boosting: Distance to target](L2-loss.htm)) and the sign vector ([Gradient boosting: Heading in the right direction](L1-loss.htm)). It's natural to ask whether there are other direction vectors we can use and what effect they have on the final $F_M(X)$ predictions.  Your intuition probably told you that nudging the intermediate $\hat{\vec y}$ prediction towards target $\vec y$ gradually improves model performance, but would $\hat{\vec y}$ ever stop if we kept increasing $M$? If so, where would it stop? Is there something special or interesting about the sequence of vectors that $\hat{\vec y}$ passes through? Moreover, training a model on observations ($\vec x$, $y$) is a matter of finding a function, $F(\vec x)$, that optimizes some cost or loss function indicating how well $F$ performs. (The procedure is to tweak model $F$'s parameters until we minimize the loss function.) What loss function is a GBM optimizing and what is the relationship with the choice of direction vector?
+So far we've looked at GBMs that use two different direction vectors, the residual vector ([Gradient boosting: Distance to target](L2-loss.html)) and the sign vector ([Gradient boosting: Heading in the right direction](L1-loss.html)). It's natural to ask whether there are other direction vectors we can use and what effect they have on the final $F_M(X)$ predictions.  Your intuition probably told you that nudging the intermediate $\hat{\vec y}$ prediction towards target $\vec y$ gradually improves model performance, but would $\hat{\vec y}$ ever stop if we kept increasing $M$? If so, where would it stop? Is there something special or interesting about the sequence of vectors that $\hat{\vec y}$ passes through? Moreover, training a model on observations ($\vec x$, $y$) is a matter of finding a function, $F(\vec x)$, that optimizes some cost or loss function indicating how well $F$ performs. (The procedure is to tweak model $F$'s parameters until we minimize the loss function.) What loss function is a GBM optimizing and what is the relationship with the choice of direction vector?
 
 To answer these questions, we're going to employ a mathematician's favorite trick: showing how our current problem is just a flavor of another well-known problem for which we have lots of useful results. Specifically, this article shows how gradient boosting machines perform an optimization technique from numerical methods called [gradient or steepest descent](https://en.wikipedia.org/wiki/Gradient_descent). We'll see that a GBM training weak leaners on residual vectors optimizes the mean squared error (MSE), the $L_2$ loss, between the true target $\vec y$ and the intermediate predictions, $\hat{\vec y} = F_m(X)$. A GBM that trains weak learners on sign vectors optimizes the mean absolute error (MAE), the $L_1$ loss. 
 
@@ -61,7 +59,7 @@ and here is the data pulled from the second article with the MSE and MAE tacked 
 
 There are a number of interesting things going on here. First, recall that we used the average for the $f_0$ model in the first article and the median in the second article because the average minimizes the MSE and the median minimizes the MAE.  The data confirms this: The MSE from the first article is smaller than the second and that the MAE is higher in the first article than the second. Our choice of $f_0$ in each case was, therefore, a good one.
 
-Next, look at the trajectory of the MSE for both models. For $\Delta_m$ trained on residual vectors, the MSE immediately drops by 10x because the regression tree stump for $\Delta_1$ immediately took off after the outlier at $\vec x$=950. The residual from the average to \$2000 rent is so large that the regression tree stump splits the outlier into its own group.  In contrast, the $\Delta_1$ trained on the sign vector splits the observations in between the second and third because the sign vector is $[-1, -1, 0, 1, 1]$. The regression tree chooses to group $[-1, -1]$ together because they are identical values, leaving $[0, 1, 1]$ as the other group. Instead of the magnitude, sign vectors treat anything above the mean as the same value, 1. Here are the $\Delta_1$ predictions again for both composite models:
+Next, look at the trajectory of the MSE for both models. For $\Delta_m$ trained on residual vectors, the MSE immediately drops by 10x because the regression tree stump for $\Delta_1$ immediately took off after the outlier at $\vec x$=950. The residual computed from the average line to \$2000 rent is so large that the regression tree stump splits the outlier into its own group. (The region in highlighted in orange.) In contrast, the $\Delta_1$ trained on the sign vector splits the observations in between the second and third because the sign vector is $[-1, -1, 0, 1, 1]$. The regression tree chooses to group $[-1, -1]$ together because they are identical values, leaving $[0, 1, 1]$ as the other group. Instead of the magnitude, sign vectors treat anything above the mean as the same value, 1. Here are the $\Delta_1$ predictions again for both composite models:
 
 <table>
 <tr>
@@ -79,15 +77,80 @@ Finally, let's make some observations about the intermediate $\hat{\vec y} = F_m
 
 <section title="The intuition behind gradient descent">
 
-Terence and Jeremy both have a story where they had to make their way down a mountain in the pitch black of night or dense fog. (*Spoiler alert*: we both make it back!) Obviously, the way to get down is to keep going downhill until you reach the bottom. More mathematically speaking, we should take steps to the left, right, or at an angle in order to minimize the "elevation function." Rather than trying to find the best angle to step, we can treat each direction forward/backward and left/right separately and then combine them. Swing your foot  forwards and backwards to figure out which way is downhill in that direction then swing your foot left and right to figure out which way is downhill in that direction. If forward and right go downhill, then take a step in the direction of vector $[ forward, right ]$.
-
-what's a gradient?
+Both of us (Terence and Jeremy) have a story where we had to make our way down a mountain in the pitch black of night or dense fog. (*Spoiler alert*: we both make it back!) Obviously, the way to get down is to keep going downhill until you reach the bottom, taking steps to the left, right, forward, backward or at an angle in order to minimize the "elevation function." Rather than trying to find the best angle to step, we can treat each direction, forward/backward and left/right, separately and then combine them to obtain the best step direction.  The procedure is to swing your foot forwards and backwards to figure out which way is downhill in that direction, then swing your foot left and right to figure out which way is downhill in that direction (Boot clipart from `http://etc.usf.edu/clipart/`):
 
 <img src="images/directions.png" width="30%">
 	
-(Boot clipart from `http://etc.usf.edu/clipart/`)
+More mathematically speaking, we need to find a direction vector with components for the $x$ and $y$ dimensions that takes us downhill, the negative $z$ direction. We can represent the components of the direction vector as a sign vector, such as $[-1, 1]$, which indicates a step to the left and forward. Or, we can take into consideration the steepness of the slope in each direction. If the slope is gradual to the left but  steep to the front, we might get a direction vector of $[-1, 4]$. The idea is to take big steps when the slope is steep but small steps when the slope it shall. As we approach the bottom of the mountain, we should take really small steps to avoid overshooting and going back up the other side.
+
+To compute the downhill direction vector, we look at the derivative of the elevation function (call it $f(x,y)$) because that tells us the slope of the surface at a given point. For a teeny movement in $x$, the partial derivative of the function with respect to $x$ gives us the uphill direction. The same is true for $y$, giving us the following  vector pointing in the direction of uphill:
+
+\[
+\nabla f = \begin{bmatrix}
+\frac{\partial f(x,y)}{\partial x}\\
+\frac{\partial f(x,y)}{\partial y}
+\end{bmatrix}
+\]
+
+To get the downhill direction vector, we just negate it: $- \nabla f$.
+
+Mathematically, we don't have to move our foot around, we can simply compute the direction vector from the the elevation function. 
+
+\[
+\vec x_{t+1} = \vec x_t + \frac{\nabla}{\nabla {\vec x}} f(\vec x)
+\]
+
+When we start thinking about the mathematical representation of this problem, it's easier to think about this in two dimensions not three, so let's start with a simple function of a single variable, $x$, that's just a shifted version of $x^2$: $f(x) = (x-5)^2 + 2$. In the following plot, the red vectors represent the direction of the slope at two specific $x$ locations (about 3 and 6.5).
+
+<img src="images/1d-vectors.png" width="50%">
+
+To use the direction vector to head downhill, we just have to update the current position $(x,y)$ by adding the appropriate direction vector. Let's call the direction vector $dz$ for now so we can write things out more formally. To update our current position from time $t$ to $t$+1, we do this:
+
+<latex>
+\begin{eqnarray*}
+x_{t+1} = x_t + dz_1\\
+y_{t+1} = y_t + dz_2\\
+\end{eqnarray*}
+</latex>
+
+It turns out that the pure direction vector makes us jump too far at each step and so we have to turn things down a bit with a learning rate called $\eta$:
+
+<latex>
+\begin{eqnarray*}
+x_{t+1} = x_t + \eta dz_1\\
+y_{t+1} = y_t + \eta dz_2\\
+\end{eqnarray*}
+</latex>
+
+These update equations are not quite what you will see when looking at gradient descent articles. That's because we've assumed that the direction vector, $dz$, takes us in the direction of downhill.  What direction is downhill at a given point? The
+
+To finish things off
+
+\[
+\begin{bmatrix}
+x_{t+1}\\
+y_{t+1}\\
+\end{bmatrix} = \begin{bmatrix}
+x_t + dz_1\\
+y_t + dz_2
+\end{bmatrix}
+\]
+
+As an example, consider the following bowl-shaped elevation function representing a mountain. 
+
+<img src="images/topo-vectors.png" width="80%">
+
+The black direction vector represents the direction we should step in $x$ and $y$ to move towards a lower elevation.  The orange vector shows the projection onto the surface of the direction vector and terminates at the next $x$, $y$ location. The black direction vector is comprised of two components, which are illustrated by the blue vectors. The magnitude of the direction vector elements is proportional to the steepness encountered in the associated direction. 
+
+\[
+[\frac{\partial f(x,y)}{\partial x} \frac{\partial f(x,y)}{\partial x}]
+\]
+
+what's a gradient?
 
 <section title="Boosting as gradient descent in prediction space">
+
+Prince says this is an important distinction for him to understand when I said it: chasing the residual vector chases the mean squared error versus chasing sign vector which does not. The gradient of L2 is the residual vector and we chase gradient in gradient descent.
 
 we would choose absolute value difference when we are worried about outliers.
 
