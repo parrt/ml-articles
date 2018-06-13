@@ -3,32 +3,22 @@
     border: 1px solid #aaa;
     display: table;
     font-size: 83%;
-    padding: 5px;
+    padding: 10px;
     width: auto;
 }
 .toc_title {
     font-weight: 700;
     text-align: center;
 }
-#toc ul {
+#toc li, #toc ul, #toc ul li{
     list-style: outside none none !important;
-	margin:1px;
-	padding:1px;
-}
-#toc li {
-	margin:1px;
-	padding:1px;
-}
-#toc ul li{
-	margin-left: 15px;
-	padding:1px;
 }
 #toc a {
-	color: #3A4145;
-	text-decoration: none;
+        color: #3A4145;
+        text-decoration: none;
 }
 #toc a:hover {
-	text-decoration: underline;
+        text-decoration: underline;
 }
 #author {
 	font-size: 100%;
@@ -113,11 +103,9 @@
 	padding-bottom: 0px;
 }
 .callout {
-	float: right; 
-	clear: right;
 	margin-right: -36%;
-	width: 32%;
-	font-size: 85%;
+	width: 100%;
+	font-size: 100%;
 	line-height: 1.4em;
 	vertical-align: baseline;
 	position: relative;
