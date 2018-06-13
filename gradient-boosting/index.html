@@ -30,26 +30,50 @@
 	<li><a href="#overview">Roadmap</a>
 	<li><a href="L2-loss.html">Distance to target</a>
 		<ul>
-			<li><a href="L2-loss.html#sec1">An introduction to additive modeling</a></li>
-			<li><a href="L2-loss.html#sec1">An introduction to boosted regression</a></li>
-			<ul>
-			</ul>
-			<li><a href="L2-loss.html#sec2">The intuition behind gradient boosting</a></li>
-			<ul>
-			</ul>
-			<li><a href="L2-loss.html#sec3">Gradient boosting regression by example</a></li>
-			<li><a href="L2-loss.html#sec5">Measuring model performance</a></li>
-			<li><a href="L2-loss.html#sec4">Choosing hyper-parameters</a></li>
-			<li><a href="L2-loss.html#sec5">GBM algorithm to minimize L2 loss</a></li>
+			<li><a href="L2-loss.html#sec:2.1">An introduction to additive modeling</a>
+			</li>
+			<li><a href="L2-loss.html#sec:2.2">An introduction to boosted regression</a>
+			</li>
+			<li><a href="L2-loss.html#sec:2.3">The intuition behind gradient boosting</a>
+			</li>
+			<li><a href="L2-loss.html#sec:2.4">Gradient boosting regression by example</a>
+			</li>
+			<li><a href="L2-loss.html#sec:2.5">Measuring model performance</a>
+			</li>
+			<li><a href="L2-loss.html#sec:2.6">Choosing hyper-parameters</a>
+			</li>
+			<li><a href="L2-loss.html#sec:2.7">GBM algorithm to minimize L2 loss</a>
 		</ul>
-	<li><a href="L1-loss.html">Heading in the right direction</a>
-	<ul>
-		<li><a href="L1-loss.html#sec1">Chasing the sign vector</a></li>
-		<li><a href="L1-loss.html#sec2">Two perspectives on training weak models for L1 loss</a></li>
-		<li><a href="L1-loss.html#sec3">GBM algorithm to minimize L1 loss</a></li>
+			<li><a href="L1-loss.html">Heading in the right direction</a>
+			<ul>
+			<li><a href="L1-loss.html#sec:1.1">Chasing the sign vector</a>
+			</li>
+			<li><a href="L1-loss.html#sec:1.2">Two perspectives on training weak models for L1 loss</a>
+			</li>
+			<li><a href="L1-loss.html#sec:1.3">GBM algorithm to minimize L1 loss</a>
 	</ul>
-	<li><a href="descent.html#sec3.1">Gradient boosting performs gradient descent</a>
-</ul>
+	<li><a href="descent.html">Gradient boosting performs gradient descent</a>
+	<ul>
+		<li><a href="descent.html#sec:3.1">Comparing drop in MSE when chasing residual vs sign vectors</a>
+		</li>
+		<li><a href="descent.html#sec:3.2">The intuition behind gradient descent</a>
+		</li>
+		<li><a href="descent.html#sec:3.3">Boosting as gradient descent in prediction space</a>
+		<ul>
+				<li><a href="descent.html#sec:3.3.1">The MSE function gradient</a></li>
+				<li><a href="descent.html#sec:3.3.2">The MAE function gradient</a></li>
+				<li><a href="descent.html#sec:3.3.3">Morphing GBM into gradient descent</a></li>
+				<li><a href="descent.html#sec:3.3.4">Function space is prediction space</a></li>
+
+		</ul>
+		</li>
+		<li><a href="descent.html#sec:3.4">Common points of confusion</a>
+		</li>
+		<li><a href="descent.html#sec:3.5">Summary</a>
+		</li>
+		<li><a href="descent.html#sec:3.6">General algorithm</a>
+	</ul>
+	</ul>
 </div>
 
 <h3 id="overview">Roadmap</h3>
@@ -66,7 +90,7 @@ First, we examine the most common form of GBM that optimizes the mean squared er
 Optimizing a model according to MSE makes it chase outliers because squaring the difference between targets and predicted values emphasizes extreme values. When we can't remove outliers, it's better to optimize the mean absolute error (MAE), also called the <i>L</i><sub>1</sub> <i>loss</i> or <i>cost</i>. (The MAE is the average of the absolute value of the difference between the true targets and the predicted values.) This second article shows the computations and visualizations for a GBM that optimizes MAE for the same data set as used in the first article to optimize MSE.<br><br>
 
 <li><a href="descent.html">Gradient boosting performs gradient descent</a>.<br>
-The previous two articles give the intuition behind GBM and the simple formulas to show how weak models join forces to create a strong regression model.  No attempt was made to show how we can abstract out a generalized GBM that works for any loss function. This last article demonstrates that gradient boosting is really doing a form of gradient descent and, therefore, is in fact optimizing MSE or MAE depending on the direction vectors we use to train the weak models. The discussion relies on a bit of derivative calculus but it's an important read if you'd like to learn deeply how GBM works. (To brush up on your vectors and derivatives, you can check out <a href="http://parrt.cs.usfca.edu/doc/matrix-calculus/index.html">The Matrix Calculus You Need For Deep Learning</a>.) We finish off with a translation of our notation to that of Friedman in his original paper on gradient boosting.
+The previous two articles give the intuition behind GBM and the simple formulas to show how weak models join forces to create a strong regression model.  No attempt was made to show how we can abstract out a generalized GBM that works for any loss function. This last article demonstrates that gradient boosting is really doing a form of gradient descent and, therefore, is in fact optimizing MSE or MAE depending on the direction vectors we use to train the weak models. The discussion relies on a bit of derivative calculus but it's an important read if you'd like to learn deeply how GBM works. (To brush up on your vectors and derivatives, you can check out <a href="http://parrt.cs.usfca.edu/doc/matrix-calculus/index.html">The Matrix Calculus You Need For Deep Learning</a>.) We finish off by clearing up a number of confusion points regarding gradient boosting.
 
 <p>As Ben Gorman points out in <a href="http://blog.kaggle.com/2017/01/23/a-kaggle-master-explains-gradient-boosting/">A Kaggle Master Explains Gradient Boosting</a>, &ldquo;<i>This is the part that gets butchered by a lot of gradient boosting explanations</i>.&rdquo; His blog post does a good job of explaining it, but we give our own perspective here.  
 
@@ -79,7 +103,7 @@ The previous two articles give the intuition behind GBM and the simple formulas 
 <h3>Python notebooks</h3>
 
 <p>
-All of the code used to generate the graphs and data in these articles is available in the <a href="https://github.com/parrt/ml-articles/tree/master/gradient-boosting/notebooks">Notebooks directory at github</a>.  Warning: the code is a hideous pile of cut-and-paste junk-drawer ramblings sufficient only to generate the graphs in these articles; the code is provided purely for transparency and completeness (i.e., we ain't proud of it).
+All of the code used to generate the graphs and data in these articles is available in the <a href="https://github.com/parrt/ml-articles/tree/master/gradient-boosting/notebooks">Notebooks directory at github</a>.  Warning: the code is a just good enough to generate the graphs in these articles; the code is provided purely for transparency and completeness (i.e., we ain't proud of it).
 
 </body>
 </html>

@@ -10,7 +10,4 @@
 
 <css file="css/article.css">
 
-<data dir="/Users/parrt/github/ml-articles/data">
-</data>
-
 <notebook-support file="notebooks/support.py">

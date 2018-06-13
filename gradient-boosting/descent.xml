@@ -3,7 +3,7 @@
 
 \todo{can't proof that it converges or is correct... it's just a way to show that it can work with any differentiable loss function or equivalently direction vector}
 
-So far we've looked at GBMs that use two different direction vectors, the residual vector ([Gradient boosting: Distance to target](L2-loss.html)) and the sign vector ([Gradient boosting: Heading in the right direction](L1-loss.html)). It's natural to ask whether there are other direction vectors we can use and what effect they have on the final $F_M(X)$ predictions.  Your intuition probably told you that nudging the intermediate $\hat{\vec y}$ prediction towards target $\vec y$ gradually improves model performance, but would $\hat{\vec y}$ ever stop if we kept increasing $M$? If so, where would it stop? Is there something special or interesting about the sequence of vectors that $\hat{\vec y}$ passes through? Moreover, training a model on observations ($\vec x$, $y$) is a matter of finding a function, $F(\vec x)$, that optimizes some cost or loss function indicating how well $F$ performs. (The procedure is to tweak model $F$'s parameters until we minimize the loss function.) What loss function is a GBM optimizing and what is the relationship with the choice of direction vector?
+So far we've looked at GBMs that use two different direction vectors, the residual vector ([Gradient boosting: Distance to target](L2-loss.html)) and the sign vector ([Gradient boosting: Heading in the right direction](L1-loss.html)). It's natural to ask whether there are other direction vectors we can use and what effect they have on the final $F_M(X)$ predictions.  Your intuition probably told you that nudging the intermediate $\hat{\vec y}$ prediction towards target $\vec y$ gradually improves model performance, but would $\hat{\vec y}$ ever stop if we kept increasing $M$? If so, where would it stop? Is there something special or interesting about the sequence of vectors that $\hat{\vec y}$ passes through? Moreover, we know that training a model on observations ($\vec x$, $y$) is a matter of finding a function, $F(\vec x)$, that optimizes some cost or loss function indicating how well $F$ performs. (The procedure is to tweak model $F$'s model parameters until we minimize the loss function.) What loss function then is a GBM optimizing and what is the relationship with the choice of direction vector?
 
 To answer these questions, we're going to employ a mathematician's favorite trick: showing how our current problem is just a flavor of another well-known problem for which we have lots of useful results. Specifically, this article shows how gradient boosting machines perform an optimization technique from numerical methods called [gradient or steepest descent](https://en.wikipedia.org/wiki/Gradient_descent). We'll see that a GBM training weak leaners on residual vectors optimizes the mean squared error (MSE), the $L_2$ loss, between the true target $\vec y$ and the intermediate predictions, $\hat{\vec y} = F_m(X)$ for observation matrix $X = [\vec x_1 \ldots \vec x_N]$. A GBM that trains weak learners on sign vectors optimizes the mean absolute error (MAE), the $L_1$ loss. 
 
@@ -11,7 +11,7 @@ Before jumping into the mathematics, let's make some observations about the beha
  
 <section title="Comparing drop in MSE when chasing residual vs sign vectors">
  
-Let's revisit the $\hat y = F_m(X)$ intermediate model predictions for both the weak learners trained on residual vectors and those trained on sign vectors.  We can empirically verify that training $\Delta_m$ weak models on the residual vector drops the MSE loss dramatically faster than training $\Delta_m$ on the sign vector. Here is the data pulled from the first article with the MSE and MAE tacked on:
+Let's revisit the $\hat{\vec y} = F_m(X)$ intermediate model predictions for both the weak learners trained on residual vectors and those trained on sign vectors.  We can empirically verify that training $\Delta_m$ weak models on the residual vector drops the MSE loss dramatically faster than training $\Delta_m$ on the sign vector. Here is the data pulled from the first article with the MSE and MAE tacked on:
 
 <latex>
 {\small
@@ -72,23 +72,23 @@ Next, look at the trajectory of the MSE for both models. For $\Delta_m$ trained 
 
 (The region highlighted in orange is the group of observations associated with the right child of the $\Delta_1$ stump and the arrow points at the prediction for the right child.)
 
-The $\Delta_1$ trained on the sign vector splits the observations in between the second and third because the sign vector is $[-1, -1, 0, 1, 1]$. The regression tree chooses to group $[-1, -1]$ together because they are identical values, leaving $[0, 1, 1]$ as the other group. Instead of the magnitude, sign vectors treat anything above the mean as the same value, 1. 
+The $\Delta_1$ trained on the sign vector splits the observations in between the second and third because the sign vector is $[-1, -1, 0, 1, 1]$. The regression tree chooses to group $[-1, -1]$ together because they are identical values, leaving $[0, 1, 1]$ as the other group. Instead of the magnitude, the $\Delta_1$ trained on sign vectors treat anything above the median, $F_0$, as the same value, 1. 
 
 The MSE for weak models trained on the sign vector does not drop dramatically until $\Delta_3$ finally goes after the outlier to yield $F_3$. In fact, the MSE does not budge in between the second and third weak models.  Empirically at least, training $\Delta_m$ on sign vectors does not seem to be optimizing the MSE very well whereas training $\Delta_m$ on residual vectors does optimize MSE well.  In general, we should see the MSE and MAE decrease monotonically but, given the weak approximations of our $\Delta_m$, monotonicity is not guaranteed. The MSE/MAE could bounce around a bit on its way down.
 
-Finally, let's make some observations about the intermediate $\hat{\vec y} = F_m(X)$ model predictions.  The units of each $\hat y_i$ is rent-dollars, so $\hat{\vec y}$ is a vector of dollar values in $N$-space (here, $N=5$). That means that the $F_m$ predictions are vectors sweeping through $N$-space as we increase $m$.   This is an important concept that we'll rely on below to show GBM is performing gradient descent. When papers use the term "*function space*," they just mean the $N$-space of predictions: a vector of $N$ target values predicted by some $F_m(X)$.
+Finally, let's make some observations about the intermediate $\hat{\vec y} = F_m(X)$ model predictions.  The units of each $\hat y_i$ is rent-dollars, so $\hat{\vec y}$ is a vector of dollar values in $N$-space (here, $N=5$). That means that the $F_m$ predictions are vectors sweeping through $N$-space as we increase $m$. When papers use the term "*function space*," they just mean the $N$-space of predictions: a vector of $N$ target values predicted by some $F_m(X)$. For convenience, we will use variable $\hat{\vec y}$ to sweep through prediction space.
 
 To help make the connection between gradient boosting and gradient descent, let's take a small detour to reinvent the technique of gradient descent used to optimize functions. Once we've got a good handle on both ideas, we'll see how similar they are mathematically.
 
 <section title="The intuition behind gradient descent">
 
-Both of us (Terence and Jeremy) have a story where we had to make our way down a mountain in the pitch black of night or dense fog. (*Spoiler alert*: we both make it back!) Obviously, the way to get down is to keep going downhill until you reach the bottom, taking steps to the left, right, forward, backward or at an angle in order to minimize the "elevation function." Rather than trying to find the best angle to step, we can treat each direction, forward/backward and left/right, separately and then combine them to obtain the best step direction.  The procedure is to swing your foot forwards and backwards to figure out which way is downhill on that axis, then swing your foot left and right to figure out which way is downhill on that axis (Boot clipart from `http://etc.usf.edu/clipart/`):
+Both of us (Terence and Jeremy) have a story where we had to make our way down a mountain in the pitch black of night or dense fog. (*Spoiler alert*: we both make it back!) Obviously, the way to get down is to keep going downhill until you reach the bottom, taking steps to the left, right, forward, backward or at an angle in order to minimize the "elevation function." Rather than trying to find the best angle to step, we can treat each direction, forward/backward and left/right, separately and then combine them to obtain the best step direction.  The procedure is to swing your foot forwards and backwards to figure out which way is downhill on, say, the North/South axis, then swing your foot left and right to figure out which way is downhill on the East/West axis (Boot clipart from `http://etc.usf.edu/clipart/`):
 
 <img src="images/directions.png" width="30%">
 
 We're looking for a direction vector with components for each of the $x$ and $y$ axes that takes us downhill, according to some elevation function, $f(x,y)$. We can represent the components of the downhill direction vector as a sign vector, such as
 
-$[$*which way is down in x*, *which way is down in y*$]$ = $[-1, 1]$
+$[$*which way is down in x direction*, *which way is down in y direction*$]$ = $[-1, 1]$
 
 which would indicate a step to the left and forward. To actually move downhill, all we have to do is add the direction vector to the current position to get the new position: $[x,y] = [x,y] + [-1, 1]$.
 
@@ -109,27 +109,25 @@ The gradient is is actually the opposite or negative of the direction vector we 
 	
 For a small change change in $x$ to the right, $\Delta x$, the function value $f(x)$ will go up if the slope is positive or go down if the slope is negative. $\Delta f$ is negative for $x<5$ and positive for $x>5$.  Consequently, to move downhill, not uphill, we update the current position by adding in the **negative** of the gradient.
 
-Let's generalize our position update equation to handle more than two dimensions. Rather than $x$ and $y$, let's use $\vec x$ (in bold) to represent all of the function parameters, which means our "elevation" function to optimize now takes a vector argument, $f(\vec x)$. As we update $\vec x$, the value of $f(\vec x)$ should decrease. When it stops decreasing, $\vec x$ has arrived at the position giving the minimum value of $f(\vec x)$.  Because we will need this to show the relationship between ingredient boosting and gradient descent, let's formally give the update equation. The next position of $\vec x$, at time step $t$, is given by:
+Let's generalize our position update equation to handle more than two dimensions. Rather than $x$ and $y$, let's use $\vec x$ (in bold) to represent all of the function parameters, which means our "elevation" function to optimize now takes a vector argument, $f(\vec x)$. As we update $\vec x$, we want the value of $f(\vec x)$ to decrease. When it stops decreasing, $\vec x$ will have arrived at the position giving the minimum value of $f(\vec x)$.  Because we'll need this to show the relationship between gradient boosting and gradient descent, let's formally give the update equation. The next position of $\vec x$, at time step $t$, is given by:
 
 \[
 \vec x_t = \vec x_{t-1} + (- \nabla f(x,y)) = \vec x_{t-1} - \nabla f(x,y)
 \]
 
-In practice, we need to restrict the size of the steps we take from $\vec x_{t-1}$ to $\vec x_t$ by shrinking the direction vector using a learning rate, $\eta$, whose value is less than 1.  This brings us to the position of equation found in most literature:
+In practice, we need to restrict the size of the steps we take from $\vec x_{t-1}$ to $\vec x_t$ by shrinking the direction vector using a learning rate, $\eta$, whose value is less than 1.  (Imagine a function that is only valid between, say, -2 and 2 but whose output values range from 0 to 1,000; direction vectors derived from the slope would force overly large steps and so we attenuate the steps with the learning rate.) This brings us to the position update equation found in most literature:
 
 \[
 \vec x_t = \vec x_{t-1} - \eta \nabla f(x,y)
 \]
 
-(Imagine a function that is only valid between, say, -2 and 2 but whose output values range from 0 to 1,000; direction vectors derived from the slope would force overly large steps and so we attenuate the steps with the learning rate.)
-
 The key takeaways from this gradient descent discussion are:
 
 <ul>
 	<li>Minimizing a function, $f(\vec x)$, means finding the $\vec x$ position where $f(\vec x)$ has minimal value.
-	<li>The procedure is to pick some initial (random) position $\vec x = \vec x_0$ and then gradually nudge $\vec x$ in the downhill direction, which is the direction where the $f(\vec x)$ value is smaller.
-	<li>The gradient of our function gives us the direction of uphill and so we negate the gradient to get the downhill direction vector.
-	<li>We update position $\vec x_{t-1}$ to $\vec x_t$, where the function is lower, by adding the direction vector to $\vec x$ scaled by the learning rate, $\eta$.
+	<li>The procedure is to pick some initial (random or best guess) position for $\vec x$ and then gradually nudge $\vec x$ in the downhill direction, which is the direction where the $f(\vec x)$ value is smaller.
+	<li>The gradient of $f(\vec x)$ gives us the direction of uphill and so we negate the gradient to get the downhill direction vector.
+	<li>We update position $\vec x_{t-1}$ to $\vec x_t$, where the function is lower, by adding the direction vector to $\vec x$, scaled by the learning rate, $\eta$.
 </ul>
 
 Ok, we're finally ready to show how gradient boosting is doing a particular kind of gradient descent.
@@ -142,13 +140,17 @@ Our goal is to show that training a GBM is performing gradient-descent minimizat
 F_M(\vec x) = f_0(\vec x) + \sum_{m=1}^M \Delta_m(\vec x)
 \]
 
-is performing gradient descent in some way.  It makes sense that nudging our approximation, $\hat{\vec y}$, closer and closer to the true target $\vec y$ would be performing gradient descent. For example, at each step, the residual $\vec y - \hat{\vec y}$ gets smaller. We must be minimizing some function related to the distance between the true target and our approximation.
+is performing gradient descent in some way.  It makes sense that nudging our approximation, $\hat{\vec y}$, closer and closer to the true target $\vec y$ would be performing gradient descent. For example, at each step, the residual $\vec y - \hat{\vec y}$ gets smaller. We must be minimizing some function related to the distance between the true target and our approximation. Let's revisit our golfer analogy and visualize the squared error between the approximation and the true value, $(y - F_m)^2$:
 
-The key to unlocking the relationship is to see that the residual, $\vec y - \hat{\vec y}$, is a direction vector. It's not just the magnitude of the difference. Moreover, the vector points in the direction of a better approximation and, hence, a smaller loss between the true $\vec y$ and $\hat{\vec y}$ vectors. That suggests that the direction vector is also (the negative of) a loss function gradient. (Recall that the derivative is positive in the uphill direction and so taking the negative gives the direction of downhill or lower cost.) So, here's the vital intuition: **Chasing the direction vector in a GBM is like chasing the gradient of a loss function via gradient descent.** 
+<img src="images/golf-MSE.png" width="70%">
+
+Since $\hat y = F_m(x)$, let's think about the ball as $\hat y$ and the golfer nudging $\hat y$ towards target $y$.  At each step, we have to figure out which direction to go. At $F_0$ and $F_1$, we should move $\hat y$ to the right; at $F_2$, we should move $\hat y$ to the left. How far should we move $\hat y$? We could move by +1 and -1, the sign of the direction, or we could take into consideration the distance of $\hat y$ to the target $y$, $y - \hat y$. That distance just happens in the direction of the negative of the slope of the MSE loss function, $(y - \hat y)^2$. (Recall that the derivative is positive in the uphill direction and so taking the negative gives the direction of downhill or lower cost.) So, at least in this single-observation case, adding the residual to $\hat y$ is subtracting the slope, which is exactly what gradient descent does.
+ 
+The key to unlocking the relationship for more than one observation is to see that the residual, $\vec y - \hat{\vec y}$, is a direction vector. It's not just the magnitude of the difference. Moreover, the vector points in the direction of a better approximation and, hence, a smaller loss between the true $\vec y$ and $\hat{\vec y}$ vectors. That suggests that the direction vector is also (the negative of) a loss function gradient.  So, here's the vital intuition: **Chasing the direction vector in a GBM is chasing the (negative) gradient of a loss function via gradient descent.** 
 
 In the next two sections, we'll show that the gradient of the MSE loss function is the residual direction vector and the gradient of the MAE loss function is the sign direction vector. Then, we can put it all together to show GBM is mathematically performing a gradient descent on the loss function.
 
-<subsection title="The gradient of the MSE function">
+<subsection title="The MSE function gradient">
 	
 To uncover the loss function optimized by a GBM whose $\Delta_m$ weak models are trained on the residual vector, we just have to integrate the residual $\vec y - \hat{\vec y}$. It's actually easier, though, to go the other direction and compute the gradient of the MSE loss function to show that its gradient is the residual vector. The MSE loss function computed from $N$ observations in matrix $X = [\vec x_1 \ldots \vec x_N]$ is:
 
@@ -162,11 +164,13 @@ but let's substitute $\hat{\vec y}$ for the model output, $F_M(X)$, to make the 
 L(\vec y, \hat{\vec y}) = \frac{1}{N} \sum_{i=1}^{N} (y_i - \hat y_i)^2
 \]
 
-Also, since $N$ is a constant once we start boosting, and we care only about minimizing a function not its actual minimum value, let's drop the $\frac{1}{N}$ constant:
+Also, since $N$ is a constant once we start boosting, and $f(x)$ and $cf(x)$ have the same $x$ minimum point, let's drop the $\frac{1}{N}$ constant:
 
 \[
 L(\vec y, \hat{\vec y}) = \sum_{i=1}^{N} (y_i - \hat y_i)^2
 \]
+
+(minimizing function $f(x)$ and $cf(x)$ gives the same $x$)
 
 Now, let's take the partial derivative of the loss function with respect to a specific approximation $\hat y_j$:
 
@@ -186,9 +190,9 @@ That means the gradient is:
 \frac{\partial}{\partial \hat{\vec y}} L(\vec y, \hat{\vec y}) = 2 (\vec y - \hat{\vec y})
 \]
 
-Again, since we are optimizing the loss function, the constant in front doesn't matter, which leaves us with the gradient being the same as the residual vector: $\vec y - \hat{\vec y}$. So, chasing the residual vector in a GBM is like chasing the gradient vector of the MSE $L_2$ loss function while performing gradient descent.
+Again, since we are optimizing the loss function, the constant in front doesn't matter, which leaves us with the gradient being the same as the residual vector: $\vec y - \hat{\vec y}$. So, chasing the residual vector in a GBM is chasing the gradient vector of the MSE $L_2$ loss function while performing gradient descent.
 
-<subsection title="The gradient of the MAE function">
+<subsection title="The MAE function gradient">
 
 Let's see what happens with the MAE loss function:
 
@@ -212,41 +216,47 @@ giving gradient:
 \frac{\partial}{\partial \hat{\vec y}} L(\vec y, \hat{\vec y}) = sign(\vec y - \hat{\vec y})
 \]
 
-This shows that chasing the sign vector in a GBM is like chasing the gradient vector of the MAE $L_1$ loss function while performing gradient descent.
+This shows that chasing the sign vector in a GBM is chasing the gradient vector of the MAE $L_1$ loss function while performing gradient descent.
 
-<subsection title="sdfsdf">
+<subsection title="Morphing GBM into gradient descent">
 
-Key substitution $\hat{\vec y}_m = F_m(X)$.
-	
+Now that we have all of the pieces, let's show that a GBM is performing gradient descent on a loss function comparing the target $\vec y$ and the approximation $F_m(X)$. To do this, we'll morph the GBM additive model recurrence relation into the gradient descent position update equation. Let's start by simplifying the GBM recurrence relation:
+
+\[
+F_m(\vec x) = F_{m-1} + \eta \Delta_{m-1}(\vec x)
+\]
+
+by substituting the $m^{th}$ approximation variable as $\hat{\vec y}_m = F_m(X)$ to get:
+
+\[
+\hat{\vec y}_m = \hat{\vec y}_{m-1} + \eta \Delta_{m-1}(\vec x)
+\]
+
+We can flip the addition to a subtraction by subtracting the negative:
+
+\[
+\hat{\vec y}_m = \hat{\vec y}_{m-1} - \eta (- \Delta_{m-1}(\vec x) )
+\]
+
+Finally, let's use iteration variable $t$ not $m$:
+
+\[
+\hat{\vec y}_t = \hat{\vec y}_{t-1} - \eta (- \Delta_{t-1}(\vec x) )
+\]
+
+Compare that to the gradient descent position update equation:
+
 \[
 \vec x_t = \vec x_{t-1} - \eta \nabla f(\vec x_{t-1})
 \]
 
-\[
-\hat{\vec y}_t = \hat{\vec y}_{t-1} - \eta \nabla f(\hat{\vec y}_{t-1})
-\]
-
-\[
-\hat{\vec y}_m = \hat{\vec y}_{m-1} - \eta \nabla f(\hat{\vec y}_{m-1})
-\]
-
-\[
-\hat{\vec y}_m = \hat{\vec y}_{m-1} + \eta (- \nabla f(\hat{\vec y}_{m-1}))
-\]
-
-Compare that to the GBM recurrence relation for additive modeling but with $\hat{\vec y}_m$ substituted for $F_m(X)$:
-
-\[
-\hat{\vec y}_m = \hat{\vec y}_{m-1} + \eta \Delta_{m-1}(X)
-\]
-
-This means that a GBM is performing gradient descent if $\Delta_{m-1}(X)$ = $- \nabla f(\hat{\vec y}_{m-1})$ for some $f$ or, equivalently, $\Delta_m(X)$ = $- \nabla f(\hat{\vec y}_m)$. If we let $f(\hat{\vec y}_m)$ be the general loss function $L(\vec y, \hat{\vec y}_m)$ then we get the goal result we wanted:
+Those equations are identical if we choose $\Delta_m(X)$ to be $- \nabla f(\hat{\vec y}_m)$ (changing $m-1$ to $m$ for clarity) for some $f$, which means a GBM would be performing gradient descent using the gradient of $f$. Let $f(\hat{\vec y}_m)$ be the general loss function $L(\vec y, \hat{\vec y}_m)$ and we have rediscovered what vector to train $\Delta_m$ weak models on:
 
 \[
 \Delta_m(X) = - \nabla L(\vec y, \hat{\vec y}_m)
 \]
 
-Adding another $\Delta_m$ weak model to a GBM is actually adding the negative of the gradient of a loss function,
+So, adding another $\Delta_m$ weak model to a GBM is actually adding the negative of the gradient of a loss function to get the next approximation:
 
 <table>
 <tr>
@@ -257,58 +267,61 @@ Adding another $\Delta_m$ weak model to a GBM is actually adding the negative of
 	<td>$\hat{\vec y}_m = \hat{\vec y}_{m-1} + \eta (- \nabla L(\vec y, \hat{\vec y}_{m-1}))$
 </table>
 		
-So by adding the negative of the gradient, a GBM
+When $L$ is the MSE loss function, $L$'s gradient is the residual vector and a gradient descent optimizer should chase that residual, which is exactly what the gradient boosting machine does as well. When $L$ is the MAE loss function, $L$'s gradient is the sign vector, leading gradient descent and gradient boosting to step using the sign vector.
 
-So when $L$ is the MSE loss function, $L$'s gradient is the residual vector and a gradient descent optimizer should chase that residual, which is exactly what the gradient boosting machine does as well. When $L$ is the MAE loss function, $L$'s gradient is the sign vector, leading gradient descent and gradient boosting to move in the direction of that sign vector.
+Hopefully the derivation from the GBM recurrence relation to gradient  descent update equation makes sense to you.  This relationship is much harder to see without the $\hat{\vec y}_m = F_m(X)$ substitution, as we'll see next. 
 
-The $\Delta_m$ weak models are approximations to direction vectors, such as the residual and sign vectors and, which
-
-
-Substituting back in:
-
-\[
-F_m(X) = F_{m-1}(X) + \eta (- \nabla f(F_{m-1}(X)))
-\]
-
+<subsection title="Function space is prediction space">
+	
+Most GBM articles follow Friedman's notation (on page 4, equation for $g_m(\vec x_i)$) and describe the gradient as this scary-looking expression for the partial derivative with respect to our approximation of $y_i$ for observation $\vec x_i$:
 
 \[
-\hat{\vec y}_m = \hat{\vec y}_{m-1} + \eta \Delta_m(X)
+\left[ \frac{\partial L(y_i, F(\vec x_i))}{\partial F(\vec x_i)} \right]_{F(\vec x)=F_{m-1}(\vec x)}
 \]
+
+Hmm... let's see if we can tease this apart.  First, evaluate the expression according to the subscript, $F(\vec x)=F_{m-1}(\vec x)$:
 
 \[
-\hat{\vec y}_m = \hat{\vec y}_{m-1} + \eta \Delta_m(X)
+\frac{\partial L(y_i, F_{m-1}(\vec x_i))}{\partial F_{m-1}(\vec x_i)}
 \]
 
-
-$\hat{\vec y} = F_m(\vec x)$
-
-Prince says this is an important distinction for him to understand when I said it: chasing the residual vector chases the mean squared error versus chasing sign vector which does not. The gradient of L2 is the residual vector and we chase gradient in gradient descent.
-
-we would choose absolute value difference when we are worried about outliers.
-
-gradient descent does parameter optimization normally but we are now doing function space optimization. Gradient descent can't be doing parameter optimization because the different kinds of models would have different parameters.
-
-The residual vector is the gradient (vector of partial derivatives) of the $L_2$ loss function and the sign vector is the gradient of the $L_1$ loss function. GBMs nudge $\hat{\vec y}$ at each stage in the direction of reduced loss.
-
+But, what does it mean to take the partial derivative with respect to a function, $F_{m-1}(\vec x_i)$?  To remove the $i$ index variable, let's look at the entire gradient instead of a specific observation's partial derivative:
 
 \[
-\frac{\partial L(y_i, F(\vec x_i))}{\partial F(\vec x_i)}
+\frac{\partial L(\vec y, F_{m-1}(X))}{\partial F_{m-1}(X)}
 \]
 
-\[
-\frac{\partial L(\vec y, F(X))}{\partial F(X)}
-\]
-
-\[
-\frac{\partial L(\vec y, \hat{\vec y})}{\partial \hat{\vec y}}
-\]
-
-How do you optimize a function? set the derivative to zero and solve for x.
+And here's where it's much easier to understand the gradient using $\hat{\vec y}_m = F_m(X)$. Substituting we get a gradient expression that references two vector variables $\vec y$ and $\hat{\vec y}_{m-1}$:
  
-Friedman says '*... consider F(x) evaluated at each point $\vec x$ to be a "parameter"*'
+\[
+\frac{\partial L(\vec y, \hat{\vec y}_{m-1})}{\partial \hat{\vec y}_{m-1}}
+\]
+
+Variable $\hat{\vec y}_{m-1}$ is a position in "function space," which just means a vector result of evaluating function $F_{m-1}(X)$. This is why GBMs perform "gradient descent in function space," but it's easier to think of it as "gradient descent in prediction space" where $\hat{\vec y}_{m-1}$ is our prediction.
+
+
+<section title="Common points of confusion">
+
+multiple optimization problems at work. picking weights is also an optimization problem.
+
+where does the gradient come from in GBM?
+
+function space
+
+why is it gradient descent?
+
+normally we are shifting model parameters around to optimize a model. In this case we are moving the approximation around in the direction of the answer. We are not optimizing the parameters of the week models.  gradient descent does parameter optimization normally but we are now doing function space optimization. Gradient descent can't be doing parameter optimization because the different kinds of models would have different parameters. Friedman says '*... consider F(x) evaluated at each point $\vec x$ to be a "parameter"*'
+
+do we need the true target in the test set? no, the model is no longer updated after training and we only need the true target to compute new weak models during training.
+
+<section title="Summary">
+
+get really fancy, we can even add momentum [Accelerated Gradient Boosting](https://arxiv.org/abs/1803.02042) can mention momentum instead of or in addition to leaf weights.  see accelerated gradient boosting paper recently.
 
 <section title="General algorithm">
 
+talk about how to pick $\gamma_{jm}$ equation 18 from Friedman? That is the $w$ in the algorithm below.
+	
 <latex>
 \setlength{\algomargin}{3pt}
 \SetAlCapSkip{-10pt}
@@ -333,242 +346,3 @@ Let $F_0(X)$ be value $v$ minimizing $\sum_{i=1}^N L(y_i, v)$, loss across all o
 \end{algorithm}
 </latex>
 
-<aside title="Why does chasing the sign vector minimize MAE?">
-
-The critical difference is training on the direction only not the magnitude, which gives different groupings. mse makes tree really want to handle the outlier properly. show a single stump where grouping is different radically because the directions make all of the values look the same.
-See dev-descent  notebook. I created data that gets radically different trees according to what they're trained on.
-
-
-<pyeval label="minMAE" output="df" hide=true>
-import pandas as pd
-import matplotlib.pyplot as plt
-from matplotlib import rc
-import matplotlib
-import numpy as np
-from scipy.optimize import minimize_scalar
-from sklearn.metrics import mean_squared_error, mean_absolute_error
-#rc('text', usetex=True)
-matplotlib.rcParams['mathtext.fontset'] = 'cm'
-matplotlib.rcParams['mathtext.rm'] = 'serif'
-matplotlib.rc('xtick', labelsize=13) 
-matplotlib.rc('ytick', labelsize=13) 
-
-bookcolors = {'crimson': '#a50026', 'red': '#d73027', 'redorange': '#f46d43',
-              'orange': '#fdae61', 'yellow': '#fee090', 'sky': '#e0f3f8', 
-              'babyblue': '#abd9e9', 'lightblue': '#74add1', 'blue': '#4575b4',
-              'purple': '#313695'}
-
-df = pd.DataFrame(data={"sqfeet":[700, 750, 800, 850, 900,950,1000]})
-df["rent"] = pd.Series([1160, 1160, 1175, 1200, 1280,1310,2000])
-
-M = 1
-f0 = df.rent.median()
-df['F0'] = f0
-
-for s in range(1,M+1):
-    df[f'res{s}'] = df.rent - df[f'F{s-1}']
-    df[f'sign{s}'] = np.sign(df[f'res{s}'])
-	
-df = df.astype(int)
-</pyeval>
-
-<pyfig label=minMAE hide=true width="40%">
-plt.plot(df.sqfeet,df.rent,'o')
-
-m = df.rent.mean()
-mm = np.empty(len(df))
-mm.fill(m)
-plt.plot(df.sqfeet,mm)
-
-md = df.rent.median()
-md2 = np.empty(len(df))
-md2.fill(md)
-plt.plot(df.sqfeet,md2, linestyle=':')
-plt.show()
-</pyfig>
-
-Scitkit decision tree gives split point of 975 for training on residual but split of 825 for sign vector. So MSE chases the 800, grouping all others whereas sign vector shows an equal split then takes median. So right leaf for MSE is 800 but is median of 0, 80, 110, 800 = 95. So we aren't taking major steps towards the outlier. First, we're grouping by up/down which ignores magnitude of outlier then we take median which won't let us jump too far towards that. So this is optimizing the abs diff and not giving special emphasis to obs far from median.
-
-modified to have different data. show that mse trajectory is different in L1 than in L2.
-
-```
-Opt MSE
-RMSE: [322.949  30.557  19.563  17.055  11.956   9.353] (RMSE)
-MAE:  [257.2    23.     16.833  13.     11.014   8.035] (RMSE)
-
-MSE drops fast at first when optimizing it. But, doesn't move much at
-first when optimizing MAE:
-
-Opt MAE
-RMSE: [359.089 336.188 334.606  23.365  22.408  22.792]
-MAE:  [183.    163.    161.5    12.25   11.125  10.75 ]
-
-shows opt MAE must be not chasing RMSE.
-```
-
-Hmm...maybe we need to do on a bigger data set vaguely linear then add noise and see difference. this is too unstable.
-
-
-</aside>
-
-<section title="Junk drawer">
-
-Nudging $\hat{\vec y}$ towards target $\vec y$ means nudging $\hat{\vec y}$ in the direction of lower cost, which is "gradient of the loss function," which is where the "gradient" in gradient boosting comes from. Shortly, we'll show that it's also the gradient in gradient descent.
-
- $\hat{\vec y}$.
-
-Here, again, the $F_m$ predictions are vectors sweeping through dollars $N$-space and the mean absolute error (MAE) falls as we add more weak models. Though it falls more slowly than the MSE, the MAE is also monotonically decreasing. Note that we can drop the "mean" part to get the same the total squared or total absolute error by dropping the $\frac{1}{N}$.
-
-The error measures in both cases never go up because we are specifically choosing to nudge the approximation in the direction of lower cost, which we call the direction vector.  
- 
-Using the mean by dividing by $N$ is the same as measuring the total squared air or total absolute error because the number of observations is a constant once we start training. It's a constant scalar factor that can be ignored because it doesn't change the shape of the error curve. 
-
-Minimizing some function $f(x)$ will always give the same $x$ as minimizing the same function scaled by constant, $cf(x)$.
-
-
-
-Students ask the most natural but hard-to-answer questions:
-
-<ol>
-<li>Why is it called *gradient* boosting?
-<li>What is "function space"?
-<li>Why is it called "gradient descent in function space"?
-</ol>
-
-The third question is the hardest to explain. As Gorman points out, "*This is the part that gets butchered by a lot of gradient boosting explanations*." (His blog post does a good job of explaining it, but I thought I would give my own perspective here.)
-
-
-How good is that model? To answer that, we need a loss or cost function, $L(y,\hat y)$, that computes the cost of predicting $\hat y$ instead of $y$.  The squared error, $L(y,\hat y) = (y-\hat y)^2$ is the most common, but sometimes we care more about the absolute difference, $L(y,\hat y) = |y-\hat y|$. The loss across all observations is just the sum (or the average if you want to divide by $N$) of all the individual observation losses:
-
-\[
-L(\vec y, X) = \sum_{i=1}^{N} L(y_i, F_M(\vec x_i))
-\]
-
-That gives this either $L(\vec y, X) = \sum_{i=1}^{N} (y_i - F_M(\vec x_i))^2$ or $L(\vec y, X) = \sum_{i=1}^{N} |y_i - F_M(\vec x_i)|$.
-
-Have you ever wondered why this technique is called *gradient* boosting? We're boosting gradients because our weak models learn sign vectors, and the other common term for "direction vector" is, drumroll please, *gradient*.  that leads us to optimization via gradient descent.
-
-
-
-
-
-only do for trees; then we are just tweaking the predictions in the leaf nodes; use mean of leaf elements already in L2 but tweak to use median in L1 case. Min $L(y_i, F_{m-1}(\vec x_i) + w)$ for $\vec x_i$ in leaf $l$. L2 case, we have $(y_i - F_{m-1}(\vec x_i) - w)^2$ and $y_i - F_{m-1}(\vec x_i)$ is just the residual so $w$ as mean minimizes that. That residual is what we are training on and as we discussed before, the initial value should be either the mean or the median because that minimizes those cost functions.
-
-$\tilde{\vec y} = - \nabla_{F_{m-1}(X)} L(\vec y, F_{m-1}(X))$
-
-= $ \frac{\partial}{\partial F_{m-1}(X)} L(\vec y, F_{m-1}(X))$
-
-$\nabla_{\hat{\vec y}} L(\vec y,\hat{\vec y})$
-
-
-
-
-
-<section title="Common points of confusion">
-
-picking weights is also an optimization problem.
-
-Conceptually, gradient boosting is pretty easy to explain
-
-Given $(X, \vec y)$ we want an $f(X)$ $f(X_i) = y_i$.
-
-$\vec y = f(X)$
-
-Treating a gradient boosting machine means an initial approximation to the target and then multiple trainings for models that map the x to a nudge.
-
-
-typical use a gradient boosting is to use a single function that represents the model mapping predictors to target, such as  logistic regression or neural networks. In that case, we are tweaking the models to see how the resulting function output affects the cost function. With gradient boosting, we have multiple functions not just one. Of course when we train each model/function we must do some model-parameter fitting to learn, but that is a totally separate concept.  With gradient boosting, we are not tweaking the parameters of a single function but instead are asking how to tweak the output from a composite function. Each new tweak gets added into the composite function.
-
-Game of golf. hit it once to get it close then nudge, nudge, nudge to get into hole.
-
-$Cost(y, \hat y_0 + \Delta y_1 + \Delta y_2 + ...  + \Delta y_M)$.
-
-$F_0(x) = \hat y$
-
-$F_1(x) = \hat y + \Delta y_1$
-
-$F_2(x) = \hat y + \Delta y_1 + \Delta y_2$
-
-or, instead of nudging along we can try to jump from the initial approximation to the end:
-
-$Cost(y, \hat y + \Delta y)$
-
-The problem is that we can't make the Delta exactly and so we end up with, in both cases,
-
-$Cost(y, \hat y + \hat{\Delta y}_1 + \hat{\Delta y}_2 + ...  + \hat{\Delta y}_M)$.
-
-
-
-Want to minimize
-
-$Cost(\vec y, f(X))$
-
-where $f(X)$ is the set of predictions coming from our model $f$. To minimize that, we keep tweaking the parameters of $f$ until we get the minimum cost.  typically we expose those parameters, such as with linear regression model $y = \beta_0 + \beta_1 x$.
-
-$Cost(\vec y, f(X;[\beta_0, \beta_1])$
-
-or
-
-$Cost(\vec y, \beta_0 + \beta_1 x)$
-
-and then say to minimize that equation by shifting $[\beta_0, \beta_1]$ around.
- 
-$Cost(\vec y, \hat y)$
-
-for some predictions from the model $\hat y$.
-
-The typical iterative update procedure for gradient descent is:
-
-$x_{t+1} = x_t - \eta \nabla f(x_t)$
-
-to find $x$ that minimizes $f(x)$.   When using it to train a model, $x$ is the set of parameters for the model. In neural networks, the architecture is embodied by the $f$ function.
-
-pikes peak metaphor: elevation function is model, x is location. shift x until elevation is minimized.  that is one model  called elevation. x is parameter.  with boosting, get a starting elevation (the summit?) then ask which direction we should take a step to head towards lower elevation at a specific x location.  hmm...maybe it's like we know the elevation at bottom, 6000' (vs 14110' at summit).  We ask, is current elevation 6000? No, need another step so drop elevation by 1 unit. this would be simulating one $\vec x$ and one $y$ target...too easy to move one person downhill. but it's like start at some elevation, now go down until bottom (cost is 0 when we reach bottom). duh. ok, extend so there are 20 kids on trip and all at different starting points. Now pretend they are all at average elevation.  Boosting tweaks not the x location of each kid, but sends a "go down or go up or stop moving signal".   The updated prediction of kid elevations is initial guess of average and then tweaks giving instructions to head up/down to reach same base camp at bottom. (some might have gotten lost and ended up below base camp). Hmm...actually, no. we send park rangers, one per kid, starting at basecamp looking to reach each kid. initial guess basecamp.  Then ask for ranger i, is kid i above/below/same. Tell ranger to move. Ranger elevation is initial + all tweaks. when tweak vector goes to all 0s, rangers have reached all kids. how does x location come into play?  training ranger to move elevation up/down might involve shifting in x/y plane to get single elevation value.
-
-\todo{ To get really fancy, we can even add momentum [Accelerated Gradient Boosting](https://arxiv.org/abs/1803.02042) can mention momentum instead of or in addition to leaf weights.  see accelerated gradient boosting paper recently.}
-
-<section title="Summary">
-
-foo
-
-<aside title="Q. Why is it called >gradient< boosting?">
-
-**A**. We're boosting gradients because the weak models learn direction vectors, and the other common term for "direction vector" is, drumroll please, *gradient*. Yup, simple as that.
-</aside>
-
-<section title="Notation translation to Friedman's paper">
-
-foo
-
-<section title="Resources">
-
-Vincent and Bengio [http://www-labs.iro.umontreal.ca/~vincentp/Publications/kmp_mlj.pdf](http://www-labs.iro.umontreal.ca/~vincentp/Publications/kmp_mlj.pdf)
-
-# Junk drawer
-
-The $w_m$ weights are computed by finding the weight that optimizes the mean squared error of the true target $\vec y$ and the proposed $F_m(X)$ model weighted by $w_m$.
-
-The weights, $w_m$, don't appear in the model equations in these graphs because we used weight $w_m = 1$ for simplicity. But, a GBM implementation would choose the optimal weight $w_m$ so as to minimize the squared difference between $\vec y$ and the prediction of the new composite model $F_m(X)$ that used $w_m$. So, first we choose the new weak model $\Delta_m$ then try out different weights, looking for the one that makes best use of this new model.  See page 8 of [Friedman's paper](https://statweb.stanford.edu/~jhf/ftp/trebst.pdf) for the form of the equation (Friedman's equation 12) that, when minimized, yields the appropriate weight for stage $m$. In our notation, the minimization is:
-
-\[
-w_m = argmin_w \sum_{i=1}^{N} (y_i - (F_{m-1}(\vec x_i) + w \Delta_m(\vec x_i)))^2
-\]
-
-In English, $argmin_w$ just says to find the $w$ such that the value of the summation to the right is minimized. The summation says to compute the loss across all observations between what we want, $y_i$, and what the model would give us if we used weight $w$: $F_{m-1}(\vec x_i) + w \Delta_m(\vec x_i)$.
-
-foo
-
-<!--
-Let's perform some manual boosting using this diagram as a guide. Let the target $y$ be 100 yards distant from the tee and the initial approximation, $f_0(\vec x)$, be 70 yards: $F_0(\vec x) = f_0(\vec x) = 70$. The golfer still has $y-70 = 30$ yards to go and so we need to boost the current prediction in the positive direction. Let's use $\Delta_1 (\vec x) = 1$ to indicate a positive delta and, to avoid taking forever, let's scale the new weak learner by $w_1 = 10$: $F_1(\vec x) = 70 + 10$. The golfer is still short so we boost again with $\Delta_2 (\vec x) = 1$ and $w_2 = 10$: $F_2(\vec x) = 70 + 10 + 10$. Finally, we get $\hat y = F_3(\vec x) = 70 + 30 + 30 + 30 = 100$. We would not have to the same  weights, but that is convenient and works for this example. We could also use
-
- a constant amount
-
-\latex{{
-\begin{eqnarray*}
-F_0 &=& f_0, ~~~~~~~~~~~~~~~~~~~~~y-\hat y = 30 \\
-F_1 &=& F_0 + 10 \times 1\\
-F_2 &=& F_1 + 10 \times 1\\
-F_3 &=& F_2 + 10 \times 1\\
-\end{eqnarray*}
-}}
--->

@@ -265,6 +265,8 @@ print("F3 MSE", mean_squared_error(df.rent, df.F3), "MAE", mean_absolute_error(d
 }
 </latex>
 
+(Many articles and Friedman's original paper call the $\vec y - F_m$ values *pseudo-responses*.)
+
 The last column shows not only the direction but the magnitude of the difference between where we are, $F_0(X)$, and where we want to go, $\vec y$. The red vectors in the following diagram are a visualization of the residual vectors from our initial model to the rent target values.
 
 <pyfig label=examples hide=true width="35%">
