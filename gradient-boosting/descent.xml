@@ -242,7 +242,7 @@ and we can also  change iteration variable to $t$ from $m$:
 \hat{\vec y}_t = \hat{\vec y}_{t-1} - \eta (- \Delta_t(X) )
 \]
 
-$\Delta_m$ is trained on and is an approximation to the direction vector, which is a function of $F_{m-1}(X)$, such as residual $\vec y - F_{m-1}(X)$ or sign vector $sign(\vec y - F_{m-1}(X))$.  We haven't given the direction vector a symbol yet, so for the purposes of this proof, let's refer to the direction vector as $v_{m-1}$ because it is derived from $F_{m-1}(X)$. (Friedman calls $v_{m-1}$ the *pseudo-response* and uses symbol $\tilde{\vec y}$, but we prefer the term direction vector and avoid $\tilde{\vec y}$ because it resembles our use of $\hat{\vec y}$ a bit much.) Substituting direction vector $v_{m-1}$ for its approximation gives us:
+$\Delta_m$ is trained on and is an approximation to the direction vector, which is a function of $F_{m-1}(X)$, such as residual $\vec y - F_{m-1}(X)$ or sign vector $sign(\vec y - F_{m-1}(X))$.  We haven't given the direction vector a symbol yet, so for the purposes of this proof, let's refer to the direction vector as $\vec v_{m-1}$ because it is derived from $F_{m-1}(X)$. (Friedman calls $\vec v_{m-1}$ the *pseudo-response* and uses symbol $\tilde{\vec y}$, but we prefer the term direction vector and avoid $\tilde{\vec y}$ because it resembles our use of $\hat{\vec y}$ too much.) Substituting direction vector $\vec v_{m-1}$ for its approximation gives us:
 
 \[
 \hat{\vec y}_t = \hat{\vec y}_{t-1} - \eta (- v_{t-1} )
@@ -254,10 +254,10 @@ Compare that to the gradient descent position update equation:
 \vec x_t = \vec x_{t-1} - \eta \nabla f(\vec x_{t-1})
 \]
 
-Those equations are identical if we choose direction vector $v_{t-1}$ to be $- \nabla f(\hat{\vec y}_{t-1})$ for some $f$, which means a GBM would be performing gradient descent using the gradient of $f$. Let $f$ be the general loss function $L(\vec y, \hat{\vec y}_m)$ and we have discovered what direction vector to train $\Delta_m$ weak models on:
+Those equations are identical if we choose direction vector $vec v_{t-1}$ to be $- \nabla f(\hat{\vec y}_{t-1})$ for some $f$, which means a GBM would be performing gradient descent using the gradient of $f$. Let $f$ be the general loss function $L(\vec y, \hat{\vec y}_m)$ and we have discovered what direction vector to train $\Delta_m$ weak models on:
 
 \[
-v_{m-1} = - \nabla L(\vec y, \hat{\vec y}_m)
+\vec v_{m-1} = - \nabla L(\vec y, \hat{\vec y}_m)
 \]
 
 So, adding another $\Delta_m$ weak model to a GBM is actually adding the negative of the gradient of a loss function to get the next approximation:
@@ -338,6 +338,7 @@ talk about how to pick $\gamma_{jm}$ equation 18 from Friedman? That is the $w$ 
 \SetAlgoSkip{}
 \SetInd{.5em}{.5em}
 \TitleOfAlgo{{\em boost}($X$,$\vec y$,$M$,$\eta$) \kwReturns{model $F_M$}}
+don't use v here
 Let $F_0(X)$ be value $v$ minimizing $\sum_{i=1}^N L(y_i, v)$, loss across all observations\\
 \For{$m$ = 1 \KwTo $M$}{
 	Let $\delta_m = \frac{\partial L(\vec y,~ \vec f(X))}{\partial \vec f(X)}\big\rvert_{\vec f=F_{m-1}}$, gradient of $L$ w.r.t. $\vec f$ evaluated at $F_{m-1}$\\
