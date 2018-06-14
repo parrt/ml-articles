@@ -1,0 +1,17 @@
+<chapter title="Gradient boosting: frequently asked questions"
+	 author={[Terence Parr](http://parrt.cs.usfca.edu) and [Jeremy Howard](http://www.fast.ai/about/#jeremy)}>
+
+multiple optimization problems at work. picking weights is also an optimization problem.
+
+where does the gradient come from in GBM?
+
+function space
+
+why approx residual? rpevent overfit. won't generalize. adding delta adds in residual or sign. sum together.
+
+why is it gradient descent?
+
+normally we are shifting model parameters around to optimize a model. In this case we are moving the approximation around in the direction of the answer. We are not optimizing the parameters of the week models.  gradient descent does parameter optimization normally but we are now doing function space optimization. Gradient descent can't be doing parameter optimization because the different kinds of models would have different parameters. Friedman says '*... consider F(x) evaluated at each point $\vec x$ to be a "parameter"*'
+
+do we need the true target in the test set? no, the model is no longer updated after training and we only need the true target to compute new weak models during training.
+

@@ -7,6 +7,7 @@
 <include file="L1-loss.xml">
 <include file="L2-loss.xml">
 <include file="descent.xml">
+<include file="faq.xml">
 
 <css file="css/article.css">
 
