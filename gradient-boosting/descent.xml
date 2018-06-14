@@ -112,13 +112,13 @@ For a small change change in $x$ to the right, $\Delta x$, the function value $f
 Let's generalize our position update equation to handle more than two dimensions. Rather than $x$ and $y$, let's use $\vec x$ (in bold) to represent all of the function parameters, which means our "elevation" function to optimize now takes a vector argument, $f(\vec x)$. As we update $\vec x$, we want the value of $f(\vec x)$ to decrease. When it stops decreasing, $\vec x$ will have arrived at the position giving the minimum value of $f(\vec x)$.  Because we'll need this to show the relationship between gradient boosting and gradient descent, let's formally give the update equation. The next position of $\vec x$, at time step $t$, is given by:
 
 \[
-\vec x_t = \vec x_{t-1} + (- \nabla f(x,y)) = \vec x_{t-1} - \nabla f(x,y)
+\vec x_t = \vec x_{t-1} + (- \nabla f(\vec x_{t-1})) = \vec x_{t-1} - \nabla f(\vec x_{t-1})
 \]
 
 In practice, we need to restrict the size of the steps we take from $\vec x_{t-1}$ to $\vec x_t$ by shrinking the direction vector using a learning rate, $\eta$, whose value is less than 1.  (Imagine a function that is only valid between, say, -2 and 2 but whose output values range from 0 to 1,000; direction vectors derived from the slope would force overly large steps and so we attenuate the steps with the learning rate.) This brings us to the position update equation found in most literature:
 
 \[
-\vec x_t = \vec x_{t-1} - \eta \nabla f(x,y)
+\vec x_t = \vec x_{t-1} - \eta \nabla f(\vec x_{t-1})
 \]
 
 The key takeaways from this gradient descent discussion are:
@@ -169,8 +169,6 @@ Also, since $N$ is a constant once we start boosting, and $f(x)$ and $cf(x)$ hav
 \[
 L(\vec y, \hat{\vec y}) = \sum_{i=1}^{N} (y_i - \hat y_i)^2
 \]
-
-(minimizing function $f(x)$ and $cf(x)$ gives the same $x$)
 
 Now, let's take the partial derivative of the loss function with respect to a specific approximation $\hat y_j$:
 
@@ -223,25 +221,31 @@ This shows that chasing the sign vector in a GBM is chasing the gradient vector 
 Now that we have all of the pieces, let's show that a GBM is performing gradient descent on a loss function comparing the target $\vec y$ and the approximation $F_m(X)$. To do this, we'll morph the GBM additive model recurrence relation into the gradient descent position update equation. Let's start by simplifying the GBM recurrence relation:
 
 \[
-F_m(\vec x) = F_{m-1} + \eta \Delta_{m-1}(\vec x)
+F_m(X) = F_{m-1}(X) + \eta \Delta_m(X)
 \]
 
 by substituting the $m^{th}$ approximation variable as $\hat{\vec y}_m = F_m(X)$ to get:
 
 \[
-\hat{\vec y}_m = \hat{\vec y}_{m-1} + \eta \Delta_{m-1}(\vec x)
+\hat{\vec y}_m = \hat{\vec y}_{m-1} + \eta \Delta_m(X)
 \]
 
 We can flip the addition to a subtraction by subtracting the negative:
 
 \[
-\hat{\vec y}_m = \hat{\vec y}_{m-1} - \eta (- \Delta_{m-1}(\vec x) )
+\hat{\vec y}_m = \hat{\vec y}_{m-1} - \eta (- \Delta_m(X) )
 \]
 
-Finally, let's use iteration variable $t$ not $m$:
+and we can also  change iteration variable to $t$ from $m$:
 
 \[
-\hat{\vec y}_t = \hat{\vec y}_{t-1} - \eta (- \Delta_{t-1}(\vec x) )
+\hat{\vec y}_t = \hat{\vec y}_{t-1} - \eta (- \Delta_t(X) )
+\]
+
+$\Delta_m$ is trained on and is an approximation to the direction vector, which is a function of $F_{m-1}(X)$, such as residual $\vec y - F_{m-1}(X)$ or sign vector $sign(\vec y - F_{m-1}(X))$.  We haven't given the direction vector a symbol yet, so for the purposes of this proof, let's refer to the direction vector as $v_{m-1}$ because it is derived from $F_{m-1}(X)$. (Friedman calls $v_{m-1}$ the *pseudo-response* and uses symbol $\tilde{\vec y}$, but we prefer the term direction vector and avoid $\tilde{\vec y}$ because it resembles our use of $\hat{\vec y}$ a bit much.) Substituting direction vector $v_{m-1}$ for its approximation gives us:
+
+\[
+\hat{\vec y}_t = \hat{\vec y}_{t-1} - \eta (- v_{t-1} )
 \]
 
 Compare that to the gradient descent position update equation:
@@ -250,10 +254,10 @@ Compare that to the gradient descent position update equation:
 \vec x_t = \vec x_{t-1} - \eta \nabla f(\vec x_{t-1})
 \]
 
-Those equations are identical if we choose $\Delta_m(X)$ to be $- \nabla f(\hat{\vec y}_m)$ (changing $m-1$ to $m$ for clarity) for some $f$, which means a GBM would be performing gradient descent using the gradient of $f$. Let $f(\hat{\vec y}_m)$ be the general loss function $L(\vec y, \hat{\vec y}_m)$ and we have rediscovered what vector to train $\Delta_m$ weak models on:
+Those equations are identical if we choose direction vector $v_{t-1}$ to be $- \nabla f(\hat{\vec y}_{t-1})$ for some $f$, which means a GBM would be performing gradient descent using the gradient of $f$. Let $f$ be the general loss function $L(\vec y, \hat{\vec y}_m)$ and we have discovered what direction vector to train $\Delta_m$ weak models on:
 
 \[
-\Delta_m(X) = - \nabla L(\vec y, \hat{\vec y}_m)
+v_{m-1} = - \nabla L(\vec y, \hat{\vec y}_m)
 \]
 
 So, adding another $\Delta_m$ weak model to a GBM is actually adding the negative of the gradient of a loss function to get the next approximation:
@@ -285,13 +289,13 @@ Hmm... let's see if we can tease this apart.  First, evaluate the expression acc
 \frac{\partial L(y_i, F_{m-1}(\vec x_i))}{\partial F_{m-1}(\vec x_i)}
 \]
 
-But, what does it mean to take the partial derivative with respect to a function, $F_{m-1}(\vec x_i)$?  To remove the $i$ index variable, let's look at the entire gradient instead of a specific observation's partial derivative:
+Next, let's remove the $i$ index variable to look at the entire gradient, instead of a specific observation's partial derivative:
 
 \[
 \frac{\partial L(\vec y, F_{m-1}(X))}{\partial F_{m-1}(X)}
 \]
 
-And here's where it's much easier to understand the gradient using $\hat{\vec y}_m = F_m(X)$. Substituting we get a gradient expression that references two vector variables $\vec y$ and $\hat{\vec y}_{m-1}$:
+But, what does it mean to take the partial derivative with respect to a function, $F_{m-1}(X)$? Here is where we find it much easier to understand the gradient expression using $\hat{\vec y}_m$, rather than $F_m(X)$. Substituting, we get a gradient expression that references two vector variables $\vec y$ and $\hat{\vec y}_{m-1}$:
  
 \[
 \frac{\partial L(\vec y, \hat{\vec y}_{m-1})}{\partial \hat{\vec y}_{m-1}}
@@ -315,12 +319,14 @@ normally we are shifting model parameters around to optimize a model. In this ca
 do we need the true target in the test set? no, the model is no longer updated after training and we only need the true target to compute new weak models during training.
 
 <section title="Summary">
+	
+we need the math so that we can handle any loss function.   The negative of the gradient is the direction vector. Adding the direction vector is therefore performing gradient descent.  Chasing the residual vector performs gradient descent on the MSE whereas chasing the sound vector performs gradient descent on the MAE function.
 
 get really fancy, we can even add momentum [Accelerated Gradient Boosting](https://arxiv.org/abs/1803.02042) can mention momentum instead of or in addition to leaf weights.  see accelerated gradient boosting paper recently.
 
 <section title="General algorithm">
 
-talk about how to pick $\gamma_{jm}$ equation 18 from Friedman? That is the $w$ in the algorithm below.
+talk about how to pick $\gamma_{jm}$ equation 18 from Friedman? That is the $w$ in the algorithm below. show w and v are for L2 and L1 loss.
 	
 <latex>
 \setlength{\algomargin}{3pt}
