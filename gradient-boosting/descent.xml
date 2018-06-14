@@ -310,15 +310,13 @@ This 3-part article exploded in size beyond our initial expectations, but hopefu
 
 The nudges that we take are often the residual or the sign vector between the true target and our approximation. We've shown these to be optimizing MSE and MAE, respectively, because the residual is the negative of the MSE gradient and the sign vector is the negative of the MAE gradient.  Chasing the direction vector is, therefore, performing a gradient descent that optimizes the loss function.
 
-We can use any loss function we want with GBMs, per the general algorithm in the next section, by using a direction vector that is the negative of the loss function's gradient.  If we're satisfied with optimizing MSE or MAE, then all of the math in this chunk is unnecessary. We only need the math to show how to handle any loss function.
+We can use any loss function we want with GBMs, per the general algorithm in the next section, by using a direction vector that is the negative of the loss function's gradient.  If we're satisfied with optimizing MSE or MAE, then all of the math in this chunk is unnecessary. We only need the math to show how to use any loss function we want.  For the most part, GBM implementations will optimize either the $L_2$ (MSE) or $L_1$ (MAE) loss function by training weak models on residual or sign direction vectors.
+
+<section title="General algorithm" label="alg:general">
+
+This general algorithm is more complex than the specific algorithms for $L_2$ and $L_1$ loss. We need to compute the gradient of the loss function, instead of just using the residual or sign of the residual, and we need to compute weights for regression tree leaves. Each leaf, $l$, has weight value, $w$, that minimizes the $\sum_{\vec x_i \in l} L(y_i, F_{m-1}(\vec x_i) + w)$ for all $\vec x_i$ observations within that leaf. 
 
 
-
-
-<section title="General algorithm">
-
-talk about how to pick $\gamma_{jm}$ equation 18 from Friedman? That is the $w$ in the algorithm below. show w and v are for L2 and L1 loss.
-	
 <latex>
 \setlength{\algomargin}{3pt}
 \SetAlCapSkip{-10pt}
@@ -331,11 +329,11 @@ talk about how to pick $\gamma_{jm}$ equation 18 from Friedman? That is the $w$ 
 \TitleOfAlgo{{\em boost}($X$,$\vec y$,$M$,$\eta$) \kwReturns{model $F_M$}}
 Let $F_0(X)$ be value $v$ minimizing $\sum_{i=1}^N L(y_i, v)$, loss across all obs.\\
 \For{$m$ = 1 \KwTo $M$}{
-	Let $\delta_m = \frac{\partial L(\vec y,~ \vec f(X))}{\partial \vec f(X)}\big\rvert_{\vec f=F_{m-1}}$, gradient of $L$ w.r.t. $\vec f$ evaluated at $F_{m-1}$\\
-	Train regression tree $\Delta_m$ on $\delta_m$, minimizing squared error\\
+	Let $\vec r_{m-1} = \nabla_{\hat{\vec y}_{m-1}} L(\vec y,~ \hat{\vec y}_{m-1})$ where $\hat{\vec y}_{m-1} = F_{m-1}(X)$\\
+	Train regression tree $\Delta_m$ on $\vec r_{m-1}$, minimizing squared error\\
 	\ForEach{leaf $l \in \Delta_m$}{
-		Let $w$ be value minimizing $L(y_i, F_{m-1}(\vec x_i) + w)$ for obs. $i$ in leaf $l$\\
-		Alter $l$ to predict $w$ (not the usual $mean(y_i)$)\\
+		Let $w$ be value minimizing $\sum_{i \in l} L(y_i, F_{m-1}(\vec x_i) + w)$ for obs. in leaf $l$\\
+		Alter $l$ to predict $w$; i.e., (not the usual mean or median)\\
 	}
 	$F_m(X) = F_{m-1}(X) + \eta \Delta_m(X)$\\
 }
@@ -343,3 +341,62 @@ Let $F_0(X)$ be value $v$ minimizing $\sum_{i=1}^N L(y_i, v)$, loss across all o
 \end{algorithm}
 </latex>
 
+To see how this algorithm reduces to that for $L_2$ we have two steps.  First, let $L(\vec y,~ \hat{\vec y}_{m-1}) = (\vec y - \hat{\vec y}_{m-1})^2$, whose gradient gives the residual vector $\vec r_{m-1} = 2(\vec y - \hat{\vec y}_{m-1})$. Second, show that using leaf weight, $w$, as the mean of the residual of the observations in each leaf minimizes $\sum_{i \in l} L(y_i, F_{m-1}(\vec x_i) + w)$. That means minimizing
+
+\[
+\sum_{i \in l} (y_i - (F_{m-1}(\vec x_i)+w))^2
+\]
+
+To find the minimal value of the function with respect to $w$, we take the partial derivative of that function with respect to $w$ and set to zero; then we solve for $w$.
+
+\[
+\frac{\partial}{\partial w} \sum_{i \in l} (y_i - (F_{m-1}(\vec x_i)+w))^2 = 2 \sum_{i \in l} (y_i - (F_{m-1}(\vec x_i)+w)) \times \frac{\partial}{\partial w} (y_i - (F_{m-1}(\vec x_i)+w))
+\]
+
+And since $\frac{\partial}{\partial w} (y_i - (F_{m-1}(\vec x_i)+w)) = 1$, the last term drops off:
+
+\[
+2 \sum_{i \in l} (y_i - F_{m-1}(\vec x_i) - w) 
+\]
+
+<cut>
+\[
+\sum_{i \in l} F_{m-1}(\vec x_i)^2 + 2 w F_{m-1}(\vec x_i) - 2 y_i F_{m-1}(\vec x_i)  + w^2 - 2 w y_i + y_i^2
+\]
+</cut>
+
+Now, set to 0 and solve for $w$: to
+
+\[
+\sum_{i \in l} 2 F_{m-1}(\vec x_i) + 2w - 2 y_i = 0
+\]
+
+\[
+\sum_{i \in l} F_{m-1}(\vec x_i) + w - y_i = 0
+\]
+
+\[
+\sum_{i \in l} F_{m-1}(\vec x_i) + \sum_{i \in l} w - \sum_{i \in l} y_i = 0
+\]
+
+\[
+\sum_{i \in l} (F_{m-1}(\vec x_i) - y_i) = - \sum_{i \in l} w
+\]
+
+\[
+\sum_{i \in l} (F_{m-1}(\vec x_i) - y_i) = - n_l w \text{~where~} n_l ~ \text{is number of obs. in~} l
+\]
+
+\[
+\sum_{i \in l} (y_i - F_{m-1}(\vec x_i)) = n_l w
+\]
+
+\[
+w = \frac{1}{n_l}\sum_{i \in l} (y_i - F_{m-1}(\vec x_i))
+\]
+
+\[
+w = mean(y_i - F_{m-1}(\vec x_i))
+\]
+
+Finally, we see that leaf weights, $w$, should be the mean when the loss function is the mean squared error.

@@ -266,7 +266,7 @@ L(\vec y,F_M(X)) = \frac{1}{N} \sum_{i=1}^{N} |y_i - F_M(\vec x_i)|
 
 Ok, so now we've looked at two similar GBM construction approaches, one that trains weak models on residual vectors and the other that trains weak models on sign vectors. The former predicts the average residual value for observations in the leaf associated with an unknown $\vec x$ whereas the latter predicts the median residual value. The effect of these differences is that the former optimizes the mean squared error and the latter optimizes the mean absolute error over the training set. Why this is true is the focus of the next article and final article, [Gradient boosting performs gradient descent](descent.html).
 
-<section title="GBM algorithm to minimize L1 loss">
+<section title="GBM algorithm to minimize L1 loss" label="alg:l1">
 
 For completeness, here is the boosting algorithm that optimizes the $L_1$ loss function using regression tree stumps:
 
@@ -281,9 +281,9 @@ For completeness, here is the boosting algorithm that optimizes the $L_1$ loss f
 \TitleOfAlgo{{\em l1boost}($X$,$\vec y$,$M$,$\eta$) {\bf returns} model $F_M$}
 Let $F_0(X) = median(\vec y)$\\
 \For{$m$ = 1 \KwTo $M$}{
-	Let $\delta_m = \vec y - F_{m-1}(X)$ be the residual vector\\
-	Let ${\bf sign}_m = sign(\delta_m)$ be the sign vector\\
-	Train regression tree $\Delta_m$ on ${\bf sign}_m$, minimizing \underline{squared error}\\
+	Let $\vec r_{m-1} = \vec y - F_{m-1}(X)$ be the direction vector\\
+	Let ${\bf sign}_{m-1} = sign(\vec r_{m-1})$ be the sign vector\\
+	Train regression tree $\Delta_m$ on ${\bf sign}_{m-1}$, minimizing \underline{squared error}\\
 	\ForEach{leaf $l \in \Delta_m$}{
 		Alter $l$ to predict median (not mean) of $y_i - F_{m-1}(x_i)$ for obs. $i$ in $l$\\
 	}

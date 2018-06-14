@@ -465,7 +465,7 @@ Ok, let's tie all of this together.  A gradient boosting regression model, $F_M(
 
 You might've heard that gradient boosting is very complex mathematically, but that's only if we care about generalizing gradient boosting to work with any loss function (with associated direction vector), rather than the two we discuss in the first two articles of this series (residual and sign vectors). If you want to get funky with the math and see the cool relationship of gradient boosting with gradient descent, check out our last article in the series, [Gradient boosting performs gradient descent](descent.html).  Also check out the next article, [Gradient boosting: Heading in the right direction](L1-loss.html) that goes through this example again but this time training weak models on the sign of the residual not the residual vector.
 
-<section title="GBM algorithm to minimize L2 loss">
+<section title="GBM algorithm to minimize L2 loss" label="alg:l2">
 
 For completeness, here is the boosting algorithm that optimizes the $L_2$ loss function using regression tree stumps:
 
@@ -480,8 +480,8 @@ For completeness, here is the boosting algorithm that optimizes the $L_2$ loss f
 \TitleOfAlgo{{\em l2boost}($X$,$\vec y$,$M$,$\eta$) {\bf returns} model $F_M$}
 Let $F_0(X) = \frac{1}{N}\sum_{i=1}^N y_i$, mean of target $\vec y$ across all observations\\
 \For{$m$ = 1 \KwTo $M$}{
-	Let $\delta_m = \vec y - F_{m-1}(X)$ be the residual vector\\
-	Train regression tree $\Delta_m$ on $\delta_m$, minimizing squared error\\
+	Let $\vec r_{m-1} = \vec y - F_{m-1}(X)$ be the residual direction vector\\
+	Train regression tree $\Delta_m$ on $\vec r_{m-1}$, minimizing squared error\\
 	$F_m(X) = F_{m-1}(X) + \eta \Delta_m(X)$\\
 }
 \Return{$F_M$}\\
