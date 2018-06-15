@@ -73,7 +73,7 @@ Next, look at the trajectory of the MSE for both kinds of models. For $\Delta_m$
 
 The $\Delta_1$ trained on the sign vector splits the observations in between the second and third because the sign vector is $[-1, -1, 0, 1, 1]$. The regression tree chooses to group $[-1, -1]$ together because they are identical values, leaving $[0, 1, 1]$ as the other group. Instead of the magnitude, the $\Delta_1$ trained on sign vectors treat anything above or equal to the median, $F_0$, as the same value. 
 
-The MSE for weak models trained on the sign vector does not drop dramatically until $\Delta_3$ finally goes after the outlier to yield $F_3$. In fact, the MSE does not budge in between the second and third weak models.  Empirically at least, training $\Delta_m$ on sign vectors does not seem to be optimizing the MSE very well whereas training $\Delta_m$ on residual vectors does optimize MSE well.  In general, we should see the MSE and MAE decrease monotonically but, given the weak approximations of our $\Delta_m$, monotonicity is not guaranteed. The MSE/MAE could bounce around a bit on its way down.
+The MSE for weak models trained on the sign vector does not drop dramatically until $\Delta_3$ finally goes after the outlier to yield $F_3$. In fact, the MSE does not budge in between the second and third weak models.  Empirically at least, training $\Delta_m$ on sign vectors does not seem to be optimizing the MSE very well whereas training $\Delta_m$ on residual vectors does optimize MSE well.
 
 Finally, let's make some observations about the intermediate $\hat{\vec y}_m = F_m(X)$ model predictions.  The units of each $\hat y_i$ element within a $\hat{\vec y}_m$ vector is rent-dollars, so each $\hat{\vec y}_m$ is a vector of dollar values in $N$-space (here, $N=5$). That means that the $F_m$ predictions are vectors sweeping through $N$-space as we increase $m$. When papers use the term "*function space*," they just mean the $N$-space of predictions: a vector of $N$ target values predicted by some $F_m(X)$.
 
@@ -231,7 +231,7 @@ by substituting the $m^{th}$ approximation variable as $\hat{\vec y}_m = F_m(X)$
 \hat{\vec y}_m = \hat{\vec y}_{m-1} + \eta \Delta_m(X)
 \]
 
-Since $\Delta_m$ is trained on and is an approximation to the direction vector, which is a function of $F_{m-1}(X)$, such as residual vector $\vec y - F_{m-1}(X)$, let's substitute the weak model prediction for the target data it's trained on. We haven't given the direction vector a symbol yet, so for the purposes of this proof, let's refer to the direction vector as $\vec r_{m-1}$ because it is derived from $F_{m-1}(X)$. (Friedman calls $\vec r_{m-1}$ the *pseudo-response* and uses symbol $\tilde{\vec y}$, but we avoid $\tilde{\vec y}$ because it resembles our use of $\hat{\vec y}$ too much.) Our equation now looks much simpler:
+Since $\Delta_m$ is trained on and is an approximation to the direction vector, which is a function of $F_{m-1}(X)$, such as residual vector $\vec y - F_{m-1}(X)$, let's replace the weak model prediction with the target data it's trained on. We haven't given the direction vector a symbol yet, so for the purposes of this proof, let's refer to the direction vector as $\vec r_{m-1}$ because it is derived from $F_{m-1}(X)$. (Friedman calls $\vec r_{m-1}$ the *pseudo-response* and uses symbol $\tilde{\vec y}$, but we avoid $\tilde{\vec y}$ because it resembles our use of $\hat{\vec y}$ too much.) Our equation now looks much simpler:
 
 \[
 \hat{\vec y}_m = \hat{\vec y}_{m-1} + \eta \vec r_{m-1}
@@ -274,7 +274,9 @@ So, adding another $\Delta_m$ weak model to a GBM is actually adding the negativ
 		
 When $L$ is the MSE loss function, $L$'s gradient is the residual vector and a gradient descent optimizer should chase that residual, which is exactly what the gradient boosting machine does as well. When $L$ is the MAE loss function, $L$'s gradient is the sign vector, leading gradient descent and gradient boosting to step using the sign vector.
 
-The implications of all of this fancy footwork is that we can use a GBM to optimize any loss function by training our weak models on the negative of the loss function gradient (with respect to the previous approximation).  Understanding this derivation from the GBM recurrence relation to gradient descent update equation is much harder to see without the $\hat{\vec y}_m = F_m(X)$ substitution, as we'll see next. 
+
+The implications of all of this fancy footwork is that we can use a GBM to optimize any differentiable loss function by training our weak models on the negative of the loss function gradient (with respect to the previous approximation).  Understanding this derivation from the GBM recurrence relation to gradient descent update equation is much harder to see without the $\hat{\vec y}_m = F_m(X)$ substitution, as we'll see next. 
+
 
 <subsection title="Function space is prediction space">
 	
@@ -304,17 +306,27 @@ But, what does it mean to take the partial derivative with respect to a function
 
 Variable $\hat{\vec y}_{m-1}$ is a position in "function space," which just means a vector result of evaluating function $F_{m-1}(X)$. This is why GBMs perform "gradient descent in function space," but it's easier to think of it as "gradient descent in prediction space" where $\hat{\vec y}_{m-1}$ is our prediction.
 
+<section title="How gradient boosting differs from gradient descent">
+	
+Before finishing up, it's worth examining the differences between gradient descent and gradient boosting.  To make things more concrete, let's consider applying gradient descent to train a neural network (NN). Training seeks to find the weights and biases, model parameters $\vec x$, that optimize the loss between the desired NN output, $\vec y$, and the current output, $\hat{\vec y}$. If we assume a squared error loss function, NN gradient descent training computes the next set of parameters by adding the residual vector, $\vec y - \hat{\vec y}$, to the current $\vec x$ (subtracting the squared error gradient).
+
+In contrast, GBMs are meta-models consisting of multiple weak models whose output is added together to get an overall prediction. The optimization we're concerned with here occurs, not on the parameters of the weak models themselves but, instead, on the composite model prediction, $\hat{\vec y}_m = F_m(X)$. GBM training occurs on two levels then, one to train the weak models and one on the overall composite model. It is the overall training of the composite model that performs gradient descent by adding the residual vector (assuming a squared error loss function) to get the improved model prediction. Training a NN using gradient descent tweaks model parameters whereas training a GBM tweaks (boosts) the model output. 
+
+Also, training a NN with gradient descent directly adds a direction vector to the current $\vec x$, whereas training a GBM adds a weak model's approximation of the direction vector to the current output, $\hat{\vec y}$.  Consequently, it's likely that a GBM's MSE and MAE will decrease monotonically during training but, given the weak approximations of our $\Delta_m$, monotonicity is not guaranteed. The GBM loss function could bounce around a bit on its way down.
+
+One final note on training regression trees used for weak models. The interesting thing is that, regardless of the direction vector (negative gradient), regression trees can always get away with using the squared error to compute node split points; i.e., even when the overall GBM is minimizing the absolute error.  The difference between optimizing MSE and MAE error for the GBM is that the weak models train on different direction vectors. How the regression trees compute splits is not a big issue since the stumps are really weak and give really noisy approximations anyway.
+
 <section title="Summary">
 
 This 3-part article exploded in size beyond our initial expectations, but hopefully it will provide the necessary pieces to explain how gradient boosting machines work in detail. There's a lot of math in this last chunk, but we can summarize it as follows. Every time we add a new weak model to a GBM, we hope to nudge our prediction, $\hat{\vec y}$, towards the target, $\vec y$.  Prediction $\hat{\vec y}$ will take smaller and smaller steps to eventually converge on $\vec y$ (modulo noise generated by imperfect weak models, $\Delta_m$).  We say that prediction $\hat{\vec y}$ sweeps through function space because $\hat{\vec y}$ it is the result of some $F_m(X)$ function evaluation. It's easier to think of this as sweeping through prediction space.
 
 The nudges that we take are often the residual or the sign vector between the true target and our approximation. We've shown these to be optimizing MSE and MAE, respectively, because the residual is the negative of the MSE gradient and the sign vector is the negative of the MAE gradient.  Chasing the direction vector is, therefore, performing a gradient descent that optimizes the loss function.
 
-We can use any loss function we want with GBMs, per the general algorithm in the next section, by using a direction vector that is the negative of the loss function's gradient.  If we're satisfied with optimizing MSE or MAE, then all of the math in this chunk is unnecessary. We only need the math to show how to use any loss function we want.  For the most part, GBM implementations will optimize either the $L_2$ (MSE) or $L_1$ (MAE) loss function by training weak models on residual or sign direction vectors.
+We can use any differentiable loss function we want with GBMs, per the general algorithm in the next section, by using a direction vector that is the negative of the loss function's gradient.  If we're satisfied with optimizing MSE or MAE, then all of the math in this last part of the 3-part article is unnecessary. We only need the math to show how to use any loss function we want.   For the most part, GBM implementations will use the [GBM algorithm to minimize L2 loss](L2-loss.html#alg:l2) or [GBM algorithm to minimize L1 loss](L1-loss.html#alg:l1).
 
-<section title="General algorithm" label="alg:general">
+<section title="General algorithm with regression tree weak models" label="alg:general">
 
-This general algorithm assumes the use of regression trees and is more complex than the specific algorithms for $L_2$ and $L_1$ loss. We need to compute the gradient of the loss function, instead of just using the residual or sign of the residual, and we need to compute weights for regression tree leaves. Each leaf, $l$, has weight value, $w$, that minimizes the $\sum_{\vec x_i \in l} L(y_i, F_{m-1}(\vec x_i) + w)$ for all $\vec x_i$ observations within that leaf. 
+This general algorithm assumes the use of regression trees and is more complex than the specific algorithms for $L_2$ and $L_1$ loss. We need to compute the gradient of the loss function, instead of just using the residual or sign of the residual, and we need to compute weights for regression tree leaves. Each leaf, $l$, has weight value, $w$, that minimizes the $\sum_{i \in l} L(y_i, F_{m-1}(\vec x_i) + w)$ for all $\vec x_i$ observations within that leaf. 
 
 
 <latex>
@@ -341,13 +353,13 @@ Let $F_0(X)$ be value $v$ minimizing $\sum_{i=1}^N L(y_i, v)$, loss across all o
 \end{algorithm}
 </latex>
 
-To see how this algorithm reduces to that for $L_2$ we have two steps.  First, let $L(\vec y,~ \hat{\vec y}_{m-1}) = (\vec y - \hat{\vec y}_{m-1})^2$, whose gradient gives the residual vector $\vec r_{m-1} = 2(\vec y - \hat{\vec y}_{m-1})$. Second, show that using leaf weight, $w$, as the mean of the residual of the observations in each leaf minimizes $\sum_{i \in l} L(y_i, F_{m-1}(\vec x_i) + w)$. That means minimizing
+To see how this algorithm reduces to that for the $L_2$ loss function we have two steps to do.  First, let $L(\vec y,~ \hat{\vec y}_{m-1}) = (\vec y - \hat{\vec y}_{m-1})^2$, whose gradient gives the residual vector $\vec r_{m-1} = 2(\vec y - \hat{\vec y}_{m-1})$. Second, show that leaf weight, $w$, is the mean of the residual of the observations in each leaf  becase the mean minimizes $\sum_{i \in l} L(y_i, F_{m-1}(\vec x_i) + w)$. That means minimizing:
 
 \[
 \sum_{i \in l} (y_i - (F_{m-1}(\vec x_i)+w))^2
 \]
 
-To find the minimal value of the function with respect to $w$, we take the partial derivative of that function with respect to $w$ and set to zero; then we solve for $w$.
+To find the minimal value of the function with respect to $w$, we take the partial derivative of that function with respect to $w$ and set to zero; then we solve for $w$. Here is the partial derivative:
 
 \[
 \frac{\partial}{\partial w} \sum_{i \in l} (y_i - (F_{m-1}(\vec x_i)+w))^2 = 2 \sum_{i \in l} (y_i - (F_{m-1}(\vec x_i)+w)) \times \frac{\partial}{\partial w} (y_i - (F_{m-1}(\vec x_i)+w))
@@ -365,38 +377,52 @@ And since $\frac{\partial}{\partial w} (y_i - (F_{m-1}(\vec x_i)+w)) = 1$, the l
 \]
 </cut>
 
-Now, set to 0 and solve for $w$: to
+Now, set to 0 and solve for $w$:
 
 \[
 \sum_{i \in l} 2 F_{m-1}(\vec x_i) + 2w - 2 y_i = 0
 \]
 
+We can drop the constant by dividing both sides by 2:
+
 \[
 \sum_{i \in l} F_{m-1}(\vec x_i) + w - y_i = 0
 \]
 
+Then, pull out the $w$ term:
+
 \[
-\sum_{i \in l} F_{m-1}(\vec x_i) + \sum_{i \in l} w - \sum_{i \in l} y_i = 0
+\sum_{i \in l} F_{m-1}(\vec x_i) - y_i + \sum_{i \in l} w = 0
 \]
+
+and move to the other side of the equation:
 
 \[
 \sum_{i \in l} (F_{m-1}(\vec x_i) - y_i) = - \sum_{i \in l} w
 \]
 
+We can simplify the $w$ summation to a multiplication:
+
 \[
 \sum_{i \in l} (F_{m-1}(\vec x_i) - y_i) = - n_l w \text{~where~} n_l ~ \text{is number of obs. in~} l
 \]
+
+Let's also flip the order of the elements within the summation to get the target variable first:
 
 \[
 \sum_{i \in l} (y_i - F_{m-1}(\vec x_i)) = n_l w
 \]
 
+Divide both sides of the equation by the number of observations in the leaf:
+
 \[
 w = \frac{1}{n_l}\sum_{i \in l} (y_i - F_{m-1}(\vec x_i))
 \]
+
+Finally, we see that leaf weights, $w$, should be the mean when the loss function is the mean squared error:
 
 \[
 w = mean(y_i - F_{m-1}(\vec x_i))
 \]
 
-Finally, we see that leaf weights, $w$, should be the mean when the loss function is the mean squared error.
+The mean is exactly what the leaves of the regression tree, trained on residuals, will predict.

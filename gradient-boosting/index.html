@@ -64,12 +64,12 @@
 				<li><a href="descent.html#sec:3.3.2">The MAE function gradient</a></li>
 				<li><a href="descent.html#sec:3.3.3">Morphing GBM into gradient descent</a></li>
 				<li><a href="descent.html#sec:3.3.4">Function space is prediction space</a></li>
-
 		</ul>
+		<li><a href="#sec:3.4">How gradient boosting differs from gradient descent</a>
 		</li>
 		<li><a href="descent.html#sec:3.5">Summary</a>
 		</li>
-		<li><a href="descent.html#sec:3.6">General algorithm</a>
+		<li><a href="descent.html#sec:3.6">General algorithm with regression tree weak models</a>
 	</ul>
 	<li><a href="faq.html">Frequently asked questions</a>
 	</ul>
@@ -77,7 +77,7 @@
 
 <h3 id="overview">Roadmap</h3>
 
-<p><img style="float:left;margin:0px 10px 0px 0;" width=180 src="images/golf-MSE.png"><a href="https://en.wikipedia.org/wiki/Gradient_boosting">Gradient boosting machines</a> (GBMs) are currently very popular and so it's a good idea for machine learning practitioners to understand how GBMs work. The problem is that understanding all of the mathematical machinery is tricky and, unfortunately, these details are needed to tune the hyper-parameters. (Tuning the hyper-parameters is required to get a decent GBM model unlike, say, Random Forests.) Our goal in this article is to explain the intuition behind gradient boosting, provide visualizations for model construction, explain the mathematics as simply as possible, and answer thorny questions such as why GBM is performing &ldquo;gradient descent in function space.&rdquo; We've split the discussion into three morsels and a FAQ for easier digestion.
+<p><img style="float:right;margin:0px 10px 0px 0;" width=205 src="images/golf-MSE.png"><a href="https://en.wikipedia.org/wiki/Gradient_boosting">Gradient boosting machines</a> (GBMs) are currently very popular and so it's a good idea for machine learning practitioners to understand how GBMs work. The problem is that understanding all of the mathematical machinery is tricky and, unfortunately, these details are needed to tune the hyper-parameters. (Tuning the hyper-parameters is required to get a decent GBM model unlike, say, Random Forests.) Our goal in this article is to explain the intuition behind gradient boosting, provide visualizations for model construction, explain the mathematics as simply as possible, and answer thorny questions such as why GBM is performing &ldquo;gradient descent in function space.&rdquo; We've split the discussion into three morsels and a FAQ for easier digestion.
 </p>
 
 <ol>
@@ -100,7 +100,7 @@ There are lots of confusing things about gradient boosting machines and we have 
 
 <h3>Recommended reading</h3>
 
-<p>To get started with GBM, those with very strong mathematical backgrounds can go directly to the super-tasty 1999 paper by Jerome Friedman called <a href="https://statweb.stanford.edu/~jhf/ftp/trebst.pdf">Greedy Function Approximation: A Gradient Boosting Machine</a>.  To get the practical and implementation perspective, though, we recommend Ben Gorman's excellent blog <a href="http://blog.kaggle.com/2017/01/23/a-kaggle-master-explains-gradient-boosting/">A Kaggle Master Explains Gradient Boosting</a> and Prince Grover's <a href="https://medium.com/mlreview/gradient-boosting-from-scratch-1e317ae4587d">Gradient Boosting from scratch</a> (written by a <a href="https://www.usfca.edu/arts-sciences/graduate-programs/data-science">data science</a> graduate student at the University of San Francisco). To go beyond basic GBM, see  <a href="https://arxiv.org/pdf/1603.02754.pdf">XGBoost: A Scalable Tree Boosting System</a> by Chen and Guestrin. To get really fancy, you can even add momentum to the gradient descent performed by boosting machines, as shown in the recent article: <a href="https://arxiv.org/abs/1803.02042">Accelerated Gradient Boosting</a>.</p> 
+<p>To get started with GBM, those with very strong mathematical backgrounds can go directly to the super-tasty 1999 paper by Jerome Friedman called <a href="https://statweb.stanford.edu/~jhf/ftp/trebst.pdf">Greedy Function Approximation: A Gradient Boosting Machine</a>.  To get the practical and implementation perspective, though, we recommend Ben Gorman's excellent blog <a href="http://blog.kaggle.com/2017/01/23/a-kaggle-master-explains-gradient-boosting/">A Kaggle Master Explains Gradient Boosting</a> and Prince Grover's <a href="https://medium.com/mlreview/gradient-boosting-from-scratch-1e317ae4587d">Gradient Boosting from scratch</a> (written by a <a href="https://www.usfca.edu/arts-sciences/graduate-programs/data-science">data science</a> graduate student at the University of San Francisco; we also thank Prince also for reviewing this article.) To go beyond basic GBM, see  <a href="https://arxiv.org/pdf/1603.02754.pdf">XGBoost: A Scalable Tree Boosting System</a> by Chen and Guestrin. To get really fancy, you can even add momentum to the gradient descent performed by boosting machines, as shown in the recent article: <a href="https://arxiv.org/abs/1803.02042">Accelerated Gradient Boosting</a>.</p> 
 
 <h3>Python notebooks</h3>
 
