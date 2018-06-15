@@ -131,14 +131,14 @@ In the context of regression, we make numerical predictions, such as rent prices
 \]
 
 
-Mathematicians represent both the weak and composite models as functions, but in practice the models can be anything including k-nearest-neighbors or regression trees.  Since everyone uses trees for boosting, we'll focus on implementations that use regression trees for weak models, which also happens greatly simplifies the mathematics.   Later, we'll stack $N$ feature vectors as rows in a matrix, $X = [\vec x_1, \vec x_2, ..., \vec x_N]$, and targets into a vector, $\vec y = [y_1, y_2, ..., y_N]$ for $N$ observations.
+Mathematicians represent both the weak and composite models as functions, but in practice the models can be anything including k-nearest-neighbors or regression trees.  Since everyone uses trees for boosting, we'll focus on implementations that use regression trees for weak models, which also happens to greatly simplify the mathematics.   Later, we'll stack $N$ feature vectors as rows in a matrix, $X = [\vec x_1, \vec x_2, ..., \vec x_N]$, and $N$ targets into a vector, $\vec y = [y_1, y_2, ..., y_N]$ for $N$ observations.
 
-It's often the case that an additive model can build the individual $f_m(\vec x)$ terms independently and in parallel, but that's not the case for boosting. Boosting constructs and adds weak models in a stage-wise fashion, one after the other, each one chosen to improve the overall model performance. The boosting strategy is greedy in the sense that choosing $f_m(\vec x)$ never alters previous functions. We could choose to stop adding weak models when $\hat y = F_M(\vec x)$'s performance is good enough or when $f_m(\vec x)$ doesn't add anything.   In practice, we choose the number of stages, $M$, as a hyper-parameter of the overall model. Allowing $M$ to grow arbitrarily increases the risk of over fitting.
+It's often the case that an additive model can build the individual $f_m(\vec x)$ terms independently and in parallel, but that's not the case for boosting. Boosting constructs and adds weak models in a stage-wise fashion, one after the other, each one chosen to improve the overall model performance. The boosting strategy is greedy in the sense that choosing $f_m(\vec x)$ never alters previous functions. We could choose to stop adding weak models when $\hat y = F_M(\vec x)$'s performance is good enough or when $f_m(\vec x)$ doesn't add anything.   In practice, we choose the number of stages, $M$, as a hyper-parameter of the overall model. Allowing $M$ to grow arbitrarily increases the risk of overfitting.
 
 Because greedy strategies choose one weak model at a time, you will often see boosting models expressed using this equivalent, recursive formulation:
 
 \[
-F_m(\vec x) = F_{m-1} + f_m(\vec x)
+F_m(\vec x) = F_{m-1}(\vec x) + f_m(\vec x)
 \]
 
 That says we should tweak the previous model with $f_m(\vec x)$ to get the next model. 
@@ -191,18 +191,16 @@ $m$& {\bf Model} & {\bf Output} $\hat y$ & {\bf on} $y - F_{m-1}$ & {\bf Predict
 }
 </latex>
 
-A GBM implementation would also support a so-called learning rate, $\eta$, that speeds up or slows down the overall approach of $\hat y$ to $y$, which helps to reduce the likelihood of overfitting. (Ideally, the jumps would shorten as we approach, but GBMs seem to use a constant learning rate.)
+A GBM implementation would also support a so-called learning rate, $\eta$, that speeds up or slows down the overall approach of $\hat y$ to $y$, which helps to reduce the likelihood of overfitting.
 
-To show how flexible this technique is, consider training the weak models on just the direction of $y$, rather than the magnitude and direction of $y$. In other words, we would train the $\Delta_m (\vec x)$ on $sign(y - F_{m-1}(\vec x))$, not $y - F_{m-1}(\vec x)$. The $sign(z)$ (or $sgn(z)$) function expresses the direction as one of $\{-1, 0, +1\}$, but both $sign(y - \hat y)$ and $y - \hat y$ point us in suitable directions. 
-
-For the single observation case, final $F_M$ models derived from both direction vectors would converge towards the same value, but that's not the case for multiple observations. In the general case, these two direction vector definitions lead the overall model to converge on different predicted target $\hat {\vec y}$ vectors; naturally, their hops through the predicted values would also be different. In [Gradient boosting performs gradient descent](descent.html), we'll show that these two direction vector definitions are optimizing different measures of model performance.
+To show how flexible this technique is, consider training the weak models on just the direction of $y$, rather than the magnitude and direction of $y$. In other words, we would train the $\Delta_m (\vec x)$ on $sign(y - F_{m-1}(\vec x))$, not $y - F_{m-1}(\vec x)$. The $sign(z)$ (or $sgn(z)$) function expresses the direction as one of $\{-1, 0, +1\}$, but both $sign(y - \hat y)$ and $y - \hat y$ point us in suitable directions.  We'll see in [Gradient boosting performs gradient descent](descent.html) that training on the residual vector optimizes the overall model for the squared error loss function and training on the sign vector optimizes the absolute error loss function.
 
 If you understand this golfer example, then you understand the key intuition behind boosting for regression, at least for a single observation.  Yup, that's it, but there are several things to reinforce before moving on:
 
 <ul>
 	<li>The weak models learn direction **vectors** with direction information, not just magnitudes.
 	<li>The initial model $f_0(\vec x)$ is trying to learn target $y$ given $\vec x$, but the $\Delta_m (\vec x)$ tweaks are trying to learn direction vectors given $\vec x$.
-	<li>All weak models, $f_0(\vec x)$ and $\Delta_m(\vec x)$, train on the original feature vectors, $\vec x$.
+	<li>All weak models, $f_0(\vec x)$ and $\Delta_m(\vec x)$, train on direction vectors that are some function of the original feature vectors, $\vec x$.
 	<li>Two common direction vector choices are the residual, $y-F_{m-1}(\vec x)$, and the sign, $sign(y-F_{m-1}(\vec x))$.
 </ul>
 
@@ -221,7 +219,7 @@ where row $i$ is an observation with one-dimensional feature vector $\vec x_i$ (
 
 From this data, we'd like to build a GBM to predict rent price given square footage. To move towards $\vec y$ from any $\hat {\vec y}$, we need a direction vector. Let's start with $\vec y-\hat{\vec y}$ and then, in [Heading in the right direction](L1-loss.html), we'll see how GBM works for $sign(\vec y-\hat{\vec y})$.
 
-Let's use the mean (average) of the rent prices as our initial model: $F_0(\vec x_i)$ = $f_0(\vec x_i)$ = 1200 for all $i$: $F_0(X) = 1200$. We use the mean because that is the single value that minimizes the mean squared error between it and the $y_i$ values. (We'll seen shortly that GBMs nudging by residual vectors optimize mean squared error.) Once we have $F_0$, we compute $F_1$ by subtracting the previous estimate from the target, $\vec y - F_0$ to get the first residual vector:
+Let's use the mean (average) of the rent prices as our initial model: $F_0(\vec x_i)$ = $f_0(\vec x_i)$ = 1200 for all $i$: $F_0(X) = \overrightarrow{1200}$. We use the mean because that is the single value that minimizes the mean squared error between it and the $y_i$ values. (We'll seen shortly that GBMs whose weak models are trained on residual vectors optimize the mean squared error.) Once we have $F_0$, we compute $\vec y - F_0$, the residual between the target and the previous estimate:
 
 <pyeval label="examples" hide=true>
 eta = 1.0
@@ -265,7 +263,7 @@ print("F3 MSE", mean_squared_error(df.rent, df.F3), "MAE", mean_absolute_error(d
 }
 </latex>
 
-(Many articles and Friedman's original paper call the $\vec y - F_m$ values *pseudo-responses*.)
+(Many articles and Friedman's original paper call the $\vec y - F_m$ values *pseudo-responses* and use notation $\tilde{\vec y}$.)
 
 The last column shows not only the direction but the magnitude of the difference between where we are, $F_0(X)$, and where we want to go, $\vec y$. The red vectors in the following diagram are a visualization of the residual vectors from our initial model to the rent target values.
 
@@ -289,24 +287,24 @@ for x,y,yhat in zip(df.sqfeet,df.rent,df.F0):
 plt.show()
 </pyfig>
 
-Next, we train a weak model, $\Delta_1$, to predict that  residual vector given $\vec x_i$ for all $i$ observations. A perfect model, $\Delta_1$, would yield exactly $\vec y-F_0(X)$, meaning that we'd be done after one step since $F_1(X)$ would be $F_1(X) = F_0(X) + (\vec y - F_0(X))$, or just $\vec y$. Because it imperfectly captures that difference, $F_1(X)$ is still not quite $\vec y$, so we need to keep going for a few stages. Our recurrence relation with learning rate, $\eta$, is:
+Next, we train a weak model, $\Delta_1$, to predict that  residual vector given $\vec x_i$ for all $i$ observations. A perfect model, $\Delta_1$, would yield exactly $\vec y-F_0(X)$, meaning that we'd be done after one step since $F_1(X)$ would be $F_1(X) = F_0(X) + (\vec y - F_0(X))$, or just $\vec y$. Because it imperfectly captures that difference, $F_1(X)$ is still not quite $\vec y$, so we need to keep going for a few stages. Let's add learning rate, $\eta$, to our recurrence relation:
 
 \[
 F_m(X) = F_{m-1}(X) + \eta \Delta_m(X)
 \]
 
-We'll discuss the learning rate below, but for now, please assume that our learning rate is $\eta = 0.7$, so $F_1 = F_0 + 0.7  \Delta_1$, $F_2 = F_1 + 0.7  \Delta_2$, and so on. The following table summarizes the intermediate values of the various key "players":
+We'll discuss the learning rate below, but for now, please assume that our learning rate is $\eta = 1.0$, so $F_1 = F_0 + \Delta_1$, $F_2 = F_1 + \Delta_2$, and so on. The following table summarizes the intermediate values of the various key "players":
 
 <latex>
 {\small
 \begin{tabular}[t]{rrrrrrrr}
 $\Delta_1$ & $F_1$ & $\vec y$-$F_1$ & $\Delta_2$ & $F_2$ & $\vec y$ - $F_2$ & $\Delta_3$ & $F_3$\\
 \hline
--145 & 1272 & -112 & -92 & 1180 & -20 & 15 & 1195 \\
--145 & 1272 & -72 & -92 & 1180 & 20 & 15 & 1195 \\
--145 & 1272 & 7 & 61 & 1334 & -54 & 15 & 1349 \\
--145 & 1272 & 177 & 61 & 1334 & 115 & 15 & 1349 \\
-582 & 2000 & 0 & 61 & 2061 & -61 & -61 & 2000 \\
+-145.5 & 1272.5 & -112.5 & -92.5 & 1180 & -20 & 15.4 & 1195.4 \\
+-145.5 & 1272.5 & -72.5 & -92.5 & 1180 & 20 & 15.4 & 1195.4 \\
+-145.5 & 1272.5 & 7.5 & 61.7 & 1334.2 & -54.2 & 15.4 & 1349.6 \\
+-145.5 & 1272.5 & 177.5 & 61.7 & 1334.2 & 115.8 & 15.4 & 1349.6 \\
+582 & 2000 & 0 & 61.7 & 2061.7 & -61.7 & -61.7 & 2000 \\
 \end{tabular}
 }
 </latex>
@@ -329,16 +327,16 @@ plt.tight_layout()
 plt.show()
 </pyfig>
 
-The blue dots are the residual vector elements used to train $\Delta_m$ weak models, the dashed lines are the predictions made by $\Delta_m$, and the dotted line is the origin at 0.  Notice how the residual vector elements get smaller as we add more weak models.
+The blue dots are the residual vector elements used to train $\Delta_m$ weak models, the dashed lines are the predictions made by $\Delta_m$, and the dotted line is the origin at 0.  Notice how the residual vector elements (blue dots) get smaller as we add more weak models.
 
 The predictions are step functions because we've used a *regression tree stump* as our base weak model with split points 925, 825, and 925. Here are the three stumps implementing our $\Delta_m$ weak models:
 
 <img src="images/stubs-mse.svg" width="90%">
 
 <aside title="Regression tree stumps">
-A regression tree stump is a regression tree with a single root and two children that splits on a single variable, which is what we have here, at a single threshold. (If we had more than a single value in our feature vectors, we'd have to build a taller tree that tested more variables; to avoid over fitting, we don't want very tall trees, however.) If a test value is less than the threshold, the model yields the average of the training samples in the left leaf. If the test value is greater than or equal to the threshold, the model yields the average of the train examples in the right leaf. 
+A regression tree stump is a regression tree with a single root and two children that splits on a single (feature) variable, which is what we have here, at a single threshold. (If we had more than a single value in our feature vectors, we'd have to build a taller tree that tested more variables; to avoid overfitting, we don't want very tall trees, however.) If a test feature value is less than the threshold, the model yields the average of the training target samples in the left leaf. If the test feature value is greater than or equal to the threshold, the model yields the average of the training target examples in the right leaf. 
 
-\todo{why those splits?}
+The feature value split location is chosen to minimize the variance of the target elements in each group. For example, imagine single-valued features for 5 observations $[0,1,4,4,3]$ and target values $[3.1,3,20,22,25]$. A good place to split the feature values is between 1 and 4. That means separating target values in the two leaves into very similar groups: $[3.1,3]$ and $[20,22,25]$.
 
 </aside>
 
@@ -457,11 +455,11 @@ A value of $\eta=0.8$ looks like it reaches the minimum error at the last stage,
 
 We stopped at $M=3$ for purposes of a simple explanation of how boosting works.  As we said, practitioners often use a grid search to optimize hyper-parameters, such as $M$, but one could also keep adding stages until performance stops improving.  The risk in that case would be overfitting the model.
 
-As a side note, the idea of using a learning rate to reduce overfitting in models that optimize cost functions to learn, such as deep learning neural networks, is very common. Rather than using a constant learning rate, though, we can start the learning rate out energetically and gradually slow it down as the model approaches optimality; this proves very effective in practice.
+As a side note, the idea of using a learning rate to reduce overfitting in models that optimize cost functions to learn, such as deep learning neural networks, is very common. Rather than using a constant learning rate, though, we could start the learning rate out energetically and gradually slow it down as the model approached optimality; this proves very effective in practice.
 
 Ok, let's tie all of this together.  A gradient boosting regression model, $F_M(X)$, adds together an initial weak model, $f_0(X)$, that predicts the average $\vec y$ value, and the predictions of $M$ weak models, $\Delta_m(X)$, that nudge $\hat{\vec y}$ towards $\vec y$. Each $\Delta_m(X)$ is trained on a residual vector that measures the direction and magnitude of the true target $\vec y$ from the previous model, $\vec y - F_{m-1}(X)$. The new prediction $F_m(X)$ is the addition of the previous model and a nudge, $\Delta_m(X)$, multiplied by a learning rate: $F_m(X) = F_{m-1}(X) + \eta \Delta_m(X)$.  Hyper-parameters $\eta$ and $M$ are determined by grid search.
 
-<img style="float:right;margin:0px 0px 0px 0;" src="images/congrats.png" width="15%"> If you more-or-less followed this discussion, then congratulations! You understand the key elements of gradient boosting for regression. That's all there is to it. Really. As we'll see in the next article, [Gradient boosting: Heading in the right direction](L1-loss.html), we can use a different direction vector than the residual, but the basic mechanism is the same. Using the sign of the residual rather than the residual vector itself, will have the effect of minimizing a different loss function than mean squared error (it'll minimize mean absolute value). 
+<img style="float:right; margin:0px 0px 0px 0;" src="images/congrats.png" width="15%"> If you more-or-less followed this discussion, then congratulations! You understand the key elements of gradient boosting for regression. That's all there is to it. Really. As we'll see in the next article, [Gradient boosting: Heading in the right direction](L1-loss.html), we can use a different direction vector than the residual, but the basic mechanism is the same. Using the sign of the residual rather than the residual vector itself, will have the effect of minimizing a different loss function than mean squared error (it'll minimize mean absolute value). 
 
 You might've heard that gradient boosting is very complex mathematically, but that's only if we care about generalizing gradient boosting to work with any loss function (with associated direction vector), rather than the two we discuss in the first two articles of this series (residual and sign vectors). If you want to get funky with the math and see the cool relationship of gradient boosting with gradient descent, check out our last article in the series, [Gradient boosting performs gradient descent](descent.html).  Also check out the next article, [Gradient boosting: Heading in the right direction](L1-loss.html) that goes through this example again but this time training weak models on the sign of the residual not the residual vector.
 

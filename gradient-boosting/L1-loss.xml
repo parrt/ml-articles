@@ -1,7 +1,7 @@
 <chapter title="Gradient boosting: Heading in the right direction"
          author={[Terence Parr](http://parrt.cs.usfca.edu) and [Jeremy Howard](http://www.fast.ai/about/#jeremy)}>
 
-In our previous article, [Gradient boosting: Distance to target](L2-loss.html), our model took steps towards the vector of targets $\vec y$ based upon the residual vector, $\vec y-F_{m-1}(X)$, which includes the magnitude not just the direction of $\vec y$ from our the previous composite model's prediction, $F_{m-1}(X)$. The residual vector makes composite models converge rapidly towards $\vec y$.  The negative, of course, is that using the magnitude makes the composite model chase outliers.   This occurs because mean computations are easily skewed by outliers and our regression tree stumps yield predictions using the mean of all target values in a leaf.  For noisy target variables, it makes more sense to focus on the *direction* of $\vec y$ from $F_{m-1}$ rather than the magnitude and direction. 
+In our previous article, [Gradient boosting: Distance to target](L2-loss.html), our weak models trained regression tree stumps on the residual vector, $\vec y-F_{m-1}(X)$, which includes the magnitude not just the direction of $\vec y$ from our the previous composite model's prediction, $F_{m-1}(X)$.  Unfortunately, training the weak models on a direction vector that includes the residual magnitude makes the composite model chase outliers.   This occurs because mean computations are easily skewed by outliers and our regression tree stumps yield predictions using the mean of the target values in a leaf.  For noisy target variables, it makes more sense to focus on the *direction* of $\vec y$ from $F_{m-1}$ rather than the magnitude and direction. 
 
 <section title="Chasing the sign vector">
 
@@ -293,5 +293,7 @@ Let $F_0(X) = median(\vec y)$\\
 \end{algorithm}
 </latex>
 
-That is not a typo that we train regression trees using the standard mechanism that minimizes the squared error when choosing splits.  The regression tree is trained on sign vectors, which is the key goal. We could probably alter the regression tree training to use absolute error, but this usually takes longer (at least in scikit's implementation) than training using squared error.
+Note that it is not a typo that we train regression trees using the standard mechanism that minimizes the squared error when choosing splits.  The regression tree is trained on sign vectors, which is the key goal. We could probably alter the regression tree training to use absolute error, but this usually takes longer (at least in scikit's implementation) than training using squared error.
+
+Another detail to keep in mind is that while we train the regression tree on the sign vector, the algorithm alters the tree so that the leaves predict the median of the residuals, $\vec y - F_{m-1}(X)$. The sign vector is used for grouping/splitting purposes in the tree, but the actual prediction is in fact a residual, just like it is for the $L_2$ algorithm.
 
