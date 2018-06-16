@@ -5,9 +5,9 @@ In our previous article, [Gradient boosting: Distance to target](L2-loss.html), 
 
 <section title="Chasing the sign vector">
 
-This brings us to the second commonly-used direction vector with gradient boosting, which we can call the *sign vector*: $sign(y_i-F_{m-1}(\vec x_i))$. The sign vector elements are either -1, 0, or +1, one value for each observation $\vec x_i$.   No matter how distant the true target is from our current prediction, we'll train weak models using direction info without the magnitude.  This sign vector is a bit weird, though, because the vector elements are limited to -1, 0, or +1.  In two dimensions, for example, such vectors can only point at multiples of 45 degrees (0, 45, 90, 135, ...) and so the sign vector will rarely point directly at the target. Just to be clear, the sign vector is not the unit vector in the direction of $y_i-F_{m-1}(\vec x_i)$.
+This brings us to the second commonly-used direction vector with gradient boosting, which we can call the *sign vector*: $sign(y_i-F_{m-1}(\vec x_i))$. The sign vector elements are either -1, 0, or +1, one value for each observation's target value.   No matter how distant the true target is from our current prediction, we'll train weak models using just the direction info without the magnitude. It gets weirder, though. While we train the weak models on the sign vector, the weak models are modified to predict a residual not a sign vector! (A stump leaf predicts the median of all the residuals within that leaf, to be precise.) More on this later.
 
-If there are outliers in the target variable that we cannot remove, using just the direction is better than both direction and magnitude. We'll show in [Gradient boosting performs gradient descent](descent.html) that using $sign(y-F_{m-1}(\vec x_i))$ as our step vector leads to a solution that optimizes the model according to the mean absolute value (MAE) or $L_1$  *loss function*: $\sum_{i=1}^{N} |y_i - F_M(\vec x_i)|$ for $N$ observations. 
+If there are outliers in the target variable that we cannot remove, training weak models on just the direction is better than both direction and magnitude. We'll show in [Gradient boosting performs gradient descent](descent.html) that using $sign(y-F_{m-1}(\vec x_i))$ as our direction vector leads to a solution that optimizes the model according to the mean absolute value (MAE) or $L_1$  *loss function*: $\sum_{i=1}^{N} |y_i - F_M(\vec x_i)|$ for $N$ observations. 
 
 Optimizing the MAE means we should start with the median, not the mean, as our initial model, $f_0$, since the median of $y$ minimizes the $L_1$ loss. (The median is the best single-value approximation of $L_1$ loss.)  Other than that, we use the same recurrence relations to compute composite models based upon the sign of the residual vector:
 
@@ -18,9 +18,9 @@ F_m(\vec x) &=& F_{m-1}(\vec x) + \eta \Delta_m(\vec x)\\
 \end{eqnarray*}
 </latex>
 
-Let's assume $\eta = 1$ so that it drops out of the equation to simplify our discussion, but keep in mind that it's an important hyper-parameter you need to set in practice.  Recall that $F_m(\vec x)$ yields a predicted value, $y_i$, but $F_m(X)$ yields a predicted target vector, $\vec y$, one value for each $\vec x_i$ feature row-vector in matrix $X$. 
+Let's assume $\eta = 1$ so that it drops out of the equation to simplify our discussion, but keep in mind that it's an important hyper-parameter you need to set in practice.  Also, recall that $F_m(\vec x)$ yields a predicted value, $y_i$, but $F_m(X)$ yields a predicted target vector, $\vec y$, one value for each $\vec x_i$ feature row-vector in matrix $X$. 
 
-Here is the rental data again along with the initial $F_0$ model (median of $\vec y$), the first residual, and the first sign vector:
+Here is the rental data again along with the initial $F_0$ model (median of rent vector $\vec y$), the first residual, and the first sign vector:
 
 <latex>
 {\small
@@ -54,7 +54,7 @@ mae = [mean_absolute_error(df.rent, df['F'+str(s)]) for s in range(M+1)]
 
 Visually, we can see that the first sign vector has components pointing in the right direction of the true target elements, $y_i$, from $f_0(X)$:
  
-<pyfig label=examples hide=true width="32%">
+<pyfig label=examples hide=true width="38%">
 f0 = df.rent.median()
 fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(4, 3.5), sharey=True)
 
@@ -91,13 +91,15 @@ plt.tight_layout()
 plt.show()
 </pyfig>
 
+As mentioned above, this version of a GBM is tricky so let's look in detail at how regression tree stumps make predictions in this case.
+
 <section title="Two perspectives on training weak models for L1 loss">
 
-As we did in the first article, our goal is to create a series of nudges, $\Delta_m$, that gradually shift our initial approximation, $f_0(X)$, towards the true target rent vector, $\vec y$. The first stump, $\Delta_1$, should be trained on $sign(\vec y - F_0(X))$, as opposed to the residual vector itself, and let's choose a split point of 850 because that groups the sign values into two similar (low variance) groups, $[-1, 0, 1]$ and $[1,1]$. Because we are dealing with $L_1$ absolute difference and not $L_2$ squared difference, stumps should predict the median, not the mean, of the observations in each leaf. That means $\Delta_1$ would predict -1 for $\vec x$\<825 and 1 for $\vec x$>=825:
+Our goal is to create a series of nudges, $\Delta_m$, that gradually shift our initial approximation, $f_0(X)$, towards the true target rent vector, $\vec y$. The first stump, $\Delta_1$, should be trained on $sign(\vec y - F_0(X))$, as opposed to the residual vector itself, and let's choose a split point of 850 because that groups the sign values into two similar (low variance) groups, $[-1, -1]$ and $[0,1,1]$. Because we are dealing with $L_1$ absolute difference and not $L_2$ squared difference, stumps should predict the median, not the mean, of the observations in each leaf. That means $\Delta_1$ would predict -1 for $\vec x$\<825 and 1 for $\vec x$>=825:
 	
 <img src="images/stubs-mae-delta1.svg" width="30%">  
 
-Without the distance to the target as part of our $\Delta_m$ nudges, however, the composite model $F_m(X)$ would step towards rent target vector $\vec y$ very slowly, one dollar at a time per observation. We need to weight the $\Delta_m$ predictions so that the algorithm takes bigger steps. Unfortunately, we can't use a single weight per stage, like $w_m \Delta_m(\vec x)$, because it might force the composite model predictions to oscillate around but never reach an accurate prediction. A global weight per stage is just too coarse to allow tight convergence to $\vec y$ for all $\hat y_i$ simultaneously. For example, if we set $w_1=100$ to get the fourth and fifth data points from 1150 to 1250 in one step, that would also push the other points very far below their true targets:
+Without the distance to the target as part of our $\Delta_m$ nudges, however, the composite model $F_m(X)$ would step towards rent target vector $\vec y$ very slowly, one dollar at a time per observation. We need to weight the $\Delta_m$ predictions so that the algorithm takes bigger steps. Unfortunately, we can't use a single weight per stage, like $w_m \Delta_m(\vec x)$, because it might force the composite model predictions to oscillate around but never reach an accurate prediction. A global weight per stage is just too coarse to allow tight convergence to $\vec y$ for all $\hat y_i$ simultaneously. For example, if we set $w_1=200$ to get the fourth and fifth data point predictions from median 1280 to 1480 (closer to their 1450, 2000 target values) in one step, $w_1$ would also push the other points very far below their true targets:
 
 <pyfig label=examples hide=true width="32%">
 f0 = df.rent.median()
@@ -106,22 +108,22 @@ fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(4, 3.5), sharey=True)
 ax = axes
 line1, = ax.plot(df.sqfeet,df.rent,'o', linewidth=.8, markersize=4, label="$y$")
 # fake a line to get smaller red dot
-line2, = ax.plot([0,0],[0,0], c='r', markersize=4, label=r"$100 \Delta_1({\bf x})$", linewidth=.8)
+line2, = ax.plot([0,0],[0,0], c='r', markersize=4, label=r"$200 \Delta_1({\bf x})$", linewidth=.8)
 ax.plot([df.sqfeet.min()-10,df.sqfeet.max()+10], [f0,f0],
          linewidth=.8, linestyle='--', c='k')
 ax.set_xlim(df.sqfeet.min()-10,df.sqfeet.max()+10)
 ax.set_ylim(df.rent.min()-150, df.rent.max()+20)
 ax.text(800, f0+30, r"$f_0({\bf x})$", fontsize=18)
 
-ax.arrow(880,f0-100, -20, 0, linewidth=.8, head_width=6, head_length=4)
-ax.text(883, f0-100-15, "Oops!", fontsize=12)
+ax.arrow(880,f0-200, -20, 0, linewidth=.8, head_width=6, head_length=4)
+ax.text(883, f0-200-15, "Oops!", fontsize=12)
 
 ax.set_ylabel(r"Rent ($y$)", fontsize=14)
 ax.set_xlabel(r"SqFeet (${\bf x}$)", fontsize=14)
 
 # draw arrows
 for x,y,yhat in zip(df.sqfeet,df.rent,df.F0):
-    draw_vector(ax, x, yhat, 0, (np.sign(y-yhat) if y-yhat>0 else -1)*100, df.rent.max()-df.rent.min())
+    draw_vector(ax, x, yhat, 0, (np.sign(y-yhat) if y-yhat>0 else -1)*200, df.rent.max()-df.rent.min())
     
 ax.legend(handles=[line2], fontsize=16,
           loc='upper left', 
@@ -134,20 +136,21 @@ plt.tight_layout()
 plt.show()
 </pyfig>
 
-When training weak models on the residual vector, in the first article, each regression tree leaf predicted the average residual for observations in that leaf. Such a prediction tries to place the next $F_m$ output in the middle of the $y_i$ of those observations.  That gives us a hint that we should use a weight per leaf to scale the predictions trained on the sign vector, but how do we compute those weights? 
+When training weak models on the residual vector, in the first article, each regression tree leaf predicted the average residual value for the observations in that leaf. Such a prediction is the same mathematically as predicting a sign, -1 or 1, then weighting it by the average residual. That gives us a hint that we could use a weight per leaf to scale the predictions trained on the sign vector, but how do we compute those weights? 
 
-The graph of rent versus sqfeet clearly shows that we need a small weight for the left stump leaf and a much larger weight for the right stump leaf. The goal should be to have the next $F_1$ model step into the middle of the $y$ rent values in each group (leaf) of observations, which means jumping to the median $y$ in each group. Again, we use the median not the mean because our overall model is trying to minimize the $L_1$ loss. The weight we need for each leaf is the magnitude of the difference between $f_0$ and the median $y$ for each leaf group. This value is the median of the $abs(y_i - f_0(\vec x_i))$ residuals restricted to observations $i$ in the leaf. The sign vector already has the direction, which is why we use the absolute value of the median (our weights in this case are always positive). 
+Well, we know exactly how we should push each $F_m(\vec x)$ because we have the residuals, $\vec y - F_m(\vec x)$. The problem is GBM never adds residual vectors directly to move the overall prediction, $\hat{\vec y}$. GBMs adjusts each $\hat y_i$ using the prediction of a weak model, $\Delta_m(\vec x)$, which means that we must choose a single value to represent a whole group of residuals (all residuals within a stump leaf). When optimizing the MSE in the first article, we represented all residuals in a leaf with the average. To optimize MAE instead, we must choose the median as the leaf weight.
 
-Equivalently, we can think of this process as having each stump leaf predict the median residual of the observations in that leaf (in which case we don't need the absolute value). Without alteration, the stump leaves would predict the average residual as usual, not the median. This fact makes the MSE and MAE approaches seem nearly identical. That's a bit weird and an incredibly subtle point, so let's emphasize it in a callout:
+Equivalently, we can think of this process as having each stump leaf predict the median residual of the observations in that leaf, rather than predicting the direction and scaling by the median. Without alteration, the leaves of a standard regression tree stump would predict the average *sign* of the residual, not the median residual. This fact makes the MSE and MAE approaches seem nearly identical. That's a bit weird and an incredibly subtle point, so let's emphasize it in a callout:
 
 <aside title="The difference between MSE and MAE GBM trees">
 
 GBMs that optimize  MSE ($L_2$ loss) and MAE ($L_1$ loss) both train regression trees, $\Delta_m$, on direction vectors.  The first difference between the approaches is that MSE trains trees on residual vectors and MAE trains trees on sign vectors. The goal of training the tree is to group similar observations into leaf nodes in both cases.  Because they are training on different vectors (residuals versus signs), the trees will group the observations in the training data differently. The actual training of the weak model trees always computes split points by trying to minimize the squared difference of target values within the two groups, even in the MAE case.  The second difference is that an MSE tree leaf predicts the average of the residuals, $y_i - F_{m-1}(\vec x_i)$, values for all $i$ observations in that leaf whereas an MAE tree leaf predicts the median of the residual. Both are predicting residuals. Weird, right?
 
-Just to drive this home, MSE trains on residual vectors and the leaves predict the average residual. MAE trains on sign vectors, but the leaves predict residuals like MSE, albeit the median, not the average residual. It's weird because models don't typically train on one space (sign values) and predict values in a different space (residuals). It's perhaps easier to think of MAE as training on sign vectors and predicting sign values (-1, 0, +1) but then weighting that prediction by the absolute value of the median of the residuals.
+Just to drive this home, MSE trains on residual vectors and the leaves predict the average residual. MAE trains on sign vectors, but the leaves predict residuals like MSE, albeit the median, not the average residual. It's strange because models don't typically train on one space (sign values) and predict values in a different space (residuals). It's perhaps easier to think of MAE as training on sign vectors and predicting sign values (-1, 0, +1) but then weighting that prediction by the absolute value of the median of the residuals.
 
 </aside>
 
+<cut>
 Let's figure out the weights for the leaves of $F_1$'s stump. The residual vector $\vec y - F_0$ has values -25, 0, -15 for the left leaf, which has a median of 15, so that is the weight for the left leaf. The right leaf has residuals 150 and 200, so the weight of the right leaf is 175.  The dashed line in the following graph shows composite model $F_1$.
 
 <pyeval label=examples hide=true>
@@ -183,8 +186,9 @@ plt.show()
 </pyfig>
 
 This graph uses notation that assumes an interpretation of weighted stump leaves that predict sign values, $\Delta_m(\vec x; \vec w_m)$.  We can drop the extra $\vec w_m$ notation for the remainder of this discussion if we interpret the $\Delta_m$ models as training on sign vectors but yielding the median of the observations in each leaf.
+</cut>
 
-Here are the intermediate results of residuals and weak learners for the $M=3$ case (with learning rate $\eta=1$):
+Let's finish constructing our GBM that optimizes MAE. Here are the intermediate results of residuals and weak learners for the $M=3$ case (with learning rate $\eta=1$):
 
 <latex>
 {\small
@@ -202,11 +206,11 @@ $\Delta_1$ & $F_1$ & $\vec y$-$F_1$ & $\vec y$-$F_1$ & $\Delta_2$ & $F_2$ & $\ve
 }
 </latex>
 
-The split points are 825, 775, 925 for the $\Delta_m$ models. Here are the resulting stumps:
+The split points are 825, 775, 925 for the $\Delta_m$ models and here are the resulting stumps:
 
 <img src="images/stubs-mae.svg" width="90%">
 
-Let's look at the $y - F_m$ residuals and the $\Delta_m$ models trained on the sign vectors and weighted by the median of the residuals in the enclosing leaf node.
+Let's look at the $y - F_m$ residuals and the $\Delta_m$ models trained on the sign vectors but predicting the median of the residuals in the leaf nodes.
 
 <table>
 <tr><th>$\Delta_m$ for MAE $L_1$ optimization
@@ -229,7 +233,7 @@ plt.show()
 </pyfig>
 </table>
 
-The blue dots are the residual vector elements whose sign value is used to train $\Delta_m$ weak models, the dashed lines are the predictions made by $\Delta_m$, and the dotted line is the origin at 0. The residual vector elements get closer to zero in general as they did in the previous article (that trained on the residual not sign vector). In this case, however, the weak models are clearly not chasing the outlier with prejudice, which is finally dealt with using $\Delta_3$. In contrast, the $L_2$-optimizing model from the previous article used $\Delta_1$ to immediately bring that outlier residual to 0 (as shown in $y-F_1$ residual):
+The blue dots are the residual vector elements whose sign value is used to train $\Delta_m$ weak models, the dashed lines are the predictions made by $\Delta_m$, and the dotted line is the origin at 0. The residual vector elements get closer to zero in general as they did in the previous article (trained on the residual not sign vector). In this case, however, the weak models are clearly not chasing the outlier, which is finally dealt with using $\Delta_3$. In contrast, the $L_2$-optimizing model from the previous article used $\Delta_1$ to immediately bring that outlier residual to 0 (as shown in residual $y-F_1$ of the middle graph):
 
 <table>
 <tr><th>$\Delta_m$ for MSE $L_2$ optimization
@@ -258,11 +262,13 @@ plt.tight_layout()
 plt.show()
 </pyfig>
 
+<cut>
 How accurate is $F_M(\vec x)$? As in the previous article, we can use a loss function $L(\vec y,\hat{\vec y})$, that computes the cost of predicting $\hat{\vec y}$ instead of $\vec y$.  Because we are worried about outliers in this article, it's appropriate to use the mean absolute error (MAE) as our loss function:
 
 \[
 L(\vec y,F_M(X)) = \frac{1}{N} \sum_{i=1}^{N} |y_i - F_M(\vec x_i)|
 \]
+</cut>
 
 Ok, so now we've looked at two similar GBM construction approaches, one that trains weak models on residual vectors and the other that trains weak models on sign vectors. The former predicts the average residual value for observations in the leaf associated with an unknown $\vec x$ whereas the latter predicts the median residual value. The effect of these differences is that the former optimizes the mean squared error and the latter optimizes the mean absolute error over the training set. Why this is true is the focus of the next article and final article, [Gradient boosting performs gradient descent](descent.html).
 

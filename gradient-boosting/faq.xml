@@ -11,6 +11,8 @@ why approx residual? rpevent overfit. won't generalize. adding delta adds in res
 
 why is it gradient descent?
 
+ what is the key difference between L2, L1?  both predict residuals, but we train on different things and we choose mean over median.
+
 normally we are shifting model parameters around to optimize a model. In this case we are moving the approximation around in the direction of the answer. We are not optimizing the parameters of the week models.  gradient descent does parameter optimization normally but we are now doing function space optimization. Gradient descent can't be doing parameter optimization because the different kinds of models would have different parameters. Friedman says '*... consider F(x) evaluated at each point $\vec x$ to be a "parameter"*'
 
 do we need the true target in the test set? no, the model is no longer updated after training and we only need the true target to compute new weak models during training.
