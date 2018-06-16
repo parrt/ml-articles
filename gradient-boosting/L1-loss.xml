@@ -136,19 +136,11 @@ plt.tight_layout()
 plt.show()
 </pyfig>
 
-When training weak models on the residual vector, in the first article, each regression tree leaf predicted the average residual value for the observations in that leaf. Such a prediction is the same mathematically as predicting a sign, -1 or 1, then weighting it by the average residual. That gives us a hint that we could use a weight per leaf to scale the predictions trained on the sign vector, but how do we compute those weights? 
+When training weak models on the residual vector, in the previous article, each regression tree leaf predicted the average residual value for the observations in that leaf. Such a prediction is the same mathematically as predicting a sign, -1 or 1, then weighting it by the (absolute value of the) average residual. (In our [general algorithm section](descent.html#alg:general), we prove the optimal weight is the average residual.) That gives us a hint that we could use a weight per leaf to scale the predictions derived from the sign vector, but how do we compute those weights?
 
-Well, we know exactly how we should push each $F_m(\vec x)$ because we have the residuals, $\vec y - F_m(\vec x)$. The problem is GBM never adds residual vectors directly to move the overall prediction, $\hat{\vec y}$. GBMs adjusts each $\hat y_i$ using the prediction of a weak model, $\Delta_m(\vec x)$, which means that we must choose a single value to represent a whole group of residuals (all residuals within a stump leaf). When optimizing the MSE in the first article, we represented all residuals in a leaf with the average. To optimize MAE instead, we must choose the median as the leaf weight.
+We know exactly how we should push each $F_m(X)$ because we have the residuals, $\vec y - F_m(X)$. The problem is that GBMs never add residual vectors directly to move the overall prediction, $\hat{\vec y}$. GBMs adjust each $\hat y_i$ using the prediction of a weak model, $\Delta_m(X)$, which means that we must choose a single value to represent the predictions for a whole group of residuals (all residuals within a leaf). The best single value to represent the group of residuals is either the mean or the median, depending on whether we are optimizing MSE or MAE, respectively. The idea is to pick a weight that jumps the next prediction, $F_m(X)$, into the "middle" the current residuals for the associated leaf.
 
-Equivalently, we can think of this process as having each stump leaf predict the median residual of the observations in that leaf, rather than predicting the direction and scaling by the median. Without alteration, the leaves of a standard regression tree stump would predict the average *sign* of the residual, not the median residual. This fact makes the MSE and MAE approaches seem nearly identical. That's a bit weird and an incredibly subtle point, so let's emphasize it in a callout:
-
-<aside title="The difference between MSE and MAE GBM trees">
-
-GBMs that optimize  MSE ($L_2$ loss) and MAE ($L_1$ loss) both train regression trees, $\Delta_m$, on direction vectors.  The first difference between the approaches is that MSE trains trees on residual vectors and MAE trains trees on sign vectors. The goal of training the tree is to group similar observations into leaf nodes in both cases.  Because they are training on different vectors (residuals versus signs), the trees will group the observations in the training data differently. The actual training of the weak model trees always computes split points by trying to minimize the squared difference of target values within the two groups, even in the MAE case.  The second difference is that an MSE tree leaf predicts the average of the residuals, $y_i - F_{m-1}(\vec x_i)$, values for all $i$ observations in that leaf whereas an MAE tree leaf predicts the median of the residual. Both are predicting residuals. Weird, right?
-
-Just to drive this home, MSE trains on residual vectors and the leaves predict the average residual. MAE trains on sign vectors, but the leaves predict residuals like MSE, albeit the median, not the average residual. It's strange because models don't typically train on one space (sign values) and predict values in a different space (residuals). It's perhaps easier to think of MAE as training on sign vectors and predicting sign values (-1, 0, +1) but then weighting that prediction by the absolute value of the median of the residuals.
-
-</aside>
+Instead of scaling each leaf's direction prediction by a weight, we can think of this process as having each stump leaf predict the median residual of the observations in that leaf, rather than predicting the direction and scaling by the median. Without alteration, the leaves of a standard regression tree stump would predict the average *sign* of the residual, not the median residual. This fact makes the MSE and MAE approaches seem nearly identical. That's a bit weird and an incredibly subtle point, which we'll explore below in more detail. For now, let's finish the GBM construction.
 
 <cut>
 Let's figure out the weights for the leaves of $F_1$'s stump. The residual vector $\vec y - F_0$ has values -25, 0, -15 for the left leaf, which has a median of 15, so that is the weight for the left leaf. The right leaf has residuals 150 and 200, so the weight of the right leaf is 175.  The dashed line in the following graph shows composite model $F_1$.
@@ -188,7 +180,9 @@ plt.show()
 This graph uses notation that assumes an interpretation of weighted stump leaves that predict sign values, $\Delta_m(\vec x; \vec w_m)$.  We can drop the extra $\vec w_m$ notation for the remainder of this discussion if we interpret the $\Delta_m$ models as training on sign vectors but yielding the median of the observations in each leaf.
 </cut>
 
-Let's finish constructing our GBM that optimizes MAE. Here are the intermediate results of residuals and weak learners for the $M=3$ case (with learning rate $\eta=1$):
+<section title="GBM optimizing MAE by example">
+	
+A GBM that optimizes MAE uses $\Delta_m(X)$ weak models that predict median residual values. Here are the intermediate results of residuals and weak learners for the $M=3$ case (with learning rate $\eta=1$):
 
 <latex>
 {\small
@@ -210,7 +204,7 @@ The split points are 825, 775, 925 for the $\Delta_m$ models and here are the re
 
 <img src="images/stubs-mae.svg" width="90%">
 
-Let's look at the $y - F_m$ residuals and the $\Delta_m$ models trained on the sign vectors but predicting the median of the residuals in the leaf nodes.
+Let's look at the $y - F_m$ residuals and the prediction of the $\Delta_m$ models trained on the sign vectors but predicting the median of the residuals in the leaf nodes.
 
 <table>
 <tr><th>$\Delta_m$ for MAE $L_1$ optimization
@@ -233,7 +227,10 @@ plt.show()
 </pyfig>
 </table>
 
-The blue dots are the residual vector elements whose sign value is used to train $\Delta_m$ weak models, the dashed lines are the predictions made by $\Delta_m$, and the dotted line is the origin at 0. The residual vector elements get closer to zero in general as they did in the previous article (trained on the residual not sign vector). In this case, however, the weak models are clearly not chasing the outlier, which is finally dealt with using $\Delta_3$. In contrast, the $L_2$-optimizing model from the previous article used $\Delta_1$ to immediately bring that outlier residual to 0 (as shown in residual $y-F_1$ of the middle graph):
+The blue dots are the residual vector elements whose sign value is used to train $\Delta_m$ weak models, the dashed lines are the predictions made by $\Delta_m$, and the dotted line is the origin at 0. The residual vector elements get closer to zero in general as they did in the previous article (trained on the residual not sign vector). In this case, however, the weak models are clearly not chasing the outlier, which is finally dealt with using $\Delta_3$. In contrast, the $L_2$-optimizing model from the previous article used $\Delta_1$ to immediately bring that outlier residual to 0.
+
+<cut>
+(as shown in residual $y-F_1$ of the middle graph):
 
 <table>
 <tr><th>$\Delta_m$ for MSE $L_2$ optimization
@@ -241,8 +238,9 @@ The blue dots are the residual vector elements whose sign value is used to train
 <td>
 <img src="images/L2-deltas.svg" width="90%">
 </table>
+</cut>
 
-Despite the imprecision of the weak models, the weighted $\Delta_m$ predictions nudge $\hat{\vec y}$ closer and closer to the true $\vec y$. It's also helpful to look at a sequence of diagrams showing the composite model predictions as we add weak models:
+Despite the imprecision of the weak models, the weighted $\Delta_m$ predictions nudge $\hat{\vec y}$ closer and closer to the true $\vec y$. Here is a sequence of diagrams showing the composite model predictions as we add weak models:
 
 <!-- composite model -->
 
@@ -270,11 +268,86 @@ L(\vec y,F_M(X)) = \frac{1}{N} \sum_{i=1}^{N} |y_i - F_M(\vec x_i)|
 \]
 </cut>
 
-Ok, so now we've looked at two similar GBM construction approaches, one that trains weak models on residual vectors and the other that trains weak models on sign vectors. The former predicts the average residual value for observations in the leaf associated with an unknown $\vec x$ whereas the latter predicts the median residual value. The effect of these differences is that the former optimizes the mean squared error and the latter optimizes the mean absolute error over the training set. Why this is true is the focus of the next article and final article, [Gradient boosting performs gradient descent](descent.html).
+So now we've looked at two similar GBM construction approaches, one that trains weak models on residual vectors and the other that trains weak models on sign vectors. The former predicts the average residual value for observations in the leaf associated with an unknown $\vec x$ whereas the latter predicts the median residual value. The effect of these differences is that the former optimizes the mean squared error and the latter optimizes the mean absolute error over the training set. Why this is true mathematically is the focus of the next article and final article, [Gradient boosting performs gradient descent](descent.html).  You can jump straight there if you like, but we also provide an empirical look at the difference between the two GBMs in the next section.
+
+<section title="Comparing GBM trees that optimize MSE and MAE ">
+
+GBMs that optimize  MSE ($L_2$ loss) and MAE ($L_1$ loss) both train regression trees, $\Delta_m$, on direction vectors.  The first difference between them is that MSE-optimizing GBMs train trees on residual vectors and MAE GBMs train trees on sign vectors. The goal of training regression tree models is to group similar direction vectors into leaf nodes in both cases.  Because they are training on different vectors (residuals versus signs), the trees will group the observations in the training data differently. The actual training of the weak model trees always computes split points by trying to minimize the squared difference of residual or sign values within two groups, even in the MAE case.  
+
+The second difference between the GBMs is that tree leaves of MSE GBMs predict the average of the residuals, $y_i - F_{m-1}(\vec x_i)$, values for all $i$ observations in that leaf, whereas MAE GBM tree leaves predicts the median of the residual. **Weak models for both GBMs predict residuals given a feature vector for an observation.**
+
+Just to drive this home, MSE GBMs train on residual vectors and the leaves predict the average residual. MAE GBMs train on sign vectors, but the leaves predict residuals like MSE GBMs, albeit the median, not the average residual. This mechanism is strange because models don't typically train on one space (sign values) and predict values in a different space (residuals). It's perhaps easier to think of MAE GBMs as training on and predicting sign vectors (in -1, 0, +1) but then weighting  predictions by the absolute value of the median of the residuals. This approach would mean we don't have to alter the $\Delta_m$ leaf predictions after constructing the regression trees. (The algorithm presented later does alter the trees.)
+
+To get a feel for the difference between MSE and MAE GBMs, let's revisit the $F_m(X)$ intermediate model predictions for the weak learners trained on both residual vectors and those trained on sign vectors.  We can empirically verify that training $\Delta_m$ weak models on the residual vector drops the MSE loss dramatically faster than training $\Delta_m$ on the sign vector. Here is the data (stripped a decimals) pulled from the first article with the MSE and MAE tacked on:
+
+<latex>
+{\small
+\setlength{\tabcolsep}{0.5em}
+\begin{tabular}[t]{rrrrrrr}
+\multicolumn{7}{c}{$\Delta_m$ {\bf trained on residual vector} $\vec y - \hat{\vec y}$}\\
+&$\vec x~~~$ & $\vec y~~~$ & \multicolumn{4}{c}{...$~\hat{\vec y}$~...}\vspace{-1mm}\\
+&{\bf SqFeet} & {\bf Rent} & $F_0(\vec x)$ & $F_1(\vec x)$ & $F_2(\vec x)$ & $F_3(\vec x)$\\
+\hline
+& 750 & 1160 & 1418 & 1272 & 1180 & 1195 \\
+& 800 & 1200 & 1418 & 1272 & 1180 & 1195 \\
+& 850 & 1280 & 1418 & 1272 & 1334 & 1349 \\
+& 900 & 1450 & 1418 & 1272 & 1334 & 1349 \\
+& 950 & 2000 & 1418 & 2000 & 2061 & 2000 \\
+\hline
+\vspace{-4mm}\\
+{\bf MSE}&\multicolumn{2}{l}{$\frac{1}{N}\sum_i^N(y_i-F_m(\vec x_i))^2$} & 94576 & 9895 & 4190 & 3240\\
+{\bf MAE}&\multicolumn{2}{l}{$\frac{1}{N}\sum_i^N|y_i-F_m(\vec x_i)|$} & 246 & 74 & 54 & 42
+\end{tabular}
+}
+</latex>
+
+and here is the data pulled from this article with the MSE and MAE tacked on:
+
+<latex>
+{\small
+\setlength{\tabcolsep}{0.5em}
+\begin{tabular}[t]{rrrrrrr}
+\multicolumn{7}{c}{$\Delta_m$ {\bf trained on sign vector} $sign(\vec y - \hat{\vec y})$}\\
+&$\vec x~~~$ & $\vec y~~~$ & \multicolumn{4}{c}{...$~\hat{\vec y}$~...}\vspace{-1mm}\\
+& {\small\bf SqFeet} & {\bf Rent} & $F_0(\vec x)$ & $F_1(\vec x)$ & $F_2(\vec x)$ & $F_3(\vec x)$\\
+\hline
+& 750 & 1160 & 1280 & 1180 & 1160 & 1155 \\
+& 800 & 1200 & 1280 & 1180 & 1190 & 1185 \\
+& 850 & 1280 & 1280 & 1450 & 1460 & 1455 \\
+& 900 & 1450 & 1280 & 1450 & 1460 & 1455 \\
+& 950 & 2000 & 1280 & 1450 & 1460 & 2000 \\
+\hline
+\vspace{-4mm}\\
+{\bf MSE}&\multicolumn{2}{l}{$\frac{1}{N}\sum_i^N(y_i-F_m(\vec x_i))^2$} & 113620 & 66440 & 64840 & 6180\\
+{\bf MAE}&\multicolumn{2}{l}{$\frac{1}{N}\sum_i^N|y_i-F_m(\vec x_i)|$} & 218 & 152 & 148 & 40 \\
+\end{tabular}
+}
+</latex>
+
+There are a number of interesting things going on here. First, recall that we used the average for the $f_0$ model in the first article and the median in this article because the average minimizes the MSE and the median minimizes the MAE.  The data confirms this: The MSE from the MSE GBM $F_m(X)$ is smaller than for the MAE GBM $F_m(X)$ and that the MAE is higher in the MSE GBM data than the MAE GBM. Our choice of $f_0$ in each case was, therefore, a good one.
+
+Next, look at the trajectory of the MSE for both kinds of models. For $\Delta_m$ trained on residual vectors, the MSE immediately drops by 10x because the regression tree stump for $\Delta_1$ immediately takes off after the outlier at $\vec x$=950. The residual computed from the average line to \$2000 rent is so large that the regression tree stump splits the outlier into its own group. The difference between training on the residual vector versus sign vector is clear when we compare the $\Delta_1$ predictions of both composite models:
+
+<table>
+<tr>
+<th>$\Delta_1$ trained on residual vector
+<th>$\Delta_1$ trained on sign vector
+<tr>
+<td><img src="images/L2-delta1.png" width="70%">
+<td><img src="images/L1-delta1.png" width="70%">
+</table>
+
+(The region highlighted in orange is the group of observations associated with the right child of the $\Delta_1$ stump and the arrow points at the prediction for the right child.)
+
+The $\Delta_1$ trained on the sign vector splits the observations in between the second and third because the sign vector is $[-1, -1, 0, 1, 1]$. The regression tree chooses to group $[-1, -1]$ together because they are identical values, leaving $[0, 1, 1]$ as the other group. Instead of the magnitude, the $\Delta_1$ trained on sign vectors treat anything above or equal to the median, $F_0$, as the same value. 
+
+The MSE for weak models trained on the sign vector does not drop dramatically until $\Delta_3$ finally goes after the outlier to yield $F_3$. In fact, the MSE does not budge in between the second and third weak models.  Empirically at least, training $\Delta_m$ on sign vectors does not seem to be optimizing the MSE very well whereas training $\Delta_m$ on residual vectors does optimize MSE well.
+
+Finally, let's make some observations about the intermediate $\hat{\vec y}_m = F_m(X)$ model predictions.  The units of each $\hat y_i$ element within a $\hat{\vec y}_m$ vector is rent-dollars, so each $\hat{\vec y}_m$ is a vector of dollar values in $N$-space (here, $N=5$). That means that the $F_m$ predictions are vectors sweeping through $N$-space as we increase $m$. When papers use the term "*function space*," they just mean the $N$-space of predictions: a vector of $N$ target values predicted by some $F_m(X)$.
 
 <section title="GBM algorithm to minimize L1 loss" label="alg:l1">
 
-For completeness, here is the boosting algorithm that optimizes the $L_1$ loss function using regression tree stumps:
+For completeness, here is the boosting algorithm, derived from [Friedman's LAD_TreeBoost on page 7](https://statweb.stanford.edu/~jhf/ftp/trebst.pdf), that optimizes the $L_1$ loss function using regression tree stumps:
 
 <latex>
 \setlength{\algomargin}{3pt}

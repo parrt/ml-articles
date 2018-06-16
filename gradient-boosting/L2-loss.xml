@@ -263,7 +263,7 @@ print("F3 MSE", mean_squared_error(df.rent, df.F3), "MAE", mean_absolute_error(d
 }
 </latex>
 
-(Many articles and Friedman's original paper call the $\vec y - F_m$ values *pseudo-responses* and use notation $\tilde{\vec y}$.)
+(Many articles and [Friedman's original paper](https://statweb.stanford.edu/~jhf/ftp/trebst.pdf) call the $\vec y - F_m$ values *pseudo-responses* and use notation $\tilde{\vec y}$.)
 
 The last column shows not only the direction but the magnitude of the difference between where we are, $F_0(X)$, and where we want to go, $\vec y$. The red vectors in the following diagram are a visualization of the residual vectors from our initial model to the rent target values.
 
@@ -465,7 +465,7 @@ You might've heard that gradient boosting is very complex mathematically, but th
 
 <section title="GBM algorithm to minimize L2 loss" label="alg:l2">
 
-For completeness, here is the boosting algorithm that optimizes the $L_2$ loss function using regression tree stumps:
+For completeness, here is the boosting algorithm, adapted from [Friedman's  LS_Boost and LAD_TreeBoost](https://statweb.stanford.edu/~jhf/ftp/trebst.pdf), that optimizes the $L_2$ loss function using regression tree stumps:
 
 <latex>
 \setlength{\algomargin}{3pt}
