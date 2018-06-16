@@ -12,3 +12,7 @@
 <css file="css/article.css">
 
 <notebook-support file="notebooks/support.py">
+
+<copyright>
+Please send comments, suggestions, or fixes to [Terence](mailto:parrt@cs.usfca.edu).
+</copyright>

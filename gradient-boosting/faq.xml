@@ -1,19 +1,30 @@
 <chapter title="Gradient boosting: frequently asked questions"
 	 author={[Terence Parr](http://parrt.cs.usfca.edu) and [Jeremy Howard](http://www.fast.ai/about/#jeremy)}>
+	 
+We tried to collect a number of common questions on this page. Please note that we focus on gradient boosting for regression not classification.
 
-multiple optimization problems at work. picking weights is also an optimization problem.
+<section title="What's the basic idea behind gradient boosting?">
 
-where does the gradient come from in GBM?
+<section title="Where does the gradient appear in gradient boosting?">
 
-function space
+<section title="What is the difference between gradient boosting optimizing squared error versus absolute error?">
+
+both predict residuals, but we train on different things and we choose mean over median.
+
+<section title="What is function space?">
+
+<section title="How is gradient boosting performing gradient descent and function space?">
+
+<section title="We train weak models on residuals y-y_hat so why don't we need y when using the model on an unknown feature vector?">
+		
+do we need the true target in the test set? no, the model is no longer updated after training and we only need the true target to compute new weak models during training.
+
+<section title="How is gradient boosting different from our typical usage of gradient descent?">
+	
+normally we are shifting model parameters around to optimize a model. In this case we are moving the approximation around in the direction of the answer. We are not optimizing the parameters of the week models.  gradient descent does parameter optimization normally but we are now doing function space optimization. Gradient descent can't be doing parameter optimization because the different kinds of models would have different parameters. Friedman says '*... consider F(x) evaluated at each point $\vec x$ to be a "parameter"*'	
 
 why approx residual? rpevent overfit. won't generalize. adding delta adds in residual or sign. sum together.
 
-why is it gradient descent?
 
- what is the key difference between L2, L1?  both predict residuals, but we train on different things and we choose mean over median.
 
-normally we are shifting model parameters around to optimize a model. In this case we are moving the approximation around in the direction of the answer. We are not optimizing the parameters of the week models.  gradient descent does parameter optimization normally but we are now doing function space optimization. Gradient descent can't be doing parameter optimization because the different kinds of models would have different parameters. Friedman says '*... consider F(x) evaluated at each point $\vec x$ to be a "parameter"*'
-
-do we need the true target in the test set? no, the model is no longer updated after training and we only need the true target to compute new weak models during training.
 
