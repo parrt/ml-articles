@@ -9,13 +9,13 @@ Jerome Friedman, in his seminal paper from 1999 (updated in 2001) called [Greedy
 
 <section title="What's the basic idea behind gradient boosting?">
 
-Instead of creating a single powerful model, [Boosting](https://en.wikipedia.org/wiki/Boosting_(meta-algorithm\)) combines multiple simple models into a single composite model. The idea is that, as we introduce more simple models, the overall model becomes a stronger and stronger predictor. In boosting terminology, the simple models are called *weak models* or *weak learners*.
+Instead of creating a single powerful model, [boosting](https://en.wikipedia.org/wiki/Boosting_(meta-algorithm\)) combines multiple simple models into a single composite model. The idea is that, as we introduce more and more simple models, the overall model becomes stronger and stronger. In boosting terminology, the simple models are called *weak models* or *weak learners*.
 
-To improve its predictions, gradient boosting looks at the difference between its current approximation, $\hat{\vec y}$ and the known correct target vector, $\vec y$, which is called the residual, $\vec y - \hat{\vec y}$. It then trains a weak model that maps feature vector $\vec x$ to that residual vector.  Adding a residual predicted by a weak model to an existing model's approximation, nudges the model towards the correct target. Adding lots of these nudges, improves the overall models approximation.
+To improve its predictions, gradient boosting looks at the difference between its current approximation, $\hat{\vec y}$, and the known correct target vector, $\vec y$, which is called the residual, $\vec y - \hat{\vec y}$. It then trains a weak model that maps feature vector $\vec x$ to that residual vector.  Adding a residual predicted by a weak model to an existing model's approximation nudges the model towards the correct target. Adding lots of these nudges, improves the overall models approximation.
 
 <section title="Where does the gradient appear in gradient boosting?">
 
-Residuals contain direction not just magnitude information and so residuals are vectors. The sign of a residual is also a vector.  Most articles treat residuals as the "error" between the approximation and the true target but we generically called these direction vectors to emphasize the fact that they are vectors, not just magnitudes. Considering the residual as an error vector also makes it awkward to talk about gradient boosting machines that optimize the absolute error, not the squared error.
+Residuals contain direction not just magnitude information and so residuals are vectors. The sign of a residual vector is also a vector.  Most articles treat residuals as the error between the approximation and the true target, but we generically call these direction vectors to emphasize the fact that they are vectors, not just magnitudes. Considering the residual as an error vector also makes it awkward to talk about gradient boosting machines that optimize the absolute error, not the squared error.
 
 If a vector is a vector of partial derivatives of some function, then that vector is called a gradient. The residual $\vec y - \hat{\vec y}$ is the gradient of $L_2$ loss function $\sum_i^N(y_i-\hat y_i)^2$ and the sign of the residual, $sign(\vec y - \hat{ \vec y})$, is the gradient of $L_1$ loss function $\sum_i^N|y_i-\hat y_i|$.
 
@@ -25,15 +25,15 @@ By adding in approximations to residuals, gradient boosting machines are chasing
 	
 GBMs that optimize MSE ($L_2$ loss) and MAE ($L_1$ loss) both train regression trees, $\Delta_m$, on direction vectors, but MSE-optimizing GBMs train trees on residual vectors and MAE GBMs train trees on sign vectors. The goal of training regression tree models is to group similar direction vectors into leaf nodes in both cases.  Because they are training on different vectors (residuals versus signs), the trees will group the observations in the training data differently.
 
-Both MSE and MAE GBM regression tree leaves predict residuals, but MSE GBM leaves predict the average residual while MAE GBM leaves predict the median residual.
+Both MSE and MAE GBM regression tree leaves predict residuals, but MSE GBM leaves predict the average residual given an observation, while MAE GBM leaves predict the median residual.
 
 <section title="What is function space?">
 
-Function space is just the $N$ space of predictions associated with $N$ observations. Each point in function space, or prediction spaces we like to call it, is just to the output of calling function $F_m(X)$ on observation matrix $X = [\vec x_1, \vec x_2, ..., \vec x_n]$.
+Function space is just the $N$ space of predictions associated with $N$ observations. Each point in function space, or prediction space as we like to call it, is just the output of calling function $F_m(X)$ on observation matrix $X = [\vec x_1, \vec x_2, ..., \vec x_n]$.  
 
 <section title="How is gradient boosting performing gradient descent in function space?">
 
-First, simplify "function space" to just "prediction space" and then let $\hat{\vec y}$  be our current prediction vector in prediction space.  As we nudge $\hat{\vec y}$ towards the true target, we add residual vectors. In the [last article in this series](descent.html), we showed that the residual vector is a gradient vector.  Adding gradient vectors is the same as subtracting the negative of the gradient, which led us to equate the gradient descent position update equation and the gradient boosting model update equation:
+First, simplify "function space" to just "prediction space" and then let $\hat{\vec y}$  be our current prediction vector in prediction space.  As we nudge $\hat{\vec y}$ towards the true target, we add residual vectors. In the [last article in this series](descent.html), we showed that the residual vector is a gradient vector.   Subtracting gradient vectors *ala* gradient descent is the same as adding the negative of the gradient, which led us to equate the gradient descent position update equation and the gradient boosting model update equation:
 
 <table>
 <tr>
@@ -46,18 +46,53 @@ First, simplify "function space" to just "prediction space" and then let $\hat{\
 
 In a nutshell, chasing the direction vector, residual or sign vector, chases the (negative) gradient of a loss function just like gradient descent.
 
-<section title="We train weak models on residuals y-y_hat so why don't we need y when using the model on an unknown feature vector?">
-		
-do we need the true target in the test set? no, the model is no longer updated after training and we only need the true target to compute new weak models during training.
+Many articles, including the original by Friedman, describe the partial derivative components of the gradient as:
+
+\[
+\left[ \frac{\partial L(y_i, F(\vec x_i))}{\partial F(\vec x_i)} \right]_{F(\vec x)=F_{m-1}(\vec x)}
+\]
+
+but, it's easier to think of it as the following gradient:
+
+\[
+\nabla L(\vec y, \hat{\vec y}_{m-1})
+\]
+
+where the gradient is with respect to $\hat{\vec y}_{m-1}$.
+
+<section title="We train weak models on residuals, y-y_hat, so why don't we need y when using the model on an unknown feature vector?">
+	
+The $\Delta_m(\vec x)$ weak models are, indeed, trained on the residuals $y_i - \hat y_i$, but we are training the models to learn a mapping from $\vec x_i$ to $y_i - \hat y_i$. Once we've trained the model, we present the feature vector for an unknown observation, $\vec x_i$, to get a predicted $\hat y_i$. After training is complete, true targets are no longer needed.  Consider the stump from the MSE GBM created in the first article:
+
+<img src="images/stubs-mse-delta1.png" width="30%">
+
+Notice that the stump tests the $x$ feature vector element value to choose a leaf node. It is the leaf nodes that have the residual values, such as those we computed in the first article:
+
+<latex>
+{\small
+\begin{tabular}[t]{rrrr}
+{\bf sqfeet} & {\bf rent} & $F_0$ & $\vec y-F_0$ \\
+\hline
+750 & 1160 & 1418 & -258 \\
+800 & 1200 & 1418 & -218 \\
+850 & 1280 & 1418 & -138 \\
+900 & 1450 & 1418 & 32 \\
+950 & 2000 & 1418 & 582 \\
+\end{tabular}
+}
+</latex>
+
+So, we only need the true target vector $\vec y$ during training. After training, weak models test purely feature vector values and make predictions by using an average or median residual (computed during training) stored in one of the leaves.  Once the average has been computed, training can delete all of the actual observations since they are never needed again for making predictions.
 
 <section title="How is gradient boosting different from our typical usage of gradient descent?">
-	
-normally we are shifting model parameters around to optimize a model. In this case we are moving the approximation around in the direction of the answer. We are not optimizing the parameters of the week models.  gradient descent does parameter optimization normally but we are now doing function space optimization. Gradient descent can't be doing parameter optimization because the different kinds of models would have different parameters. Friedman says '*... consider F(x) evaluated at each point $\vec x$ to be a "parameter"*'	
 
-why approx residual? rpevent overfit. won't generalize. adding delta adds in residual or sign. sum together.
+Gradient descent optimization in the machine learning world is typically used to find the parameters associated with a single model that optimizes some loss function, such as the squared error. In other words, we are moving parameter vector $\vec x$ around, looking for a minimal value of loss function $L(\vec x)$ that compares the model output for $\vec x$ to the intended target. The number of parameters, $|\vec x|$,  differs from the number of observations, $N$.
 
+In contrast, GBMs are meta-models consisting of multiple weak models whose output is added together to get an overall prediction. GBMs shift the current prediction of size $N$, $\hat{\vec y}$, around hoping to nudge it to the true target, $\vec y$. The gradient descent optimization occurs on the output of the model and not the parameters of the weak models.
 
-<section title="Can you point me at a resource for gradients and matrix calculus?">
+Getting a GBM's $\hat{\vec y}$ approximation to $\vec y$ is easy mathematically. Just add the residual $\vec y - \hat{\vec y}$ to the current approximation.  Rather than directly adding a residual to the current approximation, however, GBMs add a weak model's approximation of the residual vector to the current approximation. By combining the output of a bunch of noisy models, the hope is to get a model that is much stronger but also one that does not overfit the original data.  This approach is similar to what's going on in Random Forests.
+
+<section title="Can you point me at a learning resource for gradients and matrix calculus?">
 	
 Sure, check out [The Matrix Calculus You Need For Deep Learning](http://parrt.cs.usfca.edu/doc/matrix-calculus/index.html).
 

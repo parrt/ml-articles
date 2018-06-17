@@ -272,11 +272,29 @@ So now we've looked at two similar GBM construction approaches, one that trains 
 
 <section title="Comparing GBM trees that optimize MSE and MAE ">
 
-GBMs that optimize MSE ($L_2$ loss) and MAE ($L_1$ loss) both train regression trees, $\Delta_m$, on direction vectors.  The first difference between them is that MSE-optimizing GBMs train trees on residual vectors and MAE GBMs train trees on sign vectors. The goal of training regression tree models is to group similar direction vectors into leaf nodes in both cases.  Because they are training on different vectors (residuals versus signs), the trees will group the observations in the training data differently. The actual training of the weak model trees always computes split points by trying to minimize the squared difference of residual or sign values within two groups, even in the MAE case.  
+GBMs that optimize MSE ($L_2$ loss) and MAE ($L_1$ loss) both train regression trees, $\Delta_m$, on direction vectors.  The first difference between them is that MSE-optimizing GBMs train trees on residual vectors and MAE GBMs train trees on sign vectors. The goal of training regression tree models is to group similar direction vectors into leaf nodes in both cases.  Because they are training on different vectors (residuals versus signs), the trees will group the observations in the training data differently. The training of the weak model trees (and not the overall GBM) always computes split points by trying to minimize the squared difference of residual or sign values into two groups, even in the MAE case.  
 
-The second difference between the GBMs is that tree leaves of MSE GBMs predict the average of the residuals, $y_i - F_{m-1}(\vec x_i)$, values for all $i$ observations in that leaf, whereas MAE GBM tree leaves predicts the median of the residual. **Weak models for both GBMs predict residuals given a feature vector for an observation.**
+The second difference between the GBMs is that tree leaves of MSE GBMs predict the average of the residuals, $y_i - F_{m-1}(\vec x_i)$, values for all $i$ observations in that leaf, whereas MAE GBM tree leaves predict the median of the residual. **Weak models for both GBMs predict residuals given a feature vector for an observation.**
 
-Just to drive this home, MSE GBMs train on residual vectors and the leaves predict the average residual. MAE GBMs train on sign vectors, but the leaves predict residuals like MSE GBMs, albeit the median, not the average residual. This mechanism is strange because models don't typically train on one space (sign values) and predict values in a different space (residuals). It's perhaps easier to think of MAE GBMs as training on and predicting sign vectors (in -1, 0, +1) but then weighting  predictions by the absolute value of the median of the residuals. This approach would mean we don't have to alter the $\Delta_m$ leaf predictions after constructing the regression trees. (The algorithm presented later does alter the trees.)
+Just to drive this home, MSE GBMs train on residual vectors and the leaves predict the average residual. MAE GBMs train on sign vectors, but the leaves predict residuals like MSE GBMs, albeit the median, not the average residual. This mechanism is strange because models don't typically train on one space (sign values) and predict values in a different space (residuals). It's perhaps easier to think of MAE GBMs as training on and predicting sign vectors (in -1, 0, +1) but then weighting  predictions by the absolute value of the median of the residuals. This approach would mean we don't have to alter the $\Delta_m$ leaf predictions after constructing the regression trees. (The algorithm presented later does alter the trees.) Friedman shows that, for  regression tree weak models, the optimal weight, $w$, associated with any leaf, $l$, is computed by finding $w$ that minimizes:
+
+\[
+\sum_{i \in l} L(y_i, F_{m-1}(\vec x_i) + w)
+\]
+
+For the MSE case, that means minimizing:
+
+\[
+\sum_{i \in l} (y_i - (F_{m-1}(\vec x_i)+w))^2
+\]
+
+and for the MAE case, that means minimizing:
+
+\[
+\sum_{i \in l} |y_i - (F_{m-1}(\vec x_i)+w)|
+\]
+
+The weights that minimize those equations are the mean and the median, respectively. (We prove this for the MSE case in [General algorithm with regression tree weak models](descent.html#alg:general).)
 
 To get a feel for the difference between MSE and MAE GBMs, let's revisit the $F_m(X)$ intermediate model predictions for the weak learners trained on both residual vectors and those trained on sign vectors.  We can empirically verify that training $\Delta_m$ weak models on the residual vector drops the MSE loss dramatically faster than training $\Delta_m$ on the sign vector. Here is the data (stripped a decimals) pulled from the first article with the MSE and MAE tacked on:
 
