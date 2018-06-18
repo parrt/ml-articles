@@ -204,6 +204,9 @@ h1 {
                 font-size: 100%;
 				margin-left: 2%;
         }
+	.watermark {
+	    position: static;
+	}
 }
 @media (max-width: 736px) {
         /* iphone7+ 736 wide */
@@ -215,4 +218,7 @@ h1 {
                 font-size: 100%;
 				margin-left: 2%;
         }
+	.watermark {
+	    position: static;
+	}
 }
