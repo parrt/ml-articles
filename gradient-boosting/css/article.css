@@ -43,6 +43,14 @@
     font-family: Monaco;
     font-size: 80%;	
 }
+.watermark {
+    font-size: 100%;
+    right: 10px;
+    opacity: 0.4;
+    color: BLACK;
+    position: absolute;
+    top: 30px;
+}
 .codeblk {
         font-family: Monaco;
         font-size: 80%;
