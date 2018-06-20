@@ -18,3 +18,11 @@
 <copyright>
 Please send comments, suggestions, or fixes to [Terence](mailto:parrt@cs.usfca.edu).
 </copyright>
+
+<metadata title="How to explain gradient boosting"
+	imageurl="http://explained.ai/gradient-boosting/images/golf-MSE.png"
+	description="3-part article on how gradient boosting works for squared error, absolute error, and general loss functions. Deeply explained, but as simply and intuitively as possible."
+	url="http://explained.ai/gradient-boosting/index.html"
+	pagetype="article"
+	twitterhandle="@the_antlr_guy"
+>
