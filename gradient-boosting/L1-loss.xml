@@ -95,7 +95,7 @@ As mentioned above, this version of a GBM is tricky so let's look in detail at h
 
 <section title="Two perspectives on training weak models for L1 loss">
 
-Our goal is to create a series of nudges, $\Delta_m$, that gradually shift our initial approximation, $f_0(X)$, towards the true target rent vector, $\vec y$. The first stump, $\Delta_1$, should be trained on $sign(\vec y - F_0(X))$, as opposed to the residual vector itself, and let's choose a split point of 850 because that groups the sign values into two similar (low variance) groups, $[-1, -1]$ and $[0,1,1]$. Because we are dealing with $L_1$ absolute difference and not $L_2$ squared difference, stumps should predict the median, not the mean, of the observations in each leaf. That means $\Delta_1$ would predict -1 for $\vec x$\<825 and 1 for $\vec x$>=825:
+Our goal is to create a series of nudges, $\Delta_m$, that gradually shift our initial approximation, $f_0(X)$, towards the true target rent vector, $\vec y$. The first stump, $\Delta_1$, should be trained on $sign(\vec y - F_0(X))$, as opposed to the residual vector itself, and let's choose a split point of 825 because that groups the sign values into two similar (low variance) groups, $[-1, -1]$ and $[0,1,1]$. Because we are dealing with $L_1$ absolute difference and not $L_2$ squared difference, stumps should predict the median, not the mean, of the observations in each leaf. That means $\Delta_1$ would predict -1 for $\vec x$\<825 and 1 for $\vec x$>=825:
 	
 <img src="images/stubs-mae-delta1.svg" width="30%">  
 
