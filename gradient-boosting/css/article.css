@@ -40,8 +40,8 @@
 	margin-left: 5px;
 }
 .inlinecode {
-    font-family: Monaco;
-    font-size: 80%;	
+    font-family: "Monaco", "Lucida Console", "Lucida Sans Typewriter", monospace;
+    font-size: 95%;	
 }
 .watermark {
     font-size: 100%;
@@ -52,7 +52,7 @@
     top: 30px;
 }
 .codeblk {
-        font-family: Monaco;
+    font-family: "Monaco", "Lucida Console", "Lucida Sans Typewriter", monospace;
         font-size: 80%;
         box-sizing: border-box;
     margin: 0 0 1em 0;
