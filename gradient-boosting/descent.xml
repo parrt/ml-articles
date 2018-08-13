@@ -105,8 +105,9 @@ Now, let's take the partial derivative of the loss function with respect to a sp
 <latex>
 \begin{eqnarray*}
 \frac{\partial}{\partial \hat y_j} L(\vec y, \hat{\vec y}) &=& \frac{\partial}{\partial \hat y_j} \sum_{i=1}^{N} (y_i - \hat y_j)^2 \\
- &=& \frac{\partial}{\partial \hat y_j} (y_j - \hat y_j)^2\\
- &=& 2 (y_j - \hat y_j)
+&=& \frac{\partial}{\partial \hat y_j} (y_j - \hat y_j)^2\\
+&=& 2 (y_j - \hat y_j) \frac{\partial}{\partial \hat y_j} (y_j - \hat y_j)\\
+ &=& - 2 (y_j - \hat y_j)
 \end{eqnarray*}
 </latex>
 
@@ -115,7 +116,7 @@ Now, let's take the partial derivative of the loss function with respect to a sp
 That means the gradient with respect to $\hat{\vec y}$ is:
 
 \[
-\nabla_{\hat{\vec y}} L(\vec y, \hat{\vec y}) = 2 (\vec y - \hat{\vec y})
+\nabla_{\hat{\vec y}} L(\vec y, \hat{\vec y}) = - 2 (\vec y - \hat{\vec y})
 \]
 
 Dropping the constant in front again leaves us with the gradient being the same as the residual vector: $\vec y - \hat{\vec y}$. So, chasing the residual vector in a GBM is chasing the gradient vector of the MSE $L_2$ loss function while performing gradient descent.
@@ -134,14 +135,15 @@ The partial derivative with respect to a specific approximation $\hat y_j$ is:
 \begin{eqnarray*}
 \frac{\partial}{\partial \hat y_j} L(\vec y, \hat{\vec y}) &=& \frac{\partial}{\partial \hat y_j} \sum_{i=1}^{N} |y_i - \hat y_j| \\
  &=& \frac{\partial}{\partial \hat y_j} |y_j - \hat y_j|\\
- &=& sign(y_j - \hat y_j)
+ &=& sign(y_j - \hat y_j) \frac{\partial}{\partial \hat y_j} (y_j - \hat y_j)\\
+ &=& - sign(y_j - \hat y_j)
 \end{eqnarray*}
 </latex>
 
 giving gradient:
 
 \[
-\nabla_{\hat{\vec y}} L(\vec y, \hat{\vec y}) = sign(\vec y - \hat{\vec y})
+\nabla_{\hat{\vec y}} L(\vec y, \hat{\vec y}) = - sign(\vec y - \hat{\vec y})
 \]
 
 This shows that chasing the sign vector in a GBM is chasing the gradient vector of the MAE $L_1$ loss function while performing gradient descent.
