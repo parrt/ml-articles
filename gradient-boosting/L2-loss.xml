@@ -219,7 +219,7 @@ where row $i$ is an observation with one-dimensional feature vector $\vec x_i$ (
 
 From this data, we'd like to build a GBM to predict rent price given square footage. To move towards $\vec y$ from any $\hat {\vec y}$, we need a direction vector. Let's start with $\vec y-\hat{\vec y}$ and then, in [Heading in the right direction](L1-loss.html), we'll see how GBM works for $sign(\vec y-\hat{\vec y})$.
 
-Let's use the mean (average) of the rent prices as our initial model: $F_0(\vec x_i)$ = $f_0(\vec x_i)$ = 1200 for all $i$: $F_0(X) = \overrightarrow{1200}$. We use the mean because that is the single value that minimizes the mean squared error between it and the $y_i$ values. (We'll seen shortly that GBMs whose weak models are trained on residual vectors optimize the mean squared error.) Once we have $F_0$, we compute $\vec y - F_0$, the residual between the target and the previous estimate:
+Let's use the mean (average) of the rent prices as our initial model: $F_0(\vec x_i)$ = $f_0(\vec x_i)$ = 1418 for all $i$: $F_0(X) = \overrightarrow{1418}$. We use the mean because that is the single value that minimizes the mean squared error between it and the $y_i$ values. (We'll seen shortly that GBMs whose weak models are trained on residual vectors optimize the mean squared error.) Once we have $F_0$, we compute $\vec y - F_0$, the residual between the target and the previous estimate:
 
 <pyeval label="examples" hide=true>
 eta = 1.0
