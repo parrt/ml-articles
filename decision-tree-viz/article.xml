@@ -1,8 +1,6 @@
 <article
-      title="How to visualize decision tree models"
       googletracking="UA-118361649-1"
-      watermark="Brought to you by <a href='http://explained.ai'>explained.ai</a>"
-      author={[Terence Parr](http://parrt.cs.usfca.edu) and [Prince Grover](https://www.linkedin.com/in/groverpr)}>
+      watermark="Brought to you by <a href='http://explained.ai'>explained.ai</a>">
 
 <include file="index.xml">
 
