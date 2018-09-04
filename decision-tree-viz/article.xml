@@ -1,0 +1,21 @@
+<article
+      title="How to visualize decision tree models"
+      googletracking="UA-118361649-1"
+      watermark="Brought to you by <a href='http://explained.ai'>explained.ai</a>"
+      author={[Terence Parr](http://parrt.cs.usfca.edu) and [Prince Grover](https://www.linkedin.com/in/groverpr)}>
+
+<include file="index.xml">
+
+<css file="css/article.css">
+
+<copyright>
+Please send comments, suggestions, or fixes to [Terence](mailto:parrt@cs.usfca.edu).
+</copyright>
+
+<metadata title="How to visualize decision tree models"
+	imageurl="http://explained.ai/decision-tree-viz/images/demo.png"
+	description="."
+	url="http://explained.ai/decision-tree-viz/index.html"
+	pagetype="article"
+	twitterhandle="@the_antlr_guy"
+>

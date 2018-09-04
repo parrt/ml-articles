@@ -1,0 +1,18 @@
+<chapter title="How to visualize decision tree models"
+         author={[Terence Parr](http://parrt.cs.usfca.edu) and [Prince Grover](https://www.linkedin.com/in/groverpr)}>
+
+fii
+
+<section title="Chasing the sign vector">
+
+foo
+
+<pyeval label="examples" hide=true>
+x = 1
+</pyeval>
+
+Visually, we can see that the first sign vector has components pointing in the right direction of the true target elements, $y_i$, from $f_0(X)$:
+ 
+<pyfig label=examples hide=true width="38%">
+x = 1
+</pyfig>
