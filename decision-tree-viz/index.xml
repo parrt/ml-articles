@@ -1,18 +1,79 @@
 <chapter title="How to visualize decision tree models"
          author={[Terence Parr](http://parrt.cs.usfca.edu) and [Prince Grover](https://www.linkedin.com/in/groverpr)}>
 
-fii
+Decision trees are the fundamental building block of [gradient boosting machines](http://explained.ai/gradient-boosting/index.html) and [Random Forests](https://en.wikipedia.org/wiki/Random_forest)\symbol{tm}, probably the two most popular machine learning models for structured data.  Visualizing decision trees is a tremendous aid when learning these models and later, in practice, when interpreting models.  Unfortunately, current visualization packages are rudimentary and not immediately helpful to the novice. We also couldn't find a package that visualized a specific $\vec{x}$ feature vector being run down the decision tree to the leaf providing the target $\vec{y}$.
 
-<section title="Chasing the sign vector">
+Terence has reached a point in his book on [machine learning book](https://mlbook.explained.ai/) (written with [Jeremy Howard](http://www.fast.ai/about/#jeremy)) where he needs to describe lots of decision trees. So, together with former  [University of San Francisco MS in Data Science](https://www.usfca.edu/arts-sciences/graduate-programs/data-science) student Prince Grover, we have created a general package for [scikit-learn](https://github.com/scikit-learn/scikit-learn) decision tree visualization and model interpretation. This article demonstrates the results of this work, details the specific choices we made for visualization, and outlines the wild mashup of tools and techniques used in the implementation.
 
-foo
+<section title="Current state-of-the-art visualizations">
+	
+If you do a web search for "visualizing decision trees" you will quickly find a visualization provided by the awesome scikit folks themselves: [sklearn.tree.export_graphviz](http://scikit-learn.org/stable/modules/generated/sklearn.tree.export_graphviz.html).  For example, here is [their visualization](http://scikit-learn.org/stable/modules/tree.html) of a decision tree on the IRIS data set (click on image to enlarge).
 
-<pyeval label="examples" hide=true>
-x = 1
-</pyeval>
+[<img src="images/iris-scikit.png" width="60%">](images/iris.png)
 
-Visually, we can see that the first sign vector has components pointing in the right direction of the true target elements, $y_i$, from $f_0(X)$:
- 
-<pyfig label=examples hide=true width="38%">
-x = 1
-</pyfig>
+This image does a good job of representing the tree structure, but we have a few quibbles.  The colors are the best and it's not immediately obvious why some of the nodes are colored and some aren't.  If the colors represent predicted class for this classifier, one would think just the leaves would be colored because only leaves have predictions.  Including the gini coefficient costs space and doesn't really help the beginners. The count of samples of the  various target classes in each node is very useful, though, a histogram would be even better. A target class color legend would be nice.  Finally, using true and false as the edges isn't as clear as, say, labels \< and >=.
+
+The same mechanism works for decision tree regressors. For example, here is a visualization using the BOSTON data set (click to enlarge image):
+
+[<img src="images/boston-scikit.png" width="70%">](images/boston-scikit.png)
+
+In this image, it's not immediately clear what the use of color implies, but after studying the image, darker images indicate higher predicted target values.
+
+If you dig really hard, you will find that SAS and IBM provide (non-Python-based) decision tree visualizations.  For example, the visualization from SAS includes some interesting details:
+	
+[<img src="images/sas-tree.png" width="40%">](images/sas-tree.png)
+
+The histogram at each node is a nice touch.  Here's an example visualization from [IBM's Watson analytics](https://www.ibm.com/support/knowledgecenter/en/SS4QC9/com.ibm.solutions.wa_an_overview.2.0.0.doc/wa_discover_viz_expl_insigths_dec_tree.html) that appears to be on the TITANIC data set:
+
+[<img src="images/ibm-tree.png" width="50%">](images/ibm-tree.png)
+
+The explicit labels for equality or inequality improve understanding and, like the SAS tree, the legend is also helpful.
+
+All of these visualizations are useful, but we weren't truly inspired until we saw the impressive [A visual introduction to machine learning](http://www.r2d3.us/visual-intro-to-machine-learning-part-1/), which shows an (animated) decision tree like this:
+
+[<img src="images/vizml-tree.png" width="75%">](images/vizml-tree.png)
+
+Unfortunately, that visualization is hardcoded to a specific data set and is not a general library. It has two unique characteristics, though, aside from the animation: the leaf size is proportional to the number of samples in that leaf and the split point for decision nodes is shown visually in the histogram/distribution.
+
+<section title="Our decision tree visualizations">
+
+	
+<subsection title="Classifier decision trees">
+
+	started with simple
+	
+	[<img src="images/iris-TD-4-simple.png" width="55%">](images/iris-TD-4-simple.png)
+
+IRIS:
+
+[<img src="images/iris-TD-5.png" width="75%">](images/iris-TD-5.png)
+
+KNOWLEDGE
+	
+[<img src="images/class-demo.png" width="75%">](images/class-demo.png)
+
+<subsection title="Regressor decision trees">
+
+	started with simple
+	
+	[<img src="images/boston-TD-4-simple.png" width="95%">](images/boston-TD-4-simple.png)
+
+	BOSTON
+
+	[<img src="images/boston-TD-3.png" width="75%">](images/boston-TD-3.png)
+
+	DIABETES
+
+	[<img src="images/diabetes-TD-3-X.png" width="75%">](images/diabetes-TD-3-X.png)
+
+<section title="Our implementation">
+	
+	graphviz/dot
+
+	matplotlib
+
+	load svg was issue
+
+	then must parse svg to get size
+
+	future: bottom-justify histograms in classifier trees. some wedge labels overlap with axis.
