@@ -1,19 +1,41 @@
 <chapter title="How to visualize decision tree models"
          author={[Terence Parr](http://parrt.cs.usfca.edu) and [Prince Grover](https://www.linkedin.com/in/groverpr)}>
 
+
 Decision trees are the fundamental building block of [gradient boosting machines](http://explained.ai/gradient-boosting/index.html) and [Random Forests](https://en.wikipedia.org/wiki/Random_forest)\symbol{tm}, probably the two most popular machine learning models for structured data.  Visualizing decision trees is a tremendous aid when learning these models and later, in practice, when interpreting models.  Unfortunately, current visualization packages are rudimentary and not immediately helpful to the novice. We also couldn't find a package that visualized a specific $\vec{x}$ feature vector being run down the decision tree to the leaf providing the target $\vec{y}$.
 
 Terence has reached a point in his book on [machine learning book](https://mlbook.explained.ai/) (written with [Jeremy Howard](http://www.fast.ai/about/#jeremy)) where he needs to describe lots of decision trees. So, together with former  [University of San Francisco MS in Data Science](https://www.usfca.edu/arts-sciences/graduate-programs/data-science) student Prince Grover, we have created a general package for [scikit-learn](https://github.com/scikit-learn/scikit-learn) decision tree visualization and model interpretation. This article demonstrates the results of this work, details the specific choices we made for visualization, and outlines the wild mashup of tools and techniques used in the implementation.
 
+<section title="Gallery of decision tree visualizations">
+	
+[full gallery](https://github.com/parrt/animl/tree/master/testing/samples)
+
+<table>
+	<tr>
+		<td>[<img src="images/icons/wine-TD-2-icon.png">](images/wine-TD-2.png)
+		<td>[<img src="images/icons/breast_cancer-LR-3-icon.png">](images/breast_cancer-LR-3.png)	<tr>
+		<td>[<img src="images/icons/iris-TD-3-X-icon.png">](images/iris-TD-3-X.png)
+		<td>[<img src="images/icons/knowledge-LR-3-icon.png">](images/knowledge-LR-3.png)
+	<tr>
+		<td>[<img src="images/icons/digits-LR-3-icon.png">](images/digits-LR-3.png)
+		<td>[<img src="images/icons/diabetes-TD-3-X-icon.png">](images/diabetes-TD-3-X.png)		
+	<tr>
+		<td>[<img src="images/icons/boston-TD-3-X-icon.png">](images/boston-TD-3-X.png)
+		<td>[<img src="images/icons/sweets-TD-3-X-icon.png">](images/sweets-TD-3-X.png)
+</table>	
+
+Sample code.
+
+
 <section title="Current state-of-the-art visualizations">
 	
-If you do a web search for "visualizing decision trees" you will quickly find a visualization provided by the awesome scikit folks themselves: [sklearn.tree.export_graphviz](http://scikit-learn.org/stable/modules/generated/sklearn.tree.export_graphviz.html).  For example, here is [their visualization](http://scikit-learn.org/stable/modules/tree.html) of a decision tree on the IRIS data set (click on image to enlarge).
+If you do a web search for "visualizing decision trees" you will quickly find a visualization provided by the awesome scikit folks themselves: [sklearn.tree.export_graphviz](http://scikit-learn.org/stable/modules/generated/sklearn.tree.export_graphviz.html).  For example, here is [their visualization](http://scikit-learn.org/stable/modules/tree.html) of a decision tree on the [IRIS](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_iris.html#sklearn.datasets.load_iris) data set (click on image to enlarge).
 
 [<img src="images/iris-scikit.png" width="60%">](images/iris.png)
 
-This image does a good job of representing the tree structure, but we have a few quibbles.  The colors are the best and it's not immediately obvious why some of the nodes are colored and some aren't.  If the colors represent predicted class for this classifier, one would think just the leaves would be colored because only leaves have predictions.  Including the gini coefficient costs space and doesn't really help the beginners. The count of samples of the  various target classes in each node is very useful, though, a histogram would be even better. A target class color legend would be nice.  Finally, using true and false as the edges isn't as clear as, say, labels \< and >=.
+This image does a good job of representing the tree structure, but we have a few quibbles.  The colors aren't the best and it's not immediately obvious why some of the nodes are colored and some aren't.  If the colors represent predicted class for this classifier, one would think just the leaves would be colored because only leaves have predictions.  Including the gini coefficient costs space and doesn't really help the beginners. The count of samples of the  various target classes in each node is very useful, though, a histogram would be even better. A target class color legend would be nice.  Finally, using true and false as the edge labels isn't as clear as, say, labels \< and >=.
 
-The same mechanism works for decision tree regressors. For example, here is a visualization using the BOSTON data set (click to enlarge image):
+The same mechanism works for decision tree regressors. For example, here is a visualization using the [BOSTON](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_boston.html) data set (click to enlarge image):
 
 [<img src="images/boston-scikit.png" width="70%">](images/boston-scikit.png)
 
@@ -23,7 +45,7 @@ If you dig really hard, you will find that SAS and IBM provide (non-Python-based
 	
 [<img src="images/sas-tree.png" width="40%">](images/sas-tree.png)
 
-The histogram at each node is a nice touch.  Here's an example visualization from [IBM's Watson analytics](https://www.ibm.com/support/knowledgecenter/en/SS4QC9/com.ibm.solutions.wa_an_overview.2.0.0.doc/wa_discover_viz_expl_insigths_dec_tree.html) that appears to be on the TITANIC data set:
+The histogram at each node is a nice touch.  Here's an example visualization from [IBM's Watson analytics](https://www.ibm.com/support/knowledgecenter/en/SS4QC9/com.ibm.solutions.wa_an_overview.2.0.0.doc/wa_discover_viz_expl_insigths_dec_tree.html) that appears to be on the [TITANIC](https://www.kaggle.com/c/titanic/data) data set:
 
 [<img src="images/ibm-tree.png" width="50%">](images/ibm-tree.png)
 
@@ -48,9 +70,13 @@ IRIS:
 
 [<img src="images/iris-TD-5.png" width="75%">](images/iris-TD-5.png)
 
-KNOWLEDGE
+[USER KNOWLEDGE](https://archive.ics.uci.edu/ml/datasets/User+Knowledge+Modeling)
 	
-[<img src="images/class-demo.png" width="75%">](images/class-demo.png)
+[<img src="images/knowledge-TD-4.png" width="95%">](images/knowledge-TD-4.png)
+
+when there are too many classes and starts to break down and so we set the limit at 10. [DIGITS](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_digits.html#sklearn.datasets.load_digits)
+
+[<img src="images/digits-TD-2.png" width="65%">](images/digits-TD-2.png)
 
 <subsection title="Regressor decision trees">
 
@@ -62,11 +88,53 @@ KNOWLEDGE
 
 	[<img src="images/boston-TD-3.png" width="75%">](images/boston-TD-3.png)
 
-	DIABETES
+<section title="Visualizing tree interpreter for single instance">
+
+	KNOWLEDGE
+	
+	[<img src="images/class-demo.png" width="75%">](images/class-demo.png)
+
+	[DIABETES](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_diabetes.html#sklearn.datasets.load_diabetes)
 
 	[<img src="images/diabetes-TD-3-X.png" width="75%">](images/diabetes-TD-3-X.png)
 
+<section title="Left-to-right layout">
+	
+	
+	<section title="Code sample">
+		
+```
+regr = tree.DecisionTreeRegressor(max_depth=max_depth)
+boston = load_boston()
+regr = regr.fit(boston.data, boston.target)
+```
+
+```
+st = dtreeviz(regr, boston.data, boston.target, target_name='price',
+              feature_names=boston.feature_names)
+```
+
+```
+g = graphviz.Source(st, format='pdf')
+g.render(directory=".", filename="boston.pdf", view=False, cleanup=True)
+```
+
+```
+g = graphviz.Source(st, format='pdf')
+g.view()
+```
+
+```
+X = boston.data[np.random.randint(0, len(boston.data)),:]
+
+st = dtreeviz(regr, boston.data, boston.target, target_name='price',
+              feature_names=boston.feature_names,
+              X=X)
+```
+
 <section title="Our implementation">
+	
+	shadow tree
 	
 	graphviz/dot
 
@@ -76,4 +144,4 @@ KNOWLEDGE
 
 	then must parse svg to get size
 
-	future: bottom-justify histograms in classifier trees. some wedge labels overlap with axis.
+	future: bottom-justify histograms in classifier trees. some wedge labels overlap with axis. thicken incoming edges for nodes with lots of samples.
