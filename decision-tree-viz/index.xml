@@ -18,10 +18,16 @@ Terence has reached a point in his book on [machine learning book](https://mlboo
 		<td>[<img src="images/icons/knowledge-LR-3-icon.png">](images/knowledge-LR-3.png)
 	<tr>
 		<td>[<img src="images/icons/digits-LR-3-icon.png">](images/digits-LR-3.png)
-		<td>[<img src="images/icons/diabetes-TD-3-X-icon.png">](images/diabetes-TD-3-X.png)		
+		<td>[<img src="images/icons/diabetes-TD-3-X-icon.png">](images/diabetes-TD-3-X.png)	
 	<tr>
 		<td>[<img src="images/icons/boston-TD-3-X-icon.png">](images/boston-TD-3-X.png)
 		<td>[<img src="images/icons/sweets-TD-3-X-icon.png">](images/sweets-TD-3-X.png)
+			<tr>
+				<td>[<img src="images/icons/knowledge-TD-4-simple-icon.png">](images/knowledge-TD-4-simple.png)
+				<td>[<img src="images/icons/diabetes-TD-4-simple-icon.png">](images/diabetes-TD-4-simple.png)
+
+
+
 </table>	
 
 Sample code.
