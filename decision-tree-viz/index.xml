@@ -65,8 +65,16 @@ Unfortunately, that visualization is hardcoded to a specific data set and is not
 
 <section title="Our decision tree visualizations">
 
+decision trees carve up the feature space, looking for groups of observations (feature vectors) together that have similar (regression) or the same (classification) target values. Predictions for unknown observations are derived from the
+	
+While the implementation is virtually identical for both classifier and regressor decision trees, the way we interpret them is very different so our visualizations are clearly different for the two cases.
+
+What's important?  Variable name and split point for decision nodes and  prediction, purity, and number of samples for leaves.
+
 	
 <subsection title="Classifier decision trees">
+	
+
 
 	started with simple
 	
@@ -80,11 +88,14 @@ IRIS:
 	
 [<img src="images/knowledge-TD-4.png" width="95%">](images/knowledge-TD-4.png)
 
-when there are too many classes and starts to break down and so we set the limit at 10. [DIGITS](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_digits.html#sklearn.datasets.load_digits)
+when there are too many classes and starts to break down and so we set the limit at 10.
+ [DIGITS](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_digits.html#sklearn.datasets.load_digits)
 
 [<img src="images/digits-TD-2.png" width="65%">](images/digits-TD-2.png)
 
 <subsection title="Regressor decision trees">
+
+What's important? leaves:  prediction, purity, sample size as before but we need a new visualization other than pie chart. For decision nodes, we need variable name and split point.
 
 	started with simple
 	
@@ -151,3 +162,17 @@ st = dtreeviz(regr, boston.data, boston.target, target_name='price',
 	then must parse svg to get size
 
 	future: bottom-justify histograms in classifier trees. some wedge labels overlap with axis. thicken incoming edges for nodes with lots of samples.
+	
+<section title="What we tried and rejected">
+
+classifier decision nodes
+
+	<img src="images/kde.png" width="50%">
+	
+	<img src="images/bubble.png" width="70%">
+
+regression leaf nodes		
+
+	<img src="images/dual-leaf.png" width="15%">
+		
+	<img src="images/non-strip-plot.png" width="30%">
