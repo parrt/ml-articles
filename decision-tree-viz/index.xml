@@ -8,9 +8,12 @@ Terence has reached a point in his book on [machine learning book](https://mlboo
 
 <section title="Gallery of decision tree visualizations">
 	
-[full gallery](https://github.com/parrt/animl/tree/master/testing/samples)
+[full gallery](https://github.com/parrt/animl/tree/master/testing/samples) 
+and [code to generate all samples](https://github.com/parrt/animl/blob/master/testing/gen_samples.py)
 
 <table>
+	<tr>
+		<th width="50%"><th width="50%">
 	<tr>
 		<td>[<img src="images/icons/wine-TD-2-icon.png" width="100%">](images/wine-TD-2.png)
 		<td>[<img src="images/icons/breast_cancer-LR-3-icon.png" width="100%">](images/breast_cancer-LR-3.png)	<tr>
@@ -35,7 +38,7 @@ Sample code.
 
 <section title="Current state-of-the-art visualizations">
 	
-If you do a web search for "visualizing decision trees" you will quickly find a visualization provided by the awesome scikit folks themselves: [sklearn.tree.export_graphviz](http://scikit-learn.org/stable/modules/generated/sklearn.tree.export_graphviz.html).  For example, here is [their visualization](http://scikit-learn.org/stable/modules/tree.html) of a decision tree on the [IRIS](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_iris.html#sklearn.datasets.load_iris) data set (click on image to enlarge).
+If you do a web search for "visualizing decision trees" you will quickly find a visualization for **Python** provided by the awesome scikit folks themselves: [sklearn.tree.export_graphviz](http://scikit-learn.org/stable/modules/generated/sklearn.tree.export_graphviz.html).  For example, here is [their visualization](http://scikit-learn.org/stable/modules/tree.html) of a decision tree on the [IRIS](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_iris.html#sklearn.datasets.load_iris) data set (click on image to enlarge).
 
 [<img src="images/iris-scikit.png" width="60%">](images/iris.png)
 
@@ -47,7 +50,11 @@ The same mechanism works for decision tree regressors. For example, here is a vi
 
 In this image, it's not immediately clear what the use of color implies, but after studying the image, darker images indicate higher predicted target values.
 
-If you dig really hard, you will find that SAS and IBM provide (non-Python-based) decision tree visualizations.  For example, the visualization from SAS includes some interesting details:
+**R** programmers also have access to a package for [visualizing decision trees](http://blog.revolutionanalytics.com/2013/06/plotting-classification-and-regression-trees-with-plotrpart.html), which gives similar results but with nice edge labels:
+
+[<img src="images/R-tree.png" width="40%">](images/R-tree.png)
+
+If you dig really hard, you will find that **SAS** and **IBM** provide (non-Python-based) decision tree visualizations.  For example, the visualization from SAS includes some interesting details:
 	
 [<img src="images/sas-tree.png" width="40%">](images/sas-tree.png)
 
@@ -65,6 +72,12 @@ Unfortunately, that visualization is hardcoded to a specific data set and is not
 
 <section title="Our decision tree visualizations">
 
+	*How are decision trees constructed:* The algorithm tries to find a sequence of feature splits such that very different target values go on each side of split but within each side, the target values are very similar. For regression, “similar” translates to low variance of targets in each left and right buckets of splits. For classification, “similar” means that most of the targets in each bucket are of single class.
+
+	*How are predictions made for new observation from the constructed decision tree:* We sequentially map the path of new observation into either left or right side of splits based in which side do feature values fall in each non-leaf node.
+
+	*What do we want to visualize in a decision tree:* We want to see which individual feature has been split apart in each  non-leaf node. What is the distribution of target variables going both in left and right buckets at each node. What are the final predictions at each leaf node. Sometimes, it is also important to realize which particular features for a specific observation lead decision tree to predict whatever it is predicting for that observation, i.e. prediction path of an individual observation. (edited)
+	
 decision trees carve up the feature space, looking for groups of observations (feature vectors) together that have similar (regression) or the same (classification) target values. Predictions for unknown observations are derived from the
 	
 While the implementation is virtually identical for both classifier and regressor decision trees, the way we interpret them is very different so our visualizations are clearly different for the two cases.
@@ -99,7 +112,7 @@ What's important? leaves:  prediction, purity, sample size as before but we need
 
 	started with simple
 	
-	[<img src="images/boston-TD-4-simple.png" width="95%">](images/boston-TD-4-simple.png)
+	[<img src="images/boston-TD-4-simple.png" width="100%">](images/boston-TD-4-simple.png)
 
 	BOSTON
 
