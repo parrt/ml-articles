@@ -72,18 +72,34 @@ Unfortunately, that visualization is hardcoded to a specific data set and is not
 
 <section title="Our decision tree visualizations">
 
-	*How are decision trees constructed:* The algorithm tries to find a sequence of feature splits such that very different target values go on each side of split but within each side, the target values are very similar. For regression, “similar” translates to low variance of targets in each left and right buckets of splits. For classification, “similar” means that most of the targets in each bucket are of single class.
+We assume you're familiar with at least the basic functionality of decision trees if you're interested in visualizing them, but let's start with a brief summary so that we're all using the same terminology.  A decision tree is a machine learning model based upon binary trees, trees with at most a left and right child.  A decision tree learns the relationship between feature vectors $\vec{x}$ and target values $y$ (in a training set) by examining and condensing training data into a binary tree of interior decision nodes and leaf prediction nodes.  
+
+Each leaf in the decision tree is responsible for making a specific prediction.  If this is a regression tree, the prediction is a value in the target space, such as price.  If this is a classifier tree, the prediction is an integer indicating the predicted target class, such as cancer or not-cancer. A decision tree carves up the feature space into groups of feature vectors that share similar target values and each leaf represents one of these groups.
+ For regression, "similar" means a low variance between target values and, for classification, "similar" means that most or all targets are of a single class.
+
+Any path from the root of the decision tree to a specific $y$ leaf predictor passes through a series of (internal) decision nodes. Each decision node compares a single feature's value in $\vec{x}$, $x_i$, with a specific \first{split point} value learned during training. For example, to predict apartment rent price, a decision node would test features such as the number of bedrooms or number of bathrooms. The feature itself and the split point within that feature space are chosen during training to split the observations into left and right buckets (subsets). The left bucket has observations whose $x_i$ feature values are all less than the split point and the right bucket has observations whose $x_i$ is greater than the split point.  The goal is to have all observations in a bucket to have similar target values.
+
+For an unknown $\vec{x}$, we "run $\vec{x}$ down the tree," starting at the root of the decision tree and stopping at a leaf. The
+
+ set of interior nodes that$<$ and $<=$
+
+consisting of a list of observations, $(\vec{x}, y)$ pairs, into a tree model. 
+
+ trained from data carves up the feature space, looking for groups of observations (feature vectors) that have similar (regression) or the same (classification) target values. Predictions for unknown observations are derived from the
+
+While the implementation is virtually identical for both classifier and regressor decision trees, the way we interpret them is very different so our visualizations are distinct for the two cases.
+
+	*How are decision trees constructed:* The algorithm tries to find a sequence of feature splits such that very different target values go on each side of split but within each side, the target values are very similar. For regression, "similar" translates to low variance of targets in each left and right buckets of splits. For classification, "similar" means that most of the targets in each bucket are of single class.
 
 	*How are predictions made for new observation from the constructed decision tree:* We sequentially map the path of new observation into either left or right side of splits based in which side do feature values fall in each non-leaf node.
 
 	*What do we want to visualize in a decision tree:* We want to see which individual feature has been split apart in each  non-leaf node. What is the distribution of target variables going both in left and right buckets at each node. What are the final predictions at each leaf node. Sometimes, it is also important to realize which particular features for a specific observation lead decision tree to predict whatever it is predicting for that observation, i.e. prediction path of an individual observation. (edited)
 	
-decision trees carve up the feature space, looking for groups of observations (feature vectors) together that have similar (regression) or the same (classification) target values. Predictions for unknown observations are derived from the
+
 	
-While the implementation is virtually identical for both classifier and regressor decision trees, the way we interpret them is very different so our visualizations are clearly different for the two cases.
+
 
 What's important?  Variable name and split point for decision nodes and  prediction, purity, and number of samples for leaves.
-
 	
 <subsection title="Classifier decision trees">
 	
@@ -106,9 +122,11 @@ when there are too many classes and starts to break down and so we set the limit
 
 [<img src="images/digits-TD-2.png" width="65%">](images/digits-TD-2.png)
 
+Subtleties: height of bar graphs, size of leaves, x/y lim as start/stop, hand-picked colors. why pie chart for classification. label edges just once.  legend. thin edges and other lines are hairlines.  consistent y axis for regression trees. alpha set so density becomes darker.  show the split point line and the means of the two halves.  strip plot for relief of regression note shows distribution, mean, size (more/fewer dots) at a glance thanks to strip plot.
+
 <subsection title="Regressor decision trees">
 
-What's important? leaves:  prediction, purity, sample size as before but we need a new visualization other than pie chart. For decision nodes, we need variable name and split point.
+What's important? leaves:  prediction, purity, sample size as before but we need a new visualization other than pie chart. For decision nodes, we need variable name and split point. we also want to see what the distribution is.
 
 	started with simple
 	
@@ -120,6 +138,8 @@ What's important? leaves:  prediction, purity, sample size as before but we need
 
 <section title="Visualizing tree interpreter for single instance">
 
+subtleties: highlight the edges of paths taken, highlight the decision nodes and leaves. highlight the features used to make the decision.  if too many features, then subset to just those features used. difference depending on whether it's left to right or top down. orange wedge showing left/right of split point.
+	
 	KNOWLEDGE
 	
 	[<img src="images/class-demo.png" width="75%">](images/class-demo.png)
