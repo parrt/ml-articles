@@ -182,6 +182,8 @@ st = dtreeviz(regr, boston.data, boston.target, target_name='price',
               X=X)
 ```
 
+for classifier we need the class names too.
+
 <section title="Our implementation">
 	
 	shadow tree
