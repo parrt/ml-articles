@@ -4,30 +4,59 @@
 
 Decision trees are the fundamental building block of [gradient boosting machines](http://explained.ai/gradient-boosting/index.html) and [Random Forests](https://en.wikipedia.org/wiki/Random_forest)\symbol{tm}, probably the two most popular machine learning models for structured data.  Visualizing decision trees is a tremendous aid when learning these models and later, in practice, when interpreting models.  Unfortunately, current visualization packages are rudimentary and not immediately helpful to the novice. We also couldn't find a package that visualized a specific $\vec{x}$ feature vector being run down the decision tree to the leaf providing the target $\vec{y}$.
 
-Terence has reached a point in his book on [machine learning book](https://mlbook.explained.ai/) (written with [Jeremy Howard](http://www.fast.ai/about/#jeremy)) where he needs to describe lots of decision trees. So, he and former University of San Francisco MS in Data Science](https://www.usfca.edu/arts-sciences/graduate-programs/data-science) student Prince Grover teamed up to create a general package for [scikit-learn](https://github.com/scikit-learn/scikit-learn) decision tree visualization and model interpretation. This article demonstrates the results of this work, details the specific choices we made for visualization, and outlines the wild mashup of tools and techniques used in the implementation.
+Terence has reached a point in his book on [machine learning book](https://mlbook.explained.ai/) (written with [Jeremy Howard](http://www.fast.ai/about/#jeremy)) where he needs to describe lots of decision trees. So, he and former [University of San Francisco MS in Data Science](https://www.usfca.edu/arts-sciences/graduate-programs/data-science) student Prince Grover teamed up to create a general package for [scikit-learn](https://github.com/scikit-learn/scikit-learn) decision tree visualization and model interpretation. This article demonstrates the results of this work, details the specific choices we made for visualization, and outlines the mashup of tools and techniques used in the implementation.
+
+We assume you're familiar with the basic mechanism of decision trees if you're interested in visualizing them, but let's start with a brief summary so that we're all using the same terminology.
+
+<section title="Decision tree review">
+
+A decision tree is a machine learning model based upon binary trees, trees with at most a left and right child.  A decision tree learns the relationship between feature vectors $\vec{x}$ and target values $y$ (in a training set) by examining and condensing training data into a binary tree of interior decision nodes and leaf prediction nodes.  
+
+Each leaf in the decision tree is responsible for making a specific prediction.  If this is a regression tree, the prediction is a value in the target space, such as price.  If this is a classifier tree, the prediction is an integer indicating the predicted target class, such as cancer or not-cancer. A decision tree carves up the feature space into groups of feature vectors that share similar target values and each leaf represents one of these groups.  For regression, "similar" means a low variance between target values and, for classification, "similar" means that most or all targets are of a single class.
+
+Any path from the root of the decision tree to a specific $y$ leaf predictor passes through a series of (internal) decision nodes. Each decision node compares a single feature's value in $\vec{x}$, $x_i$, with a specific \first{split point} value learned during training. For example, in a model predicting apartment rent price, decision nodes would test features such as the number of bedrooms and number of bathrooms.  In a classifier with discrete target values, decision node still compare numeric *feature* values. Most decision tree implementation's assume that all features are numeric, with all categorical variables [one hot encoded](https://machinelearningmastery.com/how-to-one-hot-encode-sequence-data-in-python/) or [binned](https://www.analyticsvidhya.com/blog/2015/11/easy-methods-deal-categorical-variables-predictive-modeling/) or [label encoded](http://forums.fast.ai/t/to-label-encode-or-one-hot-encode/6057).
+
+To train a decision node, the model examines a subset of the training observations (or the full training set at the root). The node's feature and split point within that feature space are chosen during training to split the observations into left and right buckets (subsets). The left bucket has observations whose $x_i$ feature values are all less than the split point and the right bucket has observations whose $x_i$ is greater than the split point.  The goal is to pick a feature and split point in that feature space so that, within the left and right buckets, the observations have similar target values. (This selection process is generally done through exhaustive comparison of features and  feature values.) Tree construction proceeds recursively by creating decision nodes for the left bucket and the right bucket.  Given a bucket with suitably similar target values, the model creates a leaf node rather than a decision node. The leaf predicts the mean (regression) or most common target (classification).
 
 <section title="Gallery of decision tree visualizations">
 	
+Before digging into the previous state-of-the-art visualizations, we'd like to show you what's possible. This section highlights some samples visualizations we built from scikit regression and classification decision trees on classic and other data sets. You can also check out the	
 [full gallery](https://github.com/parrt/animl/tree/master/testing/samples) 
-and [code to generate all samples](https://github.com/parrt/animl/blob/master/testing/gen_samples.py)
+and [code to generate all samples](https://github.com/parrt/animl/blob/master/testing/gen_samples.py).
 
 <table>
 	<tr>
 		<th width="50%"><th width="50%">
 	<tr>
+		<td>[WINE](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_wine.html#sklearn.datasets.load_wine) 3-class top-down orientation
+		<td>[BREAST CANCER](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_breast_cancer.html#sklearn.datasets.load_breast_cancer) 2-class right-to-left
+	<tr>
 		<td>[<img src="images/icons/wine-TD-2-icon.png" width="100%">](images/wine-TD-2.png)
-		<td>[<img src="images/icons/breast_cancer-LR-3-icon.png" width="100%">](images/breast_cancer-LR-3.png)	<tr>
+		<td>[<img src="images/icons/breast_cancer-LR-3-icon.png" width="100%">](images/breast_cancer-LR-3.png)
+	<tr>
+		<td>[IRIS](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_iris.html#sklearn.datasets.load_iris) 3-class with sample X
+		<td>[USER KNOWLEDGE RATING](https://archive.ics.uci.edu/ml/datasets/User+Knowledge+Modeling) 4-class
+	<tr>
 		<td>[<img src="images/icons/iris-TD-3-X-icon.png" width="100%">](images/iris-TD-3-X.png)
 		<td>[<img src="images/icons/knowledge-LR-3-icon.png" width="100%">](images/knowledge-LR-3.png)
+	<tr>
+		<td>[DIGITS](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_digits.html#sklearn.datasets.load_digits) 10-class 
+		<td>[DIABETES](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_diabetes.html) with sample X
 	<tr>
 		<td>[<img src="images/icons/digits-LR-3-icon.png" width="100%">](images/digits-LR-3.png)
 		<td>[<img src="images/icons/diabetes-TD-3-X-icon.png" width="100%">](images/diabetes-TD-3-X.png)	
 	<tr>
+		<td>[BOSTON](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_boston.html) with sample X
+		<td>[SWEETS](http://mldata.org/repository/data/viewslug/ratings-of-sweets-sweetrs/) with sample X
+	<tr>
 		<td>[<img src="images/icons/boston-TD-3-X-icon.png" width="100%">](images/boston-TD-3-X.png)
 		<td>[<img src="images/icons/sweets-TD-3-X-icon.png" width="100%">](images/sweets-TD-3-X.png)
-			<tr>
-				<td>[<img src="images/icons/knowledge-TD-4-simple-icon.png" width="100%">](images/knowledge-TD-4-simple.png)
-				<td>[<img src="images/icons/diabetes-TD-4-simple-icon.png" width="100%">](images/diabetes-TD-4-simple.png)
+	<tr>
+		<td>USER KNOWLEDGE RATING 4-class non-fancy
+		<td>DIABETES non-fancy
+	<tr>
+		<td>[<img src="images/icons/knowledge-TD-4-simple-icon.png" width="100%">](images/knowledge-TD-4-simple.png)
+		<td>[<img src="images/icons/diabetes-TD-4-simple-icon.png" width="100%">](images/diabetes-TD-4-simple.png)
 
 
 
@@ -70,26 +99,12 @@ All of these visualizations are useful, but we weren't truly inspired until we s
 
 Unfortunately, that visualization is hardcoded to a specific data set and is not a general library. It has two unique characteristics, though, aside from the animation: the leaf size is proportional to the number of samples in that leaf and the split point for decision nodes is shown visually in the histogram/distribution.
 
+
 <section title="Our decision tree visualizations">
-
-We assume you're familiar with at least the basic functionality of decision trees if you're interested in visualizing them, but let's start with a brief summary so that we're all using the same terminology.  A decision tree is a machine learning model based upon binary trees, trees with at most a left and right child.  A decision tree learns the relationship between feature vectors $\vec{x}$ and target values $y$ (in a training set) by examining and condensing training data into a binary tree of interior decision nodes and leaf prediction nodes.  
-
-Each leaf in the decision tree is responsible for making a specific prediction.  If this is a regression tree, the prediction is a value in the target space, such as price.  If this is a classifier tree, the prediction is an integer indicating the predicted target class, such as cancer or not-cancer. A decision tree carves up the feature space into groups of feature vectors that share similar target values and each leaf represents one of these groups.
- For regression, "similar" means a low variance between target values and, for classification, "similar" means that most or all targets are of a single class.
-
-Any path from the root of the decision tree to a specific $y$ leaf predictor passes through a series of (internal) decision nodes. Each decision node compares a single feature's value in $\vec{x}$, $x_i$, with a specific \first{split point} value learned during training. For example, to predict apartment rent price, a decision node would test features such as the number of bedrooms or number of bathrooms. The feature itself and the split point within that feature space are chosen during training to split the observations into left and right buckets (subsets). The left bucket has observations whose $x_i$ feature values are all less than the split point and the right bucket has observations whose $x_i$ is greater than the split point.  The goal is to have all observations in a bucket to have similar target values.
-
-For an unknown $\vec{x}$, we "run $\vec{x}$ down the tree," starting at the root of the decision tree and stopping at a leaf. The
-
- set of interior nodes that$<$ and $<=$
-
-consisting of a list of observations, $(\vec{x}, y)$ pairs, into a tree model. 
-
- trained from data carves up the feature space, looking for groups of observations (feature vectors) that have similar (regression) or the same (classification) target values. Predictions for unknown observations are derived from the
 
 While the implementation is virtually identical for both classifier and regressor decision trees, the way we interpret them is very different so our visualizations are distinct for the two cases.
 
-	*How are decision trees constructed:* The algorithm tries to find a sequence of feature splits such that very different target values go on each side of split but within each side, the target values are very similar. For regression, "similar" translates to low variance of targets in each left and right buckets of splits. For classification, "similar" means that most of the targets in each bucket are of single class.
+*How are decision trees constructed:* The algorithm tries to find a sequence of feature splits such that very different target values go on each side of split but within each side, the target values are very similar. For regression, "similar" translates to low variance of targets in each left and right buckets of splits. For classification, "similar" means that most of the targets in each bucket are of single class.
 
 	*How are predictions made for new observation from the constructed decision tree:* We sequentially map the path of new observation into either left or right side of splits based in which side do feature values fall in each non-leaf node.
 
