@@ -48,20 +48,20 @@ and [code to generate all samples](https://github.com/parrt/animl/blob/master/te
 		<td>[<img src="images/icons/wine-TD-2-icon.png" width="100%">](images/wine-TD-2.png)
 		<td>[<img src="images/icons/breast_cancer-LR-3-icon.png" width="100%">](images/breast_cancer-LR-3.png)
 	<tr>
-		<td>[IRIS](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_iris.html#sklearn.datasets.load_iris) 3-class with sample X
+		<td>[IRIS](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_iris.html#sklearn.datasets.load_iris) 3-class with sample $\vec{x}$
 		<td>[USER KNOWLEDGE RATING](https://archive.ics.uci.edu/ml/datasets/User+Knowledge+Modeling) 4-class
 	<tr>
 		<td>[<img src="images/icons/iris-TD-3-X-icon.png" width="100%">](images/iris-TD-3-X.png)
 		<td>[<img src="images/icons/knowledge-LR-3-icon.png" width="100%">](images/knowledge-LR-3.png)
 	<tr>
 		<td>[DIGITS](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_digits.html#sklearn.datasets.load_digits) 10-class 
-		<td>[DIABETES](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_diabetes.html) with sample X
+		<td>[DIABETES](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_diabetes.html) with sample $\vec{x}$
 	<tr>
 		<td>[<img src="images/icons/digits-LR-3-icon.png" width="100%">](images/digits-LR-3.png)
 		<td>[<img src="images/icons/diabetes-TD-3-X-icon.png" width="100%">](images/diabetes-TD-3-X.png)	
 	<tr>
-		<td>[BOSTON](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_boston.html) with sample X
-		<td>[SWEETS](http://mldata.org/repository/data/viewslug/ratings-of-sweets-sweetrs/) with sample X
+		<td>[BOSTON](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_boston.html) with sample $\vec{x}$
+		<td>[SWEETS](http://mldata.org/repository/data/viewslug/ratings-of-sweets-sweetrs/) with sample $\vec{x}$
 	<tr>
 		<td>[<img src="images/icons/boston-TD-3-X-icon.png" width="100%">](images/boston-TD-3-X.png)
 		<td>[<img src="images/icons/sweets-TD-3-X-icon.png" width="100%">](images/sweets-TD-3-X.png)
@@ -174,71 +174,65 @@ While that visualization is a hardcoded animation for educational purposes, it p
 	
 Other than the educational animation in [A visual introduction to machine learning](http://www.r2d3.us/visual-intro-to-machine-learning-part-1/), we couldn't find a decision tree visualization package that illustrates how the feature space is split up at  decision nodes.  This is the critical operation performed during decision tree model training and is what newcomers should focus on, so we'll start by examining decision node visualizations for both classification and regression trees. 
 
+<subsection title="Visualizing feature versus target space">
+
 Training of a decision node chooses feature $x_i$ and split value within $x_i$ feature space to group similar target values into two buckets.  Unless decision nodes show feature space in some way, the viewer cannot see how and why training arrived at the split value. To highlight how decision nodes carve up the feature space, we trained a regressor and classifier with a single feature ([code to generate images](https://github.com/parrt/animl/blob/master/testing/paper_examples.py)).  Here's a regressor decision tree trained on BOSTON data, with node ID labeling turned on for discussion purposes here:
 
 [<img src="images/boston-TD-AGE.png" width="100%">](images/boston-TD-AGE.png)
 
-All decision nodes are restricted to the single AGE feature and our visualization forces the same X axis range for all nodes testing the same feature, leaving blank regions rather than zooming in. As we descend through decision nodes, the sample AGE values are boxed into narrower and narrower regions.  Combining the AGE feature space (regions) from two siblings yields the parent's feature space. For example, combining the AGE regions in nodes 1 and 8, yield the node 0 feature space and combining the AGE regions from nodes 9 and 12 yields the node 8 future space.
+All decision nodes are restricted to the single AGE feature and our visualization forces the same X axis range for all nodes testing the same feature, leaving blank regions rather than zooming in. As we descend through decision nodes, the sample AGE values are boxed into narrower and narrower regions.  Combining the AGE feature space (regions) from two siblings yields the parent's feature space. For example, combining the AGE regions in nodes 1 and 8, yield the node 0 feature space and combining the AGE regions from nodes 9 and 12 yields the node 8 future space. The prediction leaves are not very pure and using a single variable leads to poor model, but it demonstrates how  decision trees carve up future space nicely.
 
- and, while prediction leaf nodes are not very pure,
-
-Here's a classifier tree trained on USER KNOWLEDGE data:
+While a decision tree implementation is virtually identical for both classifier and regressor decision trees, the way we interpret them is very different so our visualizations are distinct for the two cases.  For a regressor, showing feature space is best done with a scatterplot of feature versus target.  For classifier, the target is a category rather than a number and so we chose to illustrate feature space using histograms as an indicator of feature space distributions.  Here's a classifier tree trained USER KNOWLEDGE data, again with a single feature (called PEG) and with nodes labeled for discussion purposes:
 
 [<img src="images/knowledge-TD-PEG.png" width="100%">](images/knowledge-TD-PEG.png)
 
-	
-While the implementation is virtually identical for both classifier and regressor decision trees, the way we interpret them is very different so our visualizations are distinct for the two cases.
+Ignoring color, the histogram shows the PEG feature space distribution.  Adding color, gives us an indication of the relationship between feature space and target class. For example, in node 0, we can see that samples with `very_low` target class our clustered at the low end of PEG feature space and samples with `High` target class are clustered at the high-end. As with the regressor, the feature space of a left child is everything to the left of the parents split point in the same future space; similarly for the right child. The X axis range is the same for all PEG decision nodes and lower decision nodes are clearly boxing in narrower regions that are more and more pure.
 
-<subsection title="Classifier decision trees">
-	started with simple
-	
-	[<img src="images/iris-TD-4-simple.png" width="55%">](images/iris-TD-4-simple.png)
+We use a stacked histogram so that overlap is clear in the feature space between samples with different target classes.  Note that the height in the Y axis of the stacked histogram is the total number of samples from all classes; multiple class counts are stacked on top of each other. 
 
-IRIS:
-
-[<img src="images/iris-TD-5.png" width="75%">](images/iris-TD-5.png)
-
-[USER KNOWLEDGE](https://archive.ics.uci.edu/ml/datasets/User+Knowledge+Modeling)
-	
-[<img src="images/knowledge-TD-4.png" width="95%">](images/knowledge-TD-4.png)
-
-when there are too many classes and starts to break down and so we set the limit at 10.
- [DIGITS](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_digits.html#sklearn.datasets.load_digits)
+When there are more than four or five classes, the stacked histograms are difficult to read and so we recommend setting the histogram type parameter to `bar` not `barstacked` in this case.  With high cardinality target categories, the overlapping distributions are harder to visualize and things break down, so we set a limit of 10 target classes. Here's a shallow tree example using the 10-class DIGITS data set using non-stacked histograms:
 
 [<img src="images/digits-TD-2.png" width="65%">](images/digits-TD-2.png)
 
 Subtleties: height of bar graphs, size of leaves, x/y lim as start/stop, hand-picked colors. why pie chart for classification. label edges just once.  legend. thin edges and other lines are hairlines.  consistent y axis for regression trees. alpha set so density becomes darker.  show the split point line and the means of the two halves.  strip plot for relief of regression note shows distribution, mean, size (more/fewer dots) at a glance thanks to strip plot.
-
-<subsection title="Regressor decision trees">
-
-What's important? leaves:  prediction, purity, sample size as before but we need a new visualization other than pie chart. For decision nodes, we need variable name and split point. we also want to see what the distribution is.
-
-	started with simple
-	
-	[<img src="images/boston-TD-4-simple.png" width="100%">](images/boston-TD-4-simple.png)
-
-	BOSTON
-
-	[<img src="images/boston-TD-3.png" width="75%">](images/boston-TD-3.png)
-
-<section title="Visualizing tree interpreter for single instance">
-
 subtleties: highlight the edges of paths taken, highlight the decision nodes and leaves. highlight the features used to make the decision.  if too many features, then subset to just those features used. difference depending on whether it's left to right or top down. orange wedge showing left/right of split point. The X axis feature space dimension for the same feature is using the same xlim so you can see how the nodes split things up; we don't zoom in. Same for price or Y axis.  proportional size of nodes is nonlinear log(sqrt(x)).
 
-Our stacked histogram showing the total not the max for each bar.
+<subsection title="Visualizing tree interpreter for single instance">
+
 	
 	KNOWLEDGE
 	
-	[<img src="images/class-demo.png" width="75%">](images/class-demo.png)
+	[<img src="images/knowledge-TD-3-X.png" width="100%">](images/knowledge-TD-3-X.png)
 
 	[DIABETES](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_diabetes.html#sklearn.datasets.load_diabetes)
 
-	[<img src="images/diabetes-TD-3-X.png" width="75%">](images/diabetes-TD-3-X.png)
+	[<img src="images/diabetes-TD-3-X.png" width="100%">](images/diabetes-TD-3-X.png)
 
-<section title="Left-to-right layout">
+<subsection title="Left-to-right layout">
 	
+<table>
+	<tr>
+		<th width="50%"><th width="50%">
+	<tr>
+		<td>WINE
+		<td>DIABETES
+	<tr>
+		<td>[<img src="images/icons/wine-LR-3-icon.png" width="100%">](images/wine-LR-3.png)
+		<td>[<img src="images/icons/diabetes-LR-3-icon.png" width="100%">](images/diabetes-LR-3.png)
+	<tr>
+		<td>WINE with sample $\vec{x}$
+		<td>DIABETES with sample $\vec{x}$
+	<tr>
+		<td>[<img src="images/icons/wine-LR-2-X-icon.png" width="100%">](images/wine-LR-2-X.png)
+		<td>[<img src="images/icons/diabetes-LR-2-X-icon.png" width="100%">](images/diabetes-LR-2-X.png) 
+</table>
 	
-	<section title="Code sample">
+<subsection title="Simplified non-fancy layout">
+
+	[<img src="images/iris-TD-4-simple.png" width="55%">](images/iris-TD-4-simple.png)
+	[<img src="images/boston-TD-4-simple.png" width="100%">](images/boston-TD-4-simple.png)
+
+<section title="Code sample">
 		
 ```
 regr = tree.DecisionTreeRegressor(max_depth=max_depth)
