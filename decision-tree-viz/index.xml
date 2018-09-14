@@ -277,6 +277,8 @@ for classifier we need the class names too.
 classifier decision nodes
 
 	<img src="images/kde.png" width="50%">
+
+	<img src="images/kde-leaf.png" width="15%">
 	
 	<img src="images/bubble.png" width="70%">
 
