@@ -208,7 +208,7 @@ We use a pie chart for classifier leaves, despite their bad reputation.  For the
 
 Turning to regressor trees now, we make sure that the target (vertical) axis of all decision nodes is the same height and the same range to make comparing nodes easier. Regressor feature space (horizontal axis) is always the same width and the same range for a given feature.  We set a low alpha for all scatterplot dots so that increased target value density corresponds to darker color.  Horizontal dashed lines indicate the target mean for the left and right buckets; a vertical dashed line indicates the split point in feature space.
 
-<img src="images/boston-dec-node.png" width="35%">
+<img src="images/boston-dec-node.png" width="30%">
 
 
 Regressor leaves also show the same range vertically for the target space, but leaves are a bit taller than decision nodes so it's easier to identify nodes with high or low predictions. We use a strip plot rather than, say, a box plot because the strip plot shows the distribution explicitly and implicitly shows the number of samples by the number of dots. (We also write out the number of samples in text for leaves.) The leaf prediction is the distribution center of mass (mean) of the strip plot, which we highlight with a dashed line.
