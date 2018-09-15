@@ -70,9 +70,7 @@ and [code to generate all samples](https://github.com/parrt/animl/blob/master/te
 		<td>DIABETES non-fancy
 	<tr>
 		<td>[<img src="images/icons/knowledge-TD-4-simple-icon.png" width="100%">](images/knowledge-TD-4-simple.png)
-		<td>[<img src="images/icons/diabetes-TD-4-simple-icon.png" width="100%">](images/diabetes-TD-4-simple.png)
-
-
+		<td>[<img src="images/icons/boston-LR-5-X-simple-icon.png" width="100%">](images/boston-LR-5-X-simple.png)
 
 </table>	
 
@@ -168,25 +166,27 @@ This visualization has three unique characteristics over previous work, aside fr
 	<li>the leaf size is proportional to the number of samples in that leaf
 </ul>
 
-While that visualization is a hardcoded animation for educational purposes, it points us in the right direction.
+While that visualization is a hardcoded animation for educational purposes, it points in the right direction.
 
 <section title="Our decision tree visualizations">
 	
 Other than the educational animation in [A visual introduction to machine learning](http://www.r2d3.us/visual-intro-to-machine-learning-part-1/), we couldn't find a decision tree visualization package that illustrates how the feature space is split up at  decision nodes.  This is the critical operation performed during decision tree model training and is what newcomers should focus on, so we'll start by examining decision node visualizations for both classification and regression trees. 
 
-<subsection title="Visualizing feature versus target space">
+<subsection title="Visualizing feature-target space">
 
-Training of a decision node chooses feature $x_i$ and split value within $x_i$ feature space to group similar target values into two buckets.  Unless decision nodes show feature space in some way, the viewer cannot see how and why training arrived at the split value. To highlight how decision nodes carve up the feature space, we trained a regressor and classifier with a single feature ([code to generate images](https://github.com/parrt/animl/blob/master/testing/paper_examples.py)).  Here's a regressor decision tree trained on BOSTON data, with node ID labeling turned on for discussion purposes here:
+Training of a decision node chooses feature $x_i$ and split value within $x_i$ feature space to group similar target values into two buckets.  Just to be clear, training involves examining the relationship between features and target values. Unless decision nodes show feature-target space in some way, the viewer cannot see how and why training arrived at the split value. To highlight how decision nodes carve up the feature space, we trained a regressor and classifier with a single feature (here is the [code to generate images](https://github.com/parrt/animl/blob/master/testing/paper_examples.py)).  Here's a regressor decision tree trained on BOSTON data, with node ID labeling turned on for discussion purposes here:
 
 [<img src="images/boston-TD-AGE.png" width="100%">](images/boston-TD-AGE.png)
 
-All decision nodes are restricted to the single AGE feature and our visualization forces the same X axis range for all nodes testing the same feature, leaving blank regions rather than zooming in. As we descend through decision nodes, the sample AGE values are boxed into narrower and narrower regions.  Combining the AGE feature space (regions) from two siblings yields the parent's feature space. For example, combining the AGE regions in nodes 1 and 8, yield the node 0 feature space and combining the AGE regions from nodes 9 and 12 yields the node 8 future space. The prediction leaves are not very pure and using a single variable leads to poor model, but it demonstrates how  decision trees carve up future space nicely.
+describe wedge,  vertical and horizontal dashed lines
 
-While a decision tree implementation is virtually identical for both classifier and regressor decision trees, the way we interpret them is very different so our visualizations are distinct for the two cases.  For a regressor, showing feature space is best done with a scatterplot of feature versus target.  For classifier, the target is a category rather than a number and so we chose to illustrate feature space using histograms as an indicator of feature space distributions.  Here's a classifier tree trained USER KNOWLEDGE data, again with a single feature (called PEG) and with nodes labeled for discussion purposes:
+All decision nodes are restricted to the single AGE feature and please note that our visualization forces the same X axis range for all nodes testing the same feature, leaving blank regions rather than zooming in. As we descend through decision nodes, the sample AGE values are boxed into narrower and narrower regions.  Combining the AGE feature-target space (regions) from two siblings yields the parent's feature-target space. For example, combining the AGE regions in nodes 1 and 8, yields the node 0 feature-target space and combining the AGE regions from nodes 9 and 12 yields the node 8 feature-target space. The prediction leaves are not very pure and using a single variable leads to poor model, but it demonstrates how decision trees carve up feature space nicely.
+
+While a decision tree implementation is virtually identical for both classifier and regressor decision trees, the way we interpret them is very different so our visualizations are distinct for the two cases.  For a regressor, showing feature-target space is best done with a scatterplot of feature versus target.  For classifier, however, the target is a category rather than a number and so we chose to illustrate feature-target space using histograms as an indicator of feature space distributions.  Here's a classifier tree trained on the USER KNOWLEDGE data, again with a single feature (called PEG) and with nodes labeled for discussion purposes:
 
 [<img src="images/knowledge-TD-PEG.png" width="100%">](images/knowledge-TD-PEG.png)
 
-Ignoring color, the histogram shows the PEG feature space distribution.  Adding color, gives us an indication of the relationship between feature space and target class. For example, in node 0, we can see that samples with `very_low` target class our clustered at the low end of PEG feature space and samples with `High` target class are clustered at the high-end. As with the regressor, the feature space of a left child is everything to the left of the parents split point in the same future space; similarly for the right child. The X axis range is the same for all PEG decision nodes and lower decision nodes are clearly boxing in narrower regions that are more and more pure.
+Ignoring color, the histogram shows the PEG feature space distribution.  Adding color, gives us an indication of the relationship between feature space and target class (feature-target space). For example, in node 0, we can see that samples with `very_low` target class are clustered at the low end of PEG feature space and samples with `High` target class are clustered at the high-end. As with the regressor, the feature space of a left child is everything to the left of the parents split point in the same  feature space; similarly for the right child.  For example, combining the histograms of nodes 9 and 12 yields the histogram of node 8. We force the X axis range to be the same for all PEG decision nodes. In this way, lower decision nodes clearly box in narrower regions that are more and more pure.
 
 We use a stacked histogram so that overlap is clear in the feature space between samples with different target classes.  Note that the height in the Y axis of the stacked histogram is the total number of samples from all classes; multiple class counts are stacked on top of each other. 
 
@@ -194,12 +194,36 @@ When there are more than four or five classes, the stacked histograms are diffic
 
 [<img src="images/digits-TD-2.png" width="65%">](images/digits-TD-2.png)
 
-Subtleties: height of bar graphs, size of leaves, x/y lim as start/stop, hand-picked colors. why pie chart for classification. label edges just once.  legend. thin edges and other lines are hairlines.  consistent y axis for regression trees. alpha set so density becomes darker.  show the split point line and the means of the two halves.  strip plot for relief of regression note shows distribution, mean, size (more/fewer dots) at a glance thanks to strip plot.
-subtleties: highlight the edges of paths taken, highlight the decision nodes and leaves. highlight the features used to make the decision.  if too many features, then subset to just those features used. difference depending on whether it's left to right or top down. orange wedge showing left/right of split point. The X axis feature space dimension for the same feature is using the same xlim so you can see how the nodes split things up; we don't zoom in. Same for price or Y axis.  proportional size of nodes is nonlinear log(sqrt(x)).
+<subsection title="It's all about the details">
 
-<subsection title="Visualizing tree interpreter for single instance">
+Thus far we've skipped over many of the visual cues and details that we  obsessed over during construction of the library and so we hit the key elements here.
 
-orange wedge to the left or right of the black wedge, split value. gives visual cues of why the left or right child path was taken.  features used during decision-making are highlighted.  nodes in the path are highlighted with dashed boxes.
+Our classifier tree visualizations use node size to give visual cues about the number of samples associated with each node.  Histograms get proportionally shorter as the number of samples in the node decrease and leaf node diameters get smaller.  The feature space (horizontal axis) is always the same width and the same range for a given feature, which makes it much easier to compare the feature-target spaces of different nodes. The bars of all histograms are the same width in pixels.
+
+<img src="images/knowledge-dec-node.png" width="35%">
+
+We use a pie chart for classifier leaves, despite their bad reputation.  For the purpose of indicating purity, the viewer only needs an indication of whether there is a single strong majority category. The viewer does not need to see the exact relationship between elements of the pie chart, which is one key area where pie charts fail. The color of the pie chart majority slice gives the leaf prediction. 
+
+<img src="images/knowledge-leaf.png" width="8%">
+
+Turning to regressor trees now, we make sure that the target (vertical) axis of all decision nodes is the same height and the same range to make comparing nodes easier. Regressor feature space (horizontal axis) is always the same width and the same range for a given feature.  We set a low alpha for all scatterplot dots so that increased target value density corresponds to darker color.  Horizontal dashed lines indicate the target mean for the left and right buckets; a vertical dashed line indicates the split point in feature space.
+
+<img src="images/boston-dec-node.png" width="35%">
+
+
+Regressor leaves also show the same range vertically for the target space, but leaves are a bit taller than decision nodes so it's easier to identify nodes with high or low predictions. We use a strip plot rather than, say, a box plot because the strip plot shows the distribution explicitly and implicitly shows the number of samples by the number of dots. (We also write out the number of samples in text for leaves.) The leaf prediction is the distribution center of mass (mean) of the strip plot, which we highlight with a dashed line.
+
+<img src="images/boston-leaf.png" width="25%">
+
+
+
+There are a number of miscellaneous details that we think improve the quality of the diagrams. Classifiers include a legend and all colors were handpicked from colorblind safe palletes, one handpicked pallete per number of target categories (2 through 10).  We use a gray rather than black for text because it's easier on the eyes. Lines are hairlines and we draw outlines of bars in bar charts and slices in pie charts.
+
+<subsection title="Visualizing interpretation of a single observation">
+
+orange wedge to the left or right of the black wedge, split value. gives visual cues of why the left or right child path was taken.  features used during decision-making are highlighted.  nodes in the path are highlighted with dashed boxes.  edges are orange and thicker. feature vector displayed near the leaf predictor.
+
+subtleties: highlight the edges of paths taken, highlight the decision nodes and leaves. highlight the features used to make the decision.  if too many features, then subset to just those features used. difference depending on whether it's left to right or top down. orange wedge showing left/right of split point.
 	
 	KNOWLEDGE
 	
@@ -209,7 +233,7 @@ orange wedge to the left or right of the black wedge, split value. gives visual 
 
 	[<img src="images/icons/diabetes-TD-3-X-icon.png" width="100%">](images/diabetes-TD-3-X.png)
 
-<subsection title="Left-to-right layout">
+<subsection title="Left-to-right orientation">
 
 	Some users have a preference for left to right instead of top-down layout and sometimes the nature of the tree simply flows better left to right. Sample feature vectors can still be run down the tree with the left to right orientation. Here are some examples (click on the images to enlarge):
 	
