@@ -199,16 +199,19 @@ subtleties: highlight the edges of paths taken, highlight the decision nodes and
 
 <subsection title="Visualizing tree interpreter for single instance">
 
+orange wedge to the left or right of the black wedge, split value. gives visual cues of why the left or right child path was taken.  features used during decision-making are highlighted.  nodes in the path are highlighted with dashed boxes.
 	
 	KNOWLEDGE
 	
-	[<img src="images/knowledge-TD-3-X.png" width="100%">](images/knowledge-TD-3-X.png)
+	[<img src="images/icons/knowledge-TD-3-X-icon.png" width="100%">](images/knowledge-TD-3-X.png)
 
 	[DIABETES](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_diabetes.html#sklearn.datasets.load_diabetes)
 
-	[<img src="images/diabetes-TD-3-X.png" width="100%">](images/diabetes-TD-3-X.png)
+	[<img src="images/icons/diabetes-TD-3-X-icon.png" width="100%">](images/diabetes-TD-3-X.png)
 
 <subsection title="Left-to-right layout">
+
+	Some users have a preference for left to right instead of top-down layout and sometimes the nature of the tree simply flows better left to right. Sample feature vectors can still be run down the tree with the left to right orientation. Here are some examples (click on the images to enlarge):
 	
 <table>
 	<tr>
@@ -229,8 +232,13 @@ subtleties: highlight the edges of paths taken, highlight the decision nodes and
 	
 <subsection title="Simplified non-fancy layout">
 
-	[<img src="images/iris-TD-4-simple.png" width="55%">](images/iris-TD-4-simple.png)
-	[<img src="images/boston-TD-4-simple.png" width="100%">](images/boston-TD-4-simple.png)
+get an overview of the tree and where all of the weight falls, which nodes appear and less on the decision nodes.  you can see very large trees but you have to do some scrolling and zooming.
+	
+	[<img src="images/icons/knowledge-TD-15-X-simple-icon.png" width="55%">](images/knowledge-TD-15-X-simple.png)
+
+For regressors, it looks better left to right, otherwise it is too wide.
+	
+	[<img src="images/icons/boston-LR-5-X-simple-icon.png" width="55%">](images/boston-LR-5-X-simple.png)
 
 <section title="Code sample">
 		
