@@ -43,7 +43,7 @@ and [code to generate all samples](https://github.com/parrt/animl/blob/master/te
 		<th width="50%"><th width="50%">
 	<tr>
 		<td>[WINE](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_wine.html#sklearn.datasets.load_wine) 3-class top-down orientation
-		<td>[BREAST CANCER](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_breast_cancer.html#sklearn.datasets.load_breast_cancer) 2-class right-to-left
+		<td>[BREAST CANCER](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_breast_cancer.html#sklearn.datasets.load_breast_cancer) 2-class left-to-right
 	<tr>
 		<td>[<img src="images/icons/wine-TD-2-icon.png" width="100%">](images/wine-TD-2.png)
 		<td>[<img src="images/icons/breast_cancer-LR-3-icon.png" width="100%">](images/breast_cancer-LR-3.png)
@@ -200,7 +200,7 @@ Thus far we've skipped over many of the visual cues and details that we  obsesse
 
 Our classifier tree visualizations use node size to give visual cues about the number of samples associated with each node.  Histograms get proportionally shorter as the number of samples in the node decrease and leaf node diameters get smaller.  The feature space (horizontal axis) is always the same width and the same range for a given feature, which makes it much easier to compare the feature-target spaces of different nodes. The bars of all histograms are the same width in pixels.
 
-<img src="images/knowledge-dec-node.png" width="35%">
+<img src="images/knowledge-dec-node.png" width="35%"><img src="images/knowledge-dec-node2.png" width="35%">
 
 We use a pie chart for classifier leaves, despite their bad reputation.  For the purpose of indicating purity, the viewer only needs an indication of whether there is a single strong majority category. The viewer does not need to see the exact relationship between elements of the pie chart, which is one key area where pie charts fail. The color of the pie chart majority slice gives the leaf prediction. 
 
@@ -219,7 +219,7 @@ Regressor leaves also show the same range vertically for the target space, but l
 
 There are a number of miscellaneous details that we think improve the quality of the diagrams. Classifiers include a legend and all colors were handpicked from colorblind safe palletes, one handpicked pallete per number of target categories (2 through 10).  We use a gray rather than black for text because it's easier on the eyes. Lines are hairlines and we draw outlines of bars in bar charts and slices in pie charts.
 
-<subsection title="Visualizing interpretation of a single observation">
+<subsection title="Visualizing tree interpretation of a single observation">
 
 orange wedge to the left or right of the black wedge, split value. gives visual cues of why the left or right child path was taken.  features used during decision-making are highlighted.  nodes in the path are highlighted with dashed boxes.  edges are orange and thicker. feature vector displayed near the leaf predictor.
 
@@ -235,11 +235,11 @@ subtleties: highlight the edges of paths taken, highlight the decision nodes and
 
 <subsection title="Left-to-right orientation">
 
-	Some users have a preference for left to right instead of top-down layout and sometimes the nature of the tree simply flows better left to right. Sample feature vectors can still be run down the tree with the left to right orientation. Here are some examples (click on the images to enlarge):
+Some users have a preference for left-to-right orientation instead of top-down and sometimes the nature of the tree simply flows better left-to-right. Sample feature vectors can still be run down the tree with the left-to-right orientation. Here are some examples (click on the images to enlarge):
 	
 <table>
 	<tr>
-		<th width="50%"><th width="50%">
+		<th width="45%"><th width="45%">
 	<tr>
 		<td>WINE
 		<td>DIABETES
