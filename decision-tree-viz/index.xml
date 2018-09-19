@@ -1,7 +1,6 @@
 <chapter title="How to visualize decision tree models"
          author={[Terence Parr](http://parrt.cs.usfca.edu) and [Prince Grover](https://www.linkedin.com/in/groverpr)}>
 
-
 Decision trees are the fundamental building block of [gradient boosting machines](http://explained.ai/gradient-boosting/index.html) and [Random Forests](https://en.wikipedia.org/wiki/Random_forest)\symbol{tm}, probably the two most popular machine learning models for structured data.  Visualizing decision trees is a tremendous aid when learning these models and later, in practice, when interpreting models.  Unfortunately, current visualization packages are rudimentary and not immediately helpful to the novice. For example, we couldn't find a library that could visualize how decision nodes split up feature space. Our library could be the first.  It also appears uncommon for libraries to support visualizing a specific feature vector as it weaves down through a tree's decision nodes, as we could only find one image showing this (but we didn't exhaustively look through library APIs).
 
 Terence has reached a point in his book on [machine learning book](https://mlbook.explained.ai/) (written with [Jeremy Howard](http://www.fast.ai/about/#jeremy)) where he needs to describe lots of decision trees. So, he and former [University of San Francisco MS in Data Science](https://www.usfca.edu/arts-sciences/graduate-programs/data-science) student Prince Grover teamed up to create a general package for [scikit-learn](https://github.com/scikit-learn/scikit-learn) decision tree visualization and model interpretation. This article demonstrates the results of this work, details the specific choices we made for visualization, and outlines the mashup of tools and techniques used in the implementation. The visualization software is part of a nascent Python machine learning library called [animl](https://github.com/parrt/animl).
@@ -45,32 +44,32 @@ and [code to generate all samples](https://github.com/parrt/animl/blob/master/te
 		<td>[WINE](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_wine.html#sklearn.datasets.load_wine) 3-class top-down orientation
 		<td>[BREAST CANCER](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_breast_cancer.html#sklearn.datasets.load_breast_cancer) 2-class left-to-right
 	<tr>
-		<td>[<img src="images/icons/wine-TD-2-icon.png" width="100%">](images/wine-TD-2.png)
-		<td>[<img src="images/icons/breast_cancer-LR-3-icon.png" width="100%">](images/breast_cancer-LR-3.png)
+		<td>[<img src="images/samples/wine-TD-2.svg" width="100%">](images/samples/wine-TD-2.svg)
+		<td>[<img src="images/samples/breast_cancer-LR-3.svg" width="100%">](images/samples/breast_cancer-LR-3.svg)
 	<tr>
 		<td>[IRIS](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_iris.html#sklearn.datasets.load_iris) 3-class with sample $\vec{x}$
 		<td>[USER KNOWLEDGE RATING](https://archive.ics.uci.edu/ml/datasets/User+Knowledge+Modeling) 4-class
 	<tr>
-		<td>[<img src="images/icons/iris-TD-3-X-icon.png" width="100%">](images/iris-TD-3-X.png)
-		<td>[<img src="images/icons/knowledge-LR-3-icon.png" width="100%">](images/knowledge-LR-3.png)
+		<td>[<img src="images/samples/iris-TD-3-X.svg" width="100%">](images/samples/iris-TD-3-X.svg)
+		<td>[<img src="images/samples/knowledge-LR-3.svg" width="100%">](images/samples/knowledge-LR-3.svg)
 	<tr>
 		<td>[DIGITS](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_digits.html#sklearn.datasets.load_digits) 10-class 
 		<td>[DIABETES](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_diabetes.html) with sample $\vec{x}$
 	<tr>
-		<td>[<img src="images/icons/digits-LR-3-icon.png" width="100%">](images/digits-LR-3.png)
-		<td>[<img src="images/icons/diabetes-TD-3-X-icon.png" width="100%">](images/diabetes-TD-3-X.png)	
+		<td>[<img src="images/samples/digits-LR-3.svg" width="100%">](images/samples/digits-LR-3.svg)
+		<td>[<img src="images/samples/diabetes-TD-3-X.svg" width="100%">](images/samples/diabetes-TD-3-X.svg)	
 	<tr>
 		<td>[BOSTON](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_boston.html) with sample $\vec{x}$
 		<td>[SWEETS](http://mldata.org/repository/data/viewslug/ratings-of-sweets-sweetrs/) with sample $\vec{x}$
 	<tr>
-		<td>[<img src="images/icons/boston-TD-3-X-icon.png" width="100%">](images/boston-TD-3-X.png)
-		<td>[<img src="images/icons/sweets-TD-3-X-icon.png" width="100%">](images/sweets-TD-3-X.png)
+		<td>[<img src="images/samples/boston-TD-3-X.svg" width="100%">](images/samples/boston-TD-3-X.svg)
+		<td>[<img src="images/samples/sweets-TD-3-X.svg" width="100%">](images/samples/sweets-TD-3-X.svg)
 	<tr>
 		<td>USER KNOWLEDGE RATING 4-class non-fancy
 		<td>DIABETES non-fancy
 	<tr>
-		<td>[<img src="images/icons/knowledge-TD-4-simple-icon.png" width="100%">](images/knowledge-TD-4-simple.png)
-		<td>[<img src="images/icons/boston-LR-5-X-simple-icon.png" width="100%">](images/boston-LR-5-X-simple.png)
+		<td>[<img src="images/samples/knowledge-TD-4-simple.svg" width="100%">](images/samples/knowledge-TD-4-simple.svg)
+		<td>[<img src="images/samples/boston-LR-5-X-simple.svg" width="100%">](images/samples/boston-LR-5-X-simple.svg)
 
 </table>	
 
@@ -90,7 +89,7 @@ Let's start with the [default scitkit visualization](http://scikit-learn.org/sta
 				<td>Our `animl` IRIS visualization
 	<tr>
 		<td>[<img src="images/iris-scikit.png" width="100%">](images/iris-scikit.png)
-		<td>[<img src="images/iris-TD-5.png" width="100%">](images/iris-TD-5.png)
+		<td>[<img src="images/samples/iris-TD-5.svg" width="100%">](images/samples/iris-TD-5.svg)
 </table>
 		
 The scikit tree does a good job of representing the tree structure, but we have a few quibbles.  The colors aren't the best and it's not immediately obvious why some of the nodes are colored and some aren't.  If the colors represent predicted class for this classifier, one would think just the leaves would be colored because only leaves have predictions.  Including the gini coefficient costs space and doesn't really help the beginners to interpret trees. The count of samples of the  various target classes in each node is somewhat useful, though, a histogram would be even better. A target class color legend would be nice.  Finally, using true and false as the edge labels isn't as clear as, say, labels $<$ and $\ge$. The most obvious difference is that our decision nodes show feature distributions as overlapping stacked-histograms, one histogram per target class. Also, our leaf size is proportional to the number of samples in that leaf.
@@ -106,7 +105,7 @@ Scikit uses the same visualization approach for decision tree regressors. For ex
 				<td>Our `animl` BOSTON visualization
 	<tr>
 		<td>[<img src="images/boston-scikit.png" width="100%">](images/boston-scikit.png)
-		<td>[<img src="images/boston-TD-3.png" width="100%">](images/boston-TD-3.png)
+		<td>[<img src="images/samples/boston-TD-3.svg" width="100%">](images/samples/boston-TD-3.svg)
 </table>
 
 In the scikit tree, it's not immediately clear what the use of color implies, but after studying the image, darker images indicate higher predicted target values. As before, our decision nodes show the feature space distribution, this time using a feature versus target value scatterplot.  The leaves use strip plots to show the target value distribution; leaves with more dots naturally have a higher number of samples.
@@ -176,7 +175,7 @@ Other than the educational animation in [A visual introduction to machine learni
 
 Training of a decision node chooses feature $x_i$ and split value within $x_i$ feature space to group samples with similar target values into two buckets.  Just to be clear, training involves examining the relationship between features and target values. Unless decision nodes show feature-target space in some way, the viewer cannot see how and why training arrived at the split value. To highlight how decision nodes carve up the feature space, we trained a regressor and classifier with a single (AGE) feature ([code to generate images](https://github.com/parrt/animl/blob/master/testing/paper_examples.py)).  Here's a regressor decision tree trained on BOSTON data, with node ID labeling turned on for discussion purposes here:
 
-[<img src="images/boston-TD-AGE.png" width="100%">](images/boston-TD-AGE.png)
+[<img src="images/boston-TD-AGE.svg" width="100%">](images/samples/boston-TD-AGE.svg)
 
 Horizontal dashed lines indicate the target mean for the left and right buckets in decision nodes; a vertical dashed line indicates the split point in feature space. The black wedge highlights the split point and identifies the exact split value. Leaf nodes indicate the target prediction (mean) with a dashed line.
 
@@ -184,7 +183,7 @@ All decision nodes are restricted to the single AGE feature and please note that
 
 While a decision tree implementation is virtually identical for both classifier and regressor decision trees, the way we interpret them is very different so our visualizations are distinct for the two cases.  For a regressor, showing feature-target space is best done with a scatterplot of feature versus target.  For classifier, however, the target is a category rather than a number and so we chose to illustrate feature-target space using histograms as an indicator of feature space distributions.  Here's a classifier tree trained on the USER KNOWLEDGE data, again with a single feature (PEG) and with nodes labeled for discussion purposes:
 
-[<img src="images/knowledge-TD-PEG.png" width="100%">](images/knowledge-TD-PEG.png)
+[<img src="images/knowledge-TD-PEG.svg" width="100%">](images/knowledge-TD-PEG.svg)
 
 Ignoring color, the histogram shows the PEG feature space distribution.  Adding color, gives us an indication of the relationship between feature space and target class (feature-target space). For example, in node 0, we can see that samples with `very_low` target class are clustered at the low end of PEG feature space and samples with `High` target class are clustered at the high-end. As with the regressor, the feature space of a left child is everything to the left of the parent's split point in the same  feature space; similarly for the right child.  For example, combining the histograms of nodes 9 and 12 yields the histogram of node 8. We force the horizontal axis range to be the same for all PEG decision nodes so that lower decision nodes clearly box in narrower regions that are more and more pure.
 
@@ -192,7 +191,7 @@ We use a stacked histogram so that overlap is clear in the feature space between
 
 When there are more than four or five classes, the stacked histograms are difficult to read and so we recommend setting the histogram type parameter to `bar` not `barstacked` in this case.  With high cardinality target categories, the overlapping distributions are harder to visualize and things break down, so we set a limit of 10 target classes. Here's a shallow tree example using the 10-class DIGITS data set using non-stacked histograms:
 
-[<img src="images/digits-TD-2.png" width="65%">](images/digits-TD-2.png)
+[<img src="images/samples/digits-TD-2.svg" width="65%">](images/samples/digits-TD-2.svg)
 
 <subsection title="It's all about the details">
 
@@ -230,8 +229,8 @@ Decision-making within a node is straightforward: take the left path if feature 
 				<td>KNOWLEDGE data with test vector
 				<td>DIABETES data with test vector
 	<tr>
-		<td>[<img src="images/icons/knowledge-TD-3-X-icon.png" width="100%">](images/knowledge-TD-3-X.png)
-		<td>[<img src="images/icons/diabetes-TD-3-X-icon.png" width="100%">](images/diabetes-TD-3-X.png)
+		<td>[<img src="images/samples/knowledge-TD-3-X.svg" width="100%">](images/samples/knowledge-TD-3-X.svg)
+		<td>[<img src="images/samples/diabetes-TD-3-X.svg" width="100%">](images/samples/diabetes-TD-3-X.svg)
 </table>
 
 The test vector $\vec{x}$ with feature names and values appears below the leaf predictor node (or to the right in left-to-right orientation). The test vector highlights the features used in one or more decision nodes.  When the number of features reaches a threshold of 20 (10 for left-to-right orientation),  test vectors do not show unused features to avoid unwieldly test vectors.
@@ -248,25 +247,25 @@ Some users have a preference for left-to-right orientation instead of top-down a
 		<td>WINE
 		<td>DIABETES
 	<tr>
-		<td>[<img src="images/icons/wine-LR-3-icon.png" width="100%">](images/wine-LR-3.png)
-		<td>[<img src="images/icons/diabetes-LR-3-icon.png" width="100%">](images/diabetes-LR-3.png)
+		<td>[<img src="images/samples/wine-LR-3.svg" width="100%">](images/samples/wine-LR-3.svg)
+		<td>[<img src="images/samples/diabetes-LR-3.svg" width="100%">](images/samples/diabetes-LR-3.svg)
 	<tr>
 		<td>WINE with sample $\vec{x}$
 		<td>DIABETES with sample $\vec{x}$
 	<tr>
-		<td>[<img src="images/icons/wine-LR-2-X-icon.png" width="100%">](images/wine-LR-2-X.png)
-		<td>[<img src="images/icons/diabetes-LR-2-X-icon.png" width="100%">](images/diabetes-LR-2-X.png) 
+		<td>[<img src="images/samples/wine-LR-2-X.svg" width="100%">](images/samples/wine-LR-2-X.svg)
+		<td>[<img src="images/samples/diabetes-LR-2-X.svg" width="100%">](images/samples/diabetes-LR-2-X.svg) 
 </table>
 	
 <subsection title="Simplified non-fancy layout">
 
 get an overview of the tree and where all of the weight falls, which nodes appear and less on the decision nodes.  you can see very large trees but you have to do some scrolling and zooming.
 	
-	[<img src="images/icons/knowledge-TD-15-X-simple-icon.png" width="55%">](images/knowledge-TD-15-X-simple.png)
+	[<img src="images/samples/knowledge-TD-15-X-simple.svg" width="55%">](images/samples/knowledge-TD-15-X-simple.svg)
 
 For regressors, it looks better left to right, otherwise it is too wide.
 	
-	[<img src="images/icons/boston-LR-5-X-simple-icon.png" width="55%">](images/boston-LR-5-X-simple.png)
+	[<img src="images/samples/boston-LR-5-X-simple.svg" width="55%">](images/samples/boston-LR-5-X-simple.svg)
 
 <section title="Code sample">
 		
