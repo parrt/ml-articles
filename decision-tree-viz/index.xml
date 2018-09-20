@@ -179,13 +179,13 @@ Training of a decision node chooses feature $x_i$ and split value within $x_i$'s
 
 Horizontal dashed lines indicate the target mean for the left and right buckets in decision nodes; a vertical dashed line indicates the split point in feature space. The black wedge highlights the split point and identifies the exact split value. Leaf nodes indicate the target prediction (mean) with a dashed line.
 
-All decision nodes are restricted to the single AGE feature and please note that our visualization forces the same horizontal axis range for all nodes testing the same feature, leaving blank regions rather than zooming in. As we descend through decision nodes, the sample AGE values are boxed into narrower and narrower regions.  Combining the AGE feature-target space (regions) from two siblings yields the parent's feature-target space. For example, combining the AGE regions in nodes 1 and 8, yields the node 0 feature-target space and combining the AGE regions from nodes 9 and 12 yields the node 8 feature-target space. The prediction leaves are not very pure and using a single variable leads to a poor model, but this restricted example demonstrates how decision trees carve up feature space.
+All decision nodes are restricted to the single AGE feature to demonstrate that our visualization forces the same horizontal axis range for all nodes testing the same feature, leaving blank regions rather than zooming in. As we descend through decision nodes, the sample AGE values are boxed into narrower and narrower regions.  Combining the AGE feature-target space (regions) from two siblings yields the parent's feature-target space. For example, combining the AGE regions in nodes 1 and 8, yields the node 0 feature-target space and combining the AGE regions from nodes 9 and 12 yields the node 8 feature-target space. The prediction leaves are not very pure and using a single variable leads to a poor model, but this restricted example demonstrates how decision trees carve up feature space.
 
 While a decision tree implementation is virtually identical for both classifier and regressor decision trees, the way we interpret them is very different so our visualizations are distinct for the two cases.  For a regressor, showing feature-target space is best done with a scatterplot of feature versus target.  For classifier, however, the target is a category rather than a number and so we chose to illustrate feature-target space using histograms as an indicator of feature space distributions.  Here's a classifier tree trained on the USER KNOWLEDGE data, again with a single feature (PEG) and with nodes labeled for discussion purposes:
 
 [<img src="images/knowledge-TD-PEG.svg" width="100%">](images/knowledge-TD-PEG.svg)
 
-Ignoring color, the histogram shows the PEG feature space distribution.  Adding color, gives us an indication of the relationship between feature space and target class (feature-target space). For example, in node 0, we can see that samples with `very_low` target class are clustered at the low end of PEG feature space and samples with `High` target class are clustered at the high-end. As with the regressor, the feature space of a left child is everything to the left of the parent's split point in the same  feature space; similarly for the right child.  For example, combining the histograms of nodes 9 and 12 yields the histogram of node 8. We force the horizontal axis range to be the same for all PEG decision nodes so that lower decision nodes clearly box in narrower regions that are more and more pure.
+Ignoring color, the histogram shows the PEG feature space distribution.  Adding color, gives us an indication of the relationship between feature space and target class. For example, in node 0, we can see that samples with `very_low` target class are clustered at the low end of PEG feature space and samples with `High` target class are clustered at the high-end. As with the regressor, the feature space of a left child is everything to the left of the parent's split point in the same  feature space; similarly for the right child.  For example, combining the histograms of nodes 9 and 12 yields the histogram of node 8. We force the horizontal axis range to be the same for all PEG decision nodes so that decision nodes lower in the tree clearly box in narrower regions that are more and more pure.
 
 We use a stacked histogram so that overlap is clear in the feature space between samples with different target classes.  Note that the height in the Y axis of the stacked histogram is the total number of samples from all classes; multiple class counts are stacked on top of each other. 
 
@@ -209,17 +209,25 @@ Turning to regressor trees now, we make sure that the target (vertical) axis of 
 
 <img src="images/boston-dec-node.png" width="30%">
 
-Regressor leaves also show the same range vertically for the target space, but leaves are a bit taller than decision nodes so it's easier to identify nodes with high or low predictions. We use a strip plot rather than, say, a box plot because the strip plot shows the distribution explicitly and implicitly shows the number of samples by the number of dots. (We also write out the number of samples in text for leaves.) The leaf prediction is the distribution center of mass (mean) of the strip plot, which we highlight with a dashed line.
+Regressor leaves also show the same range vertically for the target space, but leaves are a bit taller than decision nodes so it's easier to identify nodes with high or low predictions. We use a strip plot rather than, say, a box plot because the strip plot shows the distribution explicitly while implicitly showing the number of samples by the number of dots. (We also write out the number of samples in text for leaves.) The leaf prediction is the distribution center of mass (mean) of the strip plot, which we highlight with a dashed line.
 
 <img src="images/boston-leaf.png" width="25%">
 
-There are also a number of miscellaneous details that we think improve the quality of the diagrams. Classifiers include a legend and all colors were handpicked from colorblind safe palletes, one handpicked pallete per number of target categories (2 through 10).  We use a gray rather than black for text because it's easier on the eyes. Lines are hairlines and we draw outlines of bars in bar charts and slices in pie charts.
+There are also a number of miscellaneous details that we think improve the quality of the diagrams:
+
+<ul>
+	<li>Classifiers include a legend
+	<li>All colors were handpicked from colorblind safe palletes, one handpicked pallete per number of target categories (2 through 10)
+	<li>We use a gray rather than black for text because it's easier on the eyes
+	<li>Lines are hairlines
+	<li>We draw outlines of bars in bar charts and slices in pie charts
+</ul>
 
 <subsection title="Visualizing tree interpretation of a single observation">
 
 To figure out how model training arrives at a specific tree, all of the action is in the feature-space splits of the decision nodes, which we just discussed. Now, let's take a look at visualizing how a specific feature vector yields a specific prediction. The key here is to examine the decisions taken along the path from the root to the leaf predictor node. 
 
-Decision-making within a node is straightforward: take the left path if feature $x_i$ in test vector $\vec{x}$ is less than the split point, otherwise take the right path. To highlight the decision-making process, we have to highlight the comparison operation. For decision nodes along the path to the leaf predictor node, we show an orange wedge at position $x_i$ in the horizontal feature space. This makes the comparison easy to see; if the orange wedge is to the left of the black wedge, go left else go right. Decision nodes involved in the production process are surrounded by boxes with dashed lines and the child edges are thicker and colored orange. Here are two sample trees showing test vectors (click on images to expand):
+Decision-making within a node is straightforward: take the left path if feature $x_i$ in test vector $\vec{x}$ is less than the split point, otherwise take the right path. To highlight the decision-making process, we have to highlight the comparison operation. For decision nodes along the path to the leaf predictor node, we show an orange wedge at position $x_i$ in the horizontal feature space. This makes the comparison easy to see; if the orange wedge is to the left of the black wedge, go left else go right. Decision nodes involved in the prediction process are surrounded by boxes with dashed lines and the child edges are thicker and colored orange. Here are two sample trees showing test vectors (click on images to expand):
 
 <table>
 	<tr>
@@ -259,13 +267,19 @@ Some users have a preference for left-to-right orientation instead of top-down a
 	
 <subsection title="Simplified non-fancy layout">
 
+To evaluate the generality of a decision tree, if it often helps to get a high-level overview of the tree.  This generally means examining things like tree shape and size, but more importantly, it means looking at the leaves.  We'd like to know how many samples each leaf has, how pure the target values are, and just generally where most of the weight of samples falls.  
+
+
+Getting an overview of the large tree
+
+	
 get an overview of the tree and where all of the weight falls, which nodes appear and less on the decision nodes.  you can see very large trees but you have to do some scrolling and zooming.
 	
 	[<img src="images/samples/knowledge-TD-15-X-simple.svg" width="55%">](images/samples/knowledge-TD-15-X-simple.svg)
 
 For regressors, it looks better left to right, otherwise it is too wide.
 	
-	[<img src="images/samples/boston-LR-5-X-simple.svg" width="55%">](images/samples/boston-LR-5-X-simple.svg)
+	[<img src="images/samples/boston-TD-5-X-simple.svg" width="100%">](images/samples/boston-TD-5-X-simple.svg)
 
 <section title="Code sample">
 		
