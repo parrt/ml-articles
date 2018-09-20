@@ -275,59 +275,56 @@ To evaluate the generality of a decision tree, if it often helps to get a high-l
 	[<img src="images/samples/boston-TD-5-X-simple.svg" width="100%">](images/samples/boston-TD-5-X-simple.svg)
 
 <section title="Code sample">
-		
+
 ```
-regr = tree.DecisionTreeRegressor(max_depth=max_depth)
+from animl.trees import *
+from animl.viz.trees import *
+from IPython.display import Image, display_svg
+
 boston = load_boston()
-regr = regr.fit(boston.data, boston.target)
+
+X_train = boston.data
+y_train = boston.target
+testX = X_train[5,:]
+
+regr = tree.DecisionTreeRegressor(max_depth=3)
+regr = regr.fit(X_train, y_train)
 ```
 
 ```
-st = dtreeviz(regr, boston.data, boston.target, target_name='price',
-              feature_names=boston.feature_names)
+viz = dtreeviz(regr, X_train, y_train, target_name='price',
+               feature_names=boston.feature_names,
+               X = testX)
+viz.save("boston.svg") # suffix determines the generated image format
+viz.view()
 ```
-
-```
-g = graphviz.Source(st, format='pdf')
-g.render(directory=".", filename="boston.pdf", view=False, cleanup=True)
-```
-
-```
-g = graphviz.Source(st, format='pdf')
-g.view()
-```
-
-```
-X = boston.data[np.random.randint(0, len(boston.data)),:]
-
-st = dtreeviz(regr, boston.data, boston.target, target_name='price',
-              feature_names=boston.feature_names,
-              X=X)
-```
-
+		
 for classifier we need the class names too.
 
 <section title="Our implementation">
 
+<subsection title="Shadow trees for scikit decision trees">
+		
+The decision trees for classifiers and regressors from scikit-learn
+are built for efficiency, not necessarily ease of tree walking. We created `animl.trees.ShadowDecTree` and `animl.trees.ShadowDecTreeNode` classes as an easy-to-use traditional binary tree wrapper for all tree information.
 
+<subsection title="Tool mashup">
+	Graphviz/dot, matplotlib
 
-	shadow tree
-	
-	graphviz/dot
-
-	matplotlib
-
+<subsection title="Vector graphics via SVG">
 	load svg was issue
 
 	then must parse svg to get size
 
-	future: bottom-justify histograms in classifier trees. some wedge labels overlap with axis. thicken incoming edges for nodes with lots of samples.
+	pdftocairo poppler https://poppler.freedesktop.org/
+
+	brew install pdf2svg
 	
+	in the end, notebooks don't show classifier tree svgs well, only regrs :(  tried pdf2cairo and pdf2svg. browser likes.
+
 <section title="What we tried and rejected">
 
-Those interested in the visualization from a design point of view might find it interesting to read about what we tried and rejected.  
-
-Starting with classifiers, we thought that the histograms were a bit blocky and perhaps kernel density estimates would give a more accurate picture. We had decision nodes that looked like this:
+Those interested in these tree visualizations from a design point of view might find it interesting to read about what we tried and rejected.  Starting with classifiers, we thought that the histograms were a bit blocky and perhaps kernel density estimates would give a more accurate picture. We had decision nodes that looked like this:
 
 	<img src="images/kde.png" width="50%">
 		
@@ -353,7 +350,7 @@ That is misleading because the horizontal axis is usually feature space. We more
 		
 <section title="Lessons learned">
 
-	Sometimes solving a programming problem is less about algorithms and more about working within the constraints and capabilities of the programming ecosystem, such as tools and libraries.  That is definitely the case with our decision tree visualization software. The programming was not hard; it was more a matter of bashing our way to victory through an appropriate mashup of graphics tools and libraries.  
+	Sometimes solving a programming problem is less about algorithms and more about working within the constraints and capabilities of the programming ecosystem, such as tools and libraries.  That is definitely the case with our decision tree visualization software. The programming was not hard; it was more a matter of bashing our way to victory through an appropriate mashup of graphics tools and libraries.  There are lots of methods that would be useful to other libraries and tools that need to walk scikit decision trees. For example, `predict()` not only runs a feature vector through the tree but also returns the path of visited nodes. The samples associated with any particular node can be had through `node_samples()`.
 
 	Designing the actual visualization also required a seemingly infinite number of experiments and tweaks. Generating high quality vector-based images required pathological determination and a trail of dead code left along the circuitous path to success.
 	
@@ -361,4 +358,9 @@ We are definitely not visualization aficionados, but for this specific problem w
 
 	there are lots of visual effects one can choose from to visualize data: color, line thickness, line style, different kinds of plots, size (area, length, graph height, ...), alpha, text styles (color, font, bold, italics, size), graph annotations, visual flow.  Everything has to be for a reason don't just use color because colors are nice. they have to mean something.  In Tufte's seminar I learned that you can pack a lot of information into a rich diagram; humans can deal with it, but it can't be a mishmash.
 	
-	as our subtlety list shows, there's more to it.  same axis, same scale etc.
+as our subtlety list shows, there's more to it.  same axis, same scale etc.
+	
+<section title="Future work">
+
+bottom-justify histograms in classifier trees. some wedge labels overlap with axis. thicken incoming edges for nodes with lots of samples.
+	
