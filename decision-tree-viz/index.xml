@@ -69,7 +69,7 @@ and [code to generate all samples](https://github.com/parrt/animl/blob/master/te
 		<td>DIABETES non-fancy
 	<tr>
 		<td>[<img src="images/samples/knowledge-TD-4-simple.svg" width="100%">](images/samples/knowledge-TD-4-simple.svg)
-		<td>[<img src="images/samples/boston-LR-5-X-simple.svg" width="100%">](images/samples/boston-LR-5-X-simple.svg)
+		<td>[<img src="images/samples/boston-LR-5-X-simple.svg" width="70%">](images/samples/boston-LR-5-X-simple.svg)
 
 </table>	
 
@@ -209,7 +209,7 @@ Turning to regressor trees now, we make sure that the target (vertical) axis of 
 
 <img src="images/boston-dec-node.png" width="30%">
 
-Regressor leaves also show the same range vertically for the target space, but leaves are a bit taller than decision nodes so it's easier to identify nodes with high or low predictions. We use a strip plot rather than, say, a box plot because the strip plot shows the distribution explicitly while implicitly showing the number of samples by the number of dots. (We also write out the number of samples in text for leaves.) The leaf prediction is the distribution center of mass (mean) of the strip plot, which we highlight with a dashed line.
+Regressor leaves also show the same range vertically for the target space. We use a strip plot rather than, say, a box plot because the strip plot shows the distribution explicitly while implicitly showing the number of samples by the number of dots. (We also write out the number of samples in text for leaves.) The leaf prediction is the distribution center of mass (mean) of the strip plot, which we highlight with a dashed line.
 
 <img src="images/boston-leaf.png" width="25%">
 
@@ -267,17 +267,10 @@ Some users have a preference for left-to-right orientation instead of top-down a
 	
 <subsection title="Simplified non-fancy layout">
 
-To evaluate the generality of a decision tree, if it often helps to get a high-level overview of the tree.  This generally means examining things like tree shape and size, but more importantly, it means looking at the leaves.  We'd like to know how many samples each leaf has, how pure the target values are, and just generally where most of the weight of samples falls.  
-
-
-Getting an overview of the large tree
-
-	
-get an overview of the tree and where all of the weight falls, which nodes appear and less on the decision nodes.  you can see very large trees but you have to do some scrolling and zooming.
+To evaluate the generality of a decision tree, if it often helps to get a high-level overview of the tree.  This generally means examining things like tree shape and size, but more importantly, it means looking at the leaves.  We'd like to know how many samples each leaf has, how pure the target values are, and just generally where most of the weight of samples falls.   Getting an overview is harder when the visualization is too large and so we provide a non-fancy option that generates smaller visualizations while retaining key leaf information. Here are a sample classifier and a regressor in non-fancy mode with top-down orientation:
 	
 	[<img src="images/samples/knowledge-TD-15-X-simple.svg" width="55%">](images/samples/knowledge-TD-15-X-simple.svg)
 
-For regressors, it looks better left to right, otherwise it is too wide.
 	
 	[<img src="images/samples/boston-TD-5-X-simple.svg" width="100%">](images/samples/boston-TD-5-X-simple.svg)
 
@@ -315,7 +308,9 @@ st = dtreeviz(regr, boston.data, boston.target, target_name='price',
 for classifier we need the class names too.
 
 <section title="Our implementation">
-	
+
+
+
 	shadow tree
 	
 	graphviz/dot
@@ -330,22 +325,38 @@ for classifier we need the class names too.
 	
 <section title="What we tried and rejected">
 
-classifier decision nodes
+Those interested in the visualization from a design point of view might find it interesting to read about what we tried and rejected.  
+
+Starting with classifiers, we thought that the histograms were a bit blocky and perhaps kernel density estimates would give a more accurate picture. We had decision nodes that looked like this:
 
 	<img src="images/kde.png" width="50%">
+		
+The problem is that decision nodes with only one or two samples gave extremely misleading distributions:
 
 	<img src="images/kde-leaf.png" width="15%">
+		
+We also experimented using bubble charts instead of histograms for classifier decision nodes:
 	
 	<img src="images/bubble.png" width="70%">
 
-regression leaf nodes		
+These look really cool but, in the end histograms are easier to read.
+	
+Turning to regression, we considered using box plots to show the distribution of prediction values and also used a simple bar chart to show how many samples:
 
 	<img src="images/dual-leaf.png" width="15%">
 		
+This dual plot for each leaf is less satisfying than the strip plot we originally had.  Before the strip plot, we just laid out the target values using the sample index value as the horizontal axis:
+		
 	<img src="images/non-strip-plot.png" width="30%">
+		
+That is misleading because the horizontal axis is usually feature space. We more or less just scrunched that into a strip plot.
 		
 <section title="Lessons learned">
 
+	Sometimes solving a programming problem is less about algorithms and more about working within the constraints and capabilities of the programming ecosystem, such as tools and libraries.  That is definitely the case with our decision tree visualization software. The programming was not hard; it was more a matter of bashing our way to victory through an appropriate mashup of graphics tools and libraries.  
+
+	Designing the actual visualization also required a seemingly infinite number of experiments and tweaks. Generating high quality vector-based images required pathological determination and a trail of dead code left along the circuitous path to success.
+	
 We are definitely not visualization aficionados, but for this specific problem we banged on it until we got effective diagrams.
 
 	there are lots of visual effects one can choose from to visualize data: color, line thickness, line style, different kinds of plots, size (area, length, graph height, ...), alpha, text styles (color, font, bold, italics, size), graph annotations, visual flow.  Everything has to be for a reason don't just use color because colors are nice. they have to mean something.  In Tufte's seminar I learned that you can pack a lot of information into a rich diagram; humans can deal with it, but it can't be a mishmash.
