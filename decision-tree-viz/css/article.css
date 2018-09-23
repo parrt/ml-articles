@@ -222,3 +222,11 @@ h1 {
 	    position: static;
 	}
 }
+@media print {
+    body {
+        font-size: 9pt;
+    }
+    .sidenote {
+        font-size: 9pt;
+    }
+}

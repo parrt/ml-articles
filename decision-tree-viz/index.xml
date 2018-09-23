@@ -380,12 +380,12 @@ This project was very frustrating with lots of programming deadends, fiddling wi
 
 At the highest level, we used [matplotlib](https://matplotlib.org/) to generate images for decision and leaf nodes and combined them into a tree using the venerable [graphviz](http://graphviz.org/). We also used HTML labels extensively in the graphviz tree description for layout and font specification purposes. The single biggest headache was convincing all components of our solution to produce high-quality vector graphics.
 
-Our initial coding experiments lead us to create a shadow tree for the decision trees created by scikit, so let's start with that.
+Our initial coding experiments led us to create a shadow tree wrapping the decision trees created by scikit, so let's start with that.
 
 <subsection title="Shadow trees for scikit decision trees">
 		
 The decision trees for classifiers and regressors from scikit-learn
-are built for efficiency, not necessarily ease of tree walking. We created [animl.trees.ShadowDecTree](https://github.com/parrt/animl/blob/master/animl/trees.py) and `animl.trees.ShadowDecTreeNode` classes as an easy-to-use (traditional binary tree) wrapper for all tree information.  Here's how to create a shadow tree from a scikit classifier or regressor tree model:
+are built for efficiency, not necessarily ease of tree walking or extracting node information. We created [animl.trees.ShadowDecTree](https://github.com/parrt/animl/blob/master/animl/trees.py) and `animl.trees.ShadowDecTreeNode` classes as an easy-to-use (traditional binary tree) wrapper for all tree information.  Here's how to create a shadow tree from a scikit classifier or regressor tree model: 
 
 ```
 shadow_tree = ShadowDecTree(tree_model, X_train, y_train, feature_names, class_names)
@@ -439,13 +439,13 @@ $ brew install graphviz --with-librsvg --with-app --with-pango
 
 Originally, when we resorted to generating PNG files from matplotlib, we set the dots per inch (dpi) to be 450 so that they looked okay on high resolution screens like the iMac. Unfortunately, that meant we had to specify the actual size we wanted for the overall tree using an HTML table in graphviz using `width` and `height` parameters on `<td>` tags. That cause a lot of trouble because we had to figure out what the aspect ratio was coming out of matplotlib.  Once we moved to SVG files, we unnecessarily parsed the SVG files to get the size for use in the HTML; as we wrote at this document we realized  extracting the size information from SVG files was unnecessary.
 
-Unfortunately, graphviz's SVG output simply referenced the node files that we imported, rather than embedding the node images within the overall tree image. This is a very inconvenient form because it means sending a tree visualization means sending a zip of files rather than a single file. We spent the time to parse SVG XML and embed all referenced images within a single large meta-SVG file. That worked great and there was much celebration.
+Unfortunately, graphviz's SVG output simply referenced the node files that we imported, rather than embedding the node images within the overall tree image. This is a very inconvenient form because sending a single tree visualization means sending a zip of files rather than a single file. We spent the time to parse SVG XML and embed all referenced images within a single large meta-SVG file. That worked great and there was much celebration.
 
 Then we noticed that graphviz does not properly handle text in HTML labels when generating SVG. For example, the text of classifier tree legends was cut off and overlapping. Rats.
 
-What finally worked to get a single clean SVG file was first generating a PDF file and then converting the PDF to SVG with `pdf2svg` (`pdf2cairo` also appears to work).
+What finally worked to get a single clean SVG file was first generating a PDF file from graphviz and then converting the PDF to SVG with `pdf2svg` (`pdf2cairo` also appears to work).
 
-Then we noticed that Jupyter notebook has a bug where it does not display those SVG files properly (see above). Jupyter lab does handle the SVG properly as does github. We added a `topng()` method so users of Jupyter notebook can use `Image(viz.topng())` to get in line images. Better yet, call `viz.view()`, which will pop up a window that displays images properly.
+Then we noticed that Jupyter notebook has a bug where it does not display those SVG files properly (see above). Jupyter lab does handle the SVG properly as does github. We added a `topng()` method so users of Jupyter notebook can use `Image(viz.topng())` to get inline images. Better yet, call `viz.view()`, which will pop up a window that displays images properly.
 
 	<section title="Lessons learned">
 
