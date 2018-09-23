@@ -369,12 +369,14 @@ In Jupyter notebooks, the object returned from `dtreeviz()` has a `_repr_svg_()`
 	<img src="images/bad-jupyter-svg.png" width="45%">
 		
 	The good news is that github displays them properly as does Jupyter Lab.
+	
+	Use `Image(viz.topng())` to display (poorly) in Juypter notebook or simply call `viz.view()`, which will pop up a window that displays things properly.
 </aside>
 
 
 <section title="Our implementation">
 	
-This project was very frustrating with lots of programming deadends, fiddling with parameters, working around bugs/limitations in tools and libraries, and creatively mashing up a bunch of existing tools. The only fun part was the (countless) sequence of experiments in visual design.  We pushed through because it seemed likely that the machine learning community would find these visualization as much as we will. This project represents about two months of trudging through stackoverflow, documentation, and hideous graphics programming.
+This project was very frustrating with lots of programming deadends, fiddling with parameters, working around bugs/limitations in tools and libraries, and creatively mashing up a bunch of existing tools. The only fun part was the (countless) sequence of experiments in visual design.  We pushed through because it seemed likely that the machine learning community would find these visualization as useful as we will. This project represents about two months of trudging through stackoverflow, documentation, and hideous graphics programming.
 
 At the highest level, we used [matplotlib](https://matplotlib.org/) to generate images for decision and leaf nodes and combined them into a tree using the venerable [graphviz](http://graphviz.org/). We also used HTML labels extensively in the graphviz tree description for layout and font specification purposes. The single biggest headache was convincing all components of our solution to produce high-quality vector graphics.
 
@@ -395,44 +397,55 @@ The shadow tree/node classes have a lot of methods that could be useful to other
 
 <subsection title="Tool mashup">
 	
-Graphviz dot tree layout language is very useful for getting decent tree layouts if you know all of the tricks, such as getting the left node to appear to the left of the right node with hidden graph edges.
+Graphviz dot tree layout language is very useful for getting decent tree layouts if you know all of the tricks, such as getting left children to appear to the left of right children with interconnecting hidden graph edges.  For example, if you have two leaves, `leaf4` and `leaf5`, that must appear left to right on the same level, here is the graphviz magic:
 
-For the most part, we always use HTML labels rather than just text labels when text is necessary. It just gives much more control over text display and provides an ability to show tabular data as tables. For example, when displaying a test vector run down the tree, the test vector is shown using an HTML table:
+```
+LSTAT3 -> leaf4 [penwidth=0.3 color="#444443" label=<>]
+LSTAT3 -> leaf5 [penwidth=0.3 color="#444443" label=<>]
+{
+    rank=same;
+    leaf4 -> leaf5 [style=invis]
+}
+```
+
+For the most part, we always use HTML labels on graphviz nodes rather than just text labels when text is necessary. It just gives much more control over text display and provides an ability to show tabular data as tables. For example, when displaying a test vector run down the tree, the test vector is shown using an HTML table:
 
 <img src="images/X.png" width="25%">
-	
-	Graphviz/dot, matplotlib
+
+To generate generate images from graphviz files, we use the `graphviz` python package, which ends up `exec`ing the `dot` binary executable using one of its utility routines (`run()`).  Occasionally, we used slightly different parameters on the `dot` command and so we just directly call `run()` like this for flexibility:
+
+```
+cmd = ["dot", "-Tpng", "-o", filename, dotfilename]
+stdout, stderr = run(cmd, capture_output=True, check=True, quiet=False)
+```
+
+We also use the `run()` function to execute the `pdf2svg` (PDF to SVG conversion) tool, as described in the next section.
 
 <subsection title="Vector graphics via SVG">
 
-
+We use matplotlib to generate the decision and leaf nodes and, to get the images into a graphviz/dot image, we use HTML graphviz labels and then reference the generated images via `img` tags like this:
 	
 ```
 <img src="/tmp/node3_94806.svg"/>
 ```
-	
-	set size with  wrapper:
-	
-```
-<td port="img" fixedsize="true" width="158.38625" height="58.713281">...</td>
-```
+
+The 94806 number is the process ID, which helps isolate multiple instances of `animl` running on the same machine. Without this, it's possible for multiple processes to overwrite the same temporary files.
+
+Because we wanted scalable, vector graphics, we tried importing SVG images initially but we could not get graphviz to accept those files (pdf neither). This was very frustrating because graphviz clearly knew how to generate SVG and must have and be using an SVG library, we reasoned. It took us four hours to figure out  that generating and importing SVG were two different things and we needed the following magic incantation on OS X using `--with-librsvg`:
 
 ```
 $ brew install graphviz --with-librsvg --with-app --with-pango
 ```
-	high-quality images scalable
-	
-	load svg was issue
 
-	then must parse svg to get size
+Originally, when we resorted to generating PNG files from matplotlib, we set the dots per inch (dpi) to be 450 so that they looked okay on high resolution screens like the iMac. Unfortunately, that meant we had to specify the actual size we wanted for the overall tree using an HTML table in graphviz using `width` and `height` parameters on `<td>` tags. That cause a lot of trouble because we had to figure out what the aspect ratio was coming out of matplotlib.  Once we moved to SVG files, we unnecessarily parsed the SVG files to get the size for use in the HTML; as we wrote at this document we realized  extracting the size information from SVG files was unnecessary.
 
-	pdftocairo poppler https://poppler.freedesktop.org/
+Unfortunately, graphviz's SVG output simply referenced the node files that we imported, rather than embedding the node images within the overall tree image. This is a very inconvenient form because it means sending a tree visualization means sending a zip of files rather than a single file. We spent the time to parse SVG XML and embed all referenced images within a single large meta-SVG file. That worked great and there was much celebration.
 
-	brew install pdf2svg
-	
-	in the end, notebooks don't show classifier tree svgs well, only regrs :(  tried pdf2cairo and pdf2svg. browser likes.
-	
-	bug in juypter notebook
+Then we noticed that graphviz does not properly handle text in HTML labels when generating SVG. For example, the text of classifier tree legends was cut off and overlapping. Rats.
+
+What finally worked to get a single clean SVG file was first generating a PDF file and then converting the PDF to SVG with `pdf2svg` (`pdf2cairo` also appears to work).
+
+Then we noticed that Jupyter notebook has a bug where it does not display those SVG files properly (see above). Jupyter lab does handle the SVG properly as does github. We added a `topng()` method so users of Jupyter notebook can use `Image(viz.topng())` to get in line images. Better yet, call `viz.view()`, which will pop up a window that displays images properly.
 
 	<section title="Lessons learned">
 
