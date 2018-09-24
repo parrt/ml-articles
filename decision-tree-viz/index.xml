@@ -3,34 +3,38 @@
 		 
 Decision trees are the fundamental building block of [gradient boosting machines](http://explained.ai/gradient-boosting/index.html) and [Random Forests](https://en.wikipedia.org/wiki/Random_forest)\symbol{tm}, probably the two most popular machine learning models for structured data.  Visualizing decision trees is a tremendous aid when learning how these models work and when interpreting models.  Unfortunately, current visualization packages are rudimentary and not immediately helpful to the novice. For example, we couldn't find a library that visualizes how decision nodes split up the feature space. It is also uncommon for libraries to support visualizing a specific feature vector as it weaves down through a tree's decision nodes; we could only find one image showing this.
 
-So, we've created a general package for [scikit-learn](https://github.com/scikit-learn/scikit-learn) decision tree visualization and model interpretation, which we'll be using heavily in an upcoming [machine learning book](https://mlbook.explained.ai/) (written with [Jeremy Howard](http://www.fast.ai/about/#jeremy)).  Here's a sample visualization:
+So, we've created a general package for [scikit-learn](https://github.com/scikit-learn/scikit-learn) decision tree visualization and model interpretation, which we'll be using heavily in an upcoming [machine learning book](https://mlbook.explained.ai/) (written with [Jeremy Howard](http://www.fast.ai/about/#jeremy)).  Here's a sample visualization for a tiny decision tree (click to enlarge):
 
-<img src="images/samples/wine-TD-2.svg" width="45%">
+[<img src="images/samples/wine-TD-2.svg" width="70%">](images/samples/wine-TD-2.svg)
 
-This article demonstrates the results of this work, details the specific choices we made for visualization, and outlines the tools and techniques used in the implementation. The visualization software is part of a nascent Python machine learning library called [animl](https://github.com/parrt/animl).  We assume you're familiar with the basic mechanism of decision trees if you're interested in visualizing them, but let's start with a brief summary so that we're all using the same terminology. (If you're not familiar with decision trees, check out [fast.ai's machine learning MOOC](http://forums.fast.ai/t/another-treat-early-access-to-intro-to-machine-learning-videos/6826).)
+This article demonstrates the results of this work, details the specific choices we made for visualization, and outlines the tools and techniques used in the implementation. The visualization software is part of a nascent Python machine learning library called [animl](https://github.com/parrt/animl).  We assume you're familiar with the basic mechanism of decision trees if you're interested in visualizing them, but let's start with a brief summary so that we're all using the same terminology. (If you're not familiar with decision trees, check out [fast.ai's Introduction to Machine Learning for Coders MOOC](http://course.fast.ai/ml1).)
 
 <section title="Decision tree review">
 
-A decision tree is a machine learning model based upon binary trees, trees with at most a left and right child.  A decision tree learns the relationship between feature vectors $\vec{x}$ and target values $y$ (in a training set) by examining and condensing training data into a binary tree of interior decision nodes and leaf prediction nodes.  (Notation: vectors are in bold and scalars are in italics.)
+A decision tree is a machine learning model based upon binary trees (trees with at most a left and right child).  A decision tree learns the relationship between observations in a training set, represented as feature vectors $\vec{x}$ and target values $y$, by examining and condensing training data into a binary tree of interior nodes and leaf nodes.  (Notation: vectors are in bold and scalars are in italics.)
 
-Each leaf in the decision tree is responsible for making a specific prediction. For regression trees, the prediction is a value in the target space, such as price.  For classifier trees, the prediction is a target category/class (represented as an integer in scikit), such as cancer or not-cancer. A decision tree carves up the feature space into groups of feature vectors that share similar target values and each leaf represents one of these groups.  For regression, "similar" means a low variance between target values and, for classification, "similar" means that most or all targets are of a single class.
+Each leaf in the decision tree is responsible for making a specific prediction. For regression trees, the prediction is a value, such as price.  For classifier trees, the prediction is a target category (represented as an integer in scikit), such as cancer or not-cancer. A decision tree carves up the feature space into groups of observations that share similar target values and each leaf represents one of these groups.  For regression, similarity in a leaf means a low variance among target values and, for classification, it means that most or all targets are of a single class.
 
-Any path from the root of the decision tree to a specific $y$ leaf predictor passes through a series of (internal) decision nodes. Each decision node compares a single feature's value in $\vec{x}$, $x_i$, with a specific \first{split point} value learned during training. For example, in a model predicting apartment rent prices, decision nodes would test features such as the number of bedrooms and number of bathrooms.  Even in a classifier with discrete target values, decision nodes still compare numeric *feature* values because scitkit's decision tree implementation assumes that all features are numeric. Categorical variables must be [one hot encoded](https://machinelearningmastery.com/how-to-one-hot-encode-sequence-data-in-python/), [binned](https://www.analyticsvidhya.com/blog/2015/11/easy-methods-deal-categorical-variables-predictive-modeling/), [label encoded](http://forums.fast.ai/t/to-label-encode-or-one-hot-encode/6057), etc...
+Any path from the root of the decision tree to a specific leaf predictor passes through a series of (internal) decision nodes. Each decision node compares a single feature's value in $\vec{x}$, $x_i$, with a specific \first{split point} value learned during training. For example, in a model predicting apartment rent prices, decision nodes would test features such as the number of bedrooms and number of bathrooms. (See [run-X].) Even in a classifier with discrete target values, decision nodes still compare numeric *feature* values because scitkit's decision tree implementation assumes that all features are numeric. Categorical variables must be [one hot encoded](https://machinelearningmastery.com/how-to-one-hot-encode-sequence-data-in-python/), [binned](https://www.analyticsvidhya.com/blog/2015/11/easy-methods-deal-categorical-variables-predictive-modeling/), [label encoded](http://forums.fast.ai/t/to-label-encode-or-one-hot-encode/6057), etc... 
 
-To train a decision node, the model examines a subset of the training observations (or the full training set at the root). The node's feature and split point within that feature space are chosen during training to split the observations into left and right buckets (subsets). The left bucket has observations whose $x_i$ feature values are all less than the split point and the right bucket has observations whose $x_i$ is greater than the split point.  The goal is to pick a feature and split point in that feature space so that, within the left and right buckets, the observations have similar target values. (This selection process is generally done through exhaustive comparison of features and  feature values.) Tree construction proceeds recursively by creating decision nodes for the left bucket and the right bucket.  Given a bucket with suitably similar target values, the model creates a leaf node rather than a decision node. The leaf predicts the mean (regression) or most common target (classification).
+<!--
+[<img src="images/show-X-chopped.png" width="60%">](images/show-X-chopped.png)
+-->
+
+To train a decision node, the model examines a subset of the training observations (or the full training set at the root). The node's feature and split point within that feature space are chosen during training to split the observations into left and right buckets (subsets) to maximize similarity as defined above. (This selection process is generally done through exhaustive comparison of features and  feature values.) The left bucket has observations whose $x_i$ feature values are all less than the split point and the right bucket has observations whose $x_i$ is greater than the split point.   Tree construction proceeds recursively by creating decision nodes for the left bucket and the right bucket.  Construction stops when some stopping criterion is reached, such as having less than five observations in the node.
 
 <section title="The key elements of decision tree visualization">
 	
-Decision tree visualizations would optimally highlight the following important elements:
+Decision tree visualizations should highlight the following important elements, which we demonstrate below.
 
 <ul>
-	<li>Decision node feature versus target value distributions, which we call feature-target space in this article. We want to know how separable the target values are based upon the feature and a split point.
-	<li>Decision node feature name and feature split value.  We need to know which feature each decision node is testing and where in that space the nodes splits the observations.
-	<li>Leaf node purity, which affects our prediction confidence. Leaves with low variance among the target values (regression) or an overwhelming majority target class (classification) are much more reliable predictors.
-	<li>Leaf node prediction value.  What is this leaf actually predicting from the collection of target values?
-	<li>Numbers of samples in decision nodes.  Sometimes it's useful to know where all most of the samples are being routed through the decision nodes.
-	<li>Numbers of samples in leaf nodes.  Our goal is a decision tree with fewer, larger and purer leaves. Nodes with too few samples are possible indications of overfitting.
-	<li>How a specific feature vector is run down the tree to a leaf. This helps explain why a particular feature vector gets the prediction it does. For example, in a regression tree predicting apartment rent prices, we might find a feature vector routed into a high predicted price leaf because of a decision node that checks for more than three bedrooms.
+	<li>Decision node **feature versus target value** distributions (which we call feature-target space in this article). We want to know how separable the target values are based upon the feature and a split point.
+	<li>Decision node **feature name and feature split value**.  We need to know which feature each decision node is testing and where in that space the nodes splits the observations.
+	<li>**Leaf node purity**, which affects our prediction confidence. Leaves with low variance among the target values (regression) or an overwhelming majority target class (classification) are much more reliable predictors.
+	<li>**Leaf node prediction value**.  What is this leaf actually predicting from the collection of target values?
+	<li>**Numbers of samples in decision nodes**.  Sometimes it's useful to know where all most of the samples are being routed through the decision nodes.
+	<li>**Numbers of samples in leaf nodes**.  Our goal is a decision tree with fewer, larger and purer leaves. Nodes with too few samples are possible indications of overfitting.
+	<li>How a specific feature vector is **run down the tree** to a leaf. This helps explain why a particular feature vector gets the prediction it does. For example, in a regression tree predicting apartment rent prices, we might find a feature vector routed into a high predicted price leaf because of a decision node that checks for more than three bedrooms.
 </ul>
 
 <section title="Gallery of decision tree visualizations">
@@ -43,68 +47,68 @@ and [code to generate all samples](https://github.com/parrt/animl/blob/master/te
 	<tr>
 		<th width="50%"><th width="50%">
 	<tr>
-		<td>[WINE](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_wine.html#sklearn.datasets.load_wine) 3-class top-down orientation
-		<td>[BREAST CANCER](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_breast_cancer.html#sklearn.datasets.load_breast_cancer) 2-class left-to-right
+		<td>[Wine](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_wine.html#sklearn.datasets.load_wine) 3-class top-down orientation
+		<td>[Breast cancer](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_breast_cancer.html#sklearn.datasets.load_breast_cancer) 2-class left-to-right
 	<tr>
 		<td>[<img src="images/samples/wine-TD-2.svg" width="100%">](images/samples/wine-TD-2.svg)
 		<td>[<img src="images/samples/breast_cancer-LR-3.svg" width="100%">](images/samples/breast_cancer-LR-3.svg)
 	<tr>
-		<td>[IRIS](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_iris.html#sklearn.datasets.load_iris) 3-class with sample $\vec{x}$
-		<td>[USER KNOWLEDGE RATING](https://archive.ics.uci.edu/ml/datasets/User+Knowledge+Modeling) 4-class
+		<td>[Iris](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_iris.html#sklearn.datasets.load_iris) 3-class showing a prediction
+		<td>[User knowledge rating](https://archive.ics.uci.edu/ml/datasets/User+Knowledge+Modeling) 4-class
 	<tr>
 		<td>[<img src="images/samples/iris-TD-3-X.svg" width="100%">](images/samples/iris-TD-3-X.svg)
 		<td>[<img src="images/samples/knowledge-LR-3.svg" width="100%">](images/samples/knowledge-LR-3.svg)
 	<tr>
-		<td>[DIGITS](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_digits.html#sklearn.datasets.load_digits) 10-class 
-		<td>[DIABETES](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_diabetes.html) with sample $\vec{x}$
+		<td>[Digits](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_digits.html#sklearn.datasets.load_digits) 10-class
+		<td>[Diabetes](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_diabetes.html) showing a prediction
 	<tr>
 		<td>[<img src="images/samples/digits-LR-3.svg" width="100%">](images/samples/digits-LR-3.svg)
 		<td>[<img src="images/samples/diabetes-TD-3-X.svg" width="100%">](images/samples/diabetes-TD-3-X.svg)	
 	<tr>
-		<td>[BOSTON](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_boston.html) with sample $\vec{x}$
-		<td>[SWEETS](http://mldata.org/repository/data/viewslug/ratings-of-sweets-sweetrs/) with sample $\vec{x}$
+		<td>[Boston](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_boston.html) showing a prediction
+		<td>[Sweets](http://mldata.org/repository/data/viewslug/ratings-of-sweets-sweetrs/) showing a prediction
 	<tr>
 		<td>[<img src="images/samples/boston-TD-3-X.svg" width="100%">](images/samples/boston-TD-3-X.svg)
 		<td>[<img src="images/samples/sweets-TD-3-X.svg" width="100%">](images/samples/sweets-TD-3-X.svg)
-	<tr>
-		<td>USER KNOWLEDGE RATING 4-class non-fancy
-		<td>DIABETES non-fancy
-	<tr>
-		<td>[<img src="images/samples/knowledge-TD-4-simple.svg" width="100%">](images/samples/knowledge-TD-4-simple.svg)
-		<td>[<img src="images/samples/boston-LR-5-X-simple.svg" width="70%">](images/samples/boston-LR-5-X-simple.svg)
+		<tr>
+			<td>User knowledge rating 4-class non-fancy
+			<td>Diabetes non-fancy
+		<tr>
+			<td>[<img src="images/samples/knowledge-TD-15-X-simple.svg" width="100%">](images/samples/knowledge-TD-15-X-simple.svg)
+			<td>[<img src="images/samples/boston-LR-5-X-simple.svg" width="80%">](images/samples/boston-LR-5-X-simple.svg)
 
 </table>	
 
 <section title="A comparison to previous state-of-the-art visualizations">
 	
-If you do a web search for "visualizing decision trees" you will quickly find a **Python** solution provided by the awesome scikit folks: [sklearn.tree.export_graphviz](http://scikit-learn.org/stable/modules/generated/sklearn.tree.export_graphviz.html).  With more work, you can find visualizations for **R** and even **SAS** and **IBM**. In this section, we collect the various decision tree visualizations we could find and compare them to the visualizations made by our `animl` library. We give a more detailed discussion of our visualizations in the next section.
+If you search for "visualizing decision trees" you will quickly find a **Python** solution provided by the awesome scikit folks: [sklearn.tree.export_graphviz](http://scikit-learn.org/stable/modules/generated/sklearn.tree.export_graphviz.html).  With more work, you can find visualizations for [R](http://scikit-learn.org/stable/modules/tree.html) and even [SAS](http://support.sas.com/documentation/cdl/en/vaug/68027/HTML/default/viewer.htm#n0q3i0zwng79kin1kb1zvpo9k312.htm) and [IBM](https://www.ibm.com/support/knowledgecenter/en/SS4QC9/com.ibm.solutions.wa_an_overview.2.0.0.doc/wa_discover_viz_expl_insigths_dec_tree.html). In this section, we collect the various decision tree visualizations we could find and compare them to the visualizations made by our `animl` library. We give a more detailed discussion of our visualizations in the next section.
 
 
-Let's start with the [default scitkit visualization](http://scikit-learn.org/stable/modules/tree.html) of a decision tree on the well-known [IRIS](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_iris.html#sklearn.datasets.load_iris) data set (click on images to enlarge).
+Let's start with the [default scitkit visualization](http://scikit-learn.org/stable/modules/tree.html) of a decision tree on the well-known [Iris](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_iris.html#sklearn.datasets.load_iris) data set (click on images to enlarge).
 
 <table>
 	<tr>
 		<th width="50%">
 		<th width="50%">
 			<tr>
-				<td>Default scikit IRIS visualization
-				<td>Our `animl` IRIS visualization
+				<td>Default scikit Iris visualization
+				<td>Our `animl` Iris visualization
 	<tr>
 		<td>[<img src="images/iris-scikit.png" width="100%">](images/iris-scikit.png)
 		<td>[<img src="images/samples/iris-TD-5.svg" width="100%">](images/samples/iris-TD-5.svg)
 </table>
 		
-The scikit tree does a good job of representing the tree structure, but we have a few quibbles.  The colors aren't the best and it's not immediately obvious why some of the nodes are colored and some aren't.  If the colors represent predicted class for this classifier, one would think just the leaves would be colored because only leaves have predictions. (It turns out the non-colored nodes have no majority prediction.) Including the gini coefficient (certainty score) costs space and doesn't really help the beginners to interpret trees. The count of samples of the  various target classes in each node is somewhat useful, though, a histogram would be even better. A target class color legend would be nice.  Finally, using true and false as the edge labels isn't as clear as, say, labels $<$ and $\ge$. The most obvious difference is that our decision nodes show feature distributions as overlapping stacked-histograms, one histogram per target class. Also, our leaf size is proportional to the number of samples in that leaf.
+The scikit tree does a good job of representing the tree structure, but we have a few quibbles.  The colors aren't the best and it's not immediately obvious why some of the nodes are colored and some aren't.  If the colors represent predicted class for this classifier, one would think just the leaves would be colored because only leaves have predictions. (It turns out the non-colored nodes have no majority prediction.) Including the gini coefficient (certainty score) costs space and doesn't help with interpretation. The count of samples of the  various target classes in each node is somewhat useful, but a histogram would be even better. A target class color legend would be nice.  Finally, using true and false as the edge labels isn't as clear as, say, labels $<$ and $\ge$. The most obvious difference is that our decision nodes show feature distributions as overlapping stacked-histograms, one histogram per target class. Also, our leaf size is proportional to the number of samples in that leaf.
 
-Scikit uses the same visualization approach for decision tree regressors. For example, here is scikit's visualization using the [BOSTON](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_boston.html) data set, with `animl`'s version for comparison (click to enlarge images):
+Scikit uses the same visualization approach for decision tree regressors. For example, here is scikit's visualization using the [Boston](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_boston.html) data set, with `animl`'s version for comparison (click to enlarge images):
 
 <table>
 	<tr>
 		<th width="50%">
 		<th width="50%">
 			<tr>
-				<td>Default scikit BOSTON visualization
-				<td>Our `animl` BOSTON visualization
+				<td>Default scikit Boston visualization
+				<td>Our `animl` Boston visualization
 	<tr>
 		<td>[<img src="images/boston-scikit.png" width="100%">](images/boston-scikit.png)
 		<td>[<img src="images/samples/boston-TD-3.svg" width="100%">](images/samples/boston-TD-3.svg)
@@ -112,11 +116,11 @@ Scikit uses the same visualization approach for decision tree regressors. For ex
 
 In the scikit tree, it's not immediately clear what the use of color implies, but after studying the image, darker images indicate higher predicted target values. As before, our decision nodes show the feature space distribution, this time using a feature versus target value scatterplot.  The leaves use strip plots to show the target value distribution; leaves with more dots naturally have a higher number of samples.
 
-**R** programmers also have access to a package for [visualizing decision trees](http://blog.revolutionanalytics.com/2013/06/plotting-classification-and-regression-trees-with-plotrpart.html), which gives similar results to scikit but with nice edge labels:
+**R** programmers also have access to a package for [visualizing decision trees](http://blog.revolutionanalytics.com/2013/06/plotting-classification-and-regression-trees-with-plotrpart.html), which gives similar results to scikit but with nicer edge labels:
 
 [<img src="images/R-tree.png" width="40%">](images/R-tree.png)
 
-If you dig really hard, you will find that **SAS** and **IBM** provide (non-Python-based) decision tree visualizations.  Starting with SAS, we see that their decision nodes include a bar chart related to the node's sample target values and other details:
+**SAS** and **IBM** also provide (non-Python-based) decision tree visualizations.  Starting with SAS, we see that their decision nodes include a bar chart related to the node's sample target values and other details:
 	
 <table>
 	<tr>
@@ -131,11 +135,11 @@ If you dig really hard, you will find that **SAS** and **IBM** provide (non-Pyth
 </table>
 
 
-Indicating the size of the left and right buckets via edge width is a nice touch. But, those bar charts are hard to interpret because they have no horizontal axis.  Decision nodes testing categorical variables (left image) have exactly one bar per category so they must represent simple category counts, rather than feature distributions. For numeric features (right image), SAS decision nodes show a histogram of either target  or feature space (we can't tell from the image). SAS node bar charts / histograms appear to illustrate just target values, which tells us nothing about how the feature space was split.
+Indicating the size of the left and right buckets via edge width is a nice touch. But, those bar charts are hard to interpret because they have no horizontal axis.  Decision nodes testing categorical variables (left image) have exactly one bar per category, so they must represent simple category counts, rather than feature distributions. For numeric features (right image), SAS decision nodes show a histogram of either target  or feature space (we can't tell from the image). SAS node bar charts / histograms appear to illustrate just target values, which tells us nothing about how the feature space was split.
 
 The SAS tree on the right appears to highlight a path through the decision tree for a specific unknown feature vector, but we couldn't find any other examples from other tools and libraries.  The ability to visualize a specific vector run down the tree does not seem to be generally available.
 
-Moving on to IBM software, here is a nice visualization, that also shows decision node category counts as bar charts, from [IBM's Watson analytics](https://www.ibm.com/support/knowledgecenter/en/SS4QC9/com.ibm.solutions.wa_an_overview.2.0.0.doc/wa_discover_viz_expl_insigths_dec_tree.html) (on the [TITANIC](https://www.kaggle.com/c/titanic/data) data set):
+Moving on to IBM software, here is a nice visualization that also shows decision node category counts as bar charts, from [IBM's Watson analytics](https://www.ibm.com/support/knowledgecenter/en/SS4QC9/com.ibm.solutions.wa_an_overview.2.0.0.doc/wa_discover_viz_expl_insigths_dec_tree.html) (on the [TITANIC](https://www.kaggle.com/c/titanic/data) data set):
 
 [<img src="images/ibm-tree.png" width="60%">](images/ibm-tree.png)
 
@@ -175,23 +179,23 @@ Other than the educational animation in [A visual introduction to machine learni
 
 <subsection title="Visualizing feature-target space">
 
-Training of a decision node chooses feature $x_i$ and split value within $x_i$'s range of values (feature space) to group samples with similar target values into two buckets.  Just to be clear, training involves examining the relationship between features and target values. Unless decision nodes show feature-target space in some way, the viewer cannot see how and why training arrived at the split value. To highlight how decision nodes carve up the feature space, we trained a regressor and classifier with a single (AGE) feature ([code to generate images](https://github.com/parrt/animl/blob/master/testing/paper_examples.py)).  Here's a regressor decision tree trained on BOSTON data, with node ID labeling turned on for discussion purposes here:
+Training of a decision node chooses feature $x_i$ and split value within $x_i$'s range of values (feature space) to group samples with similar target values into two buckets.  Just to be clear, training involves examining the relationship between features and target values. Unless decision nodes show feature-target space in some way, the viewer cannot see how and why training arrived at the split value. To highlight how decision nodes carve up the feature space, we trained a regressor and classifier with a single (AGE) feature ([code to generate images](https://github.com/parrt/animl/blob/master/testing/paper_examples.py)).  Here's a regressor decision tree trained using a single feature from the Boston data, `AGE`, and with node ID labeling turned on for discussion purposes here:
 
 [<img src="images/boston-TD-AGE.svg" width="100%">](images/boston-TD-AGE.svg)
 
 Horizontal dashed lines indicate the target mean for the left and right buckets in decision nodes; a vertical dashed line indicates the split point in feature space. The black wedge highlights the split point and identifies the exact split value. Leaf nodes indicate the target prediction (mean) with a dashed line.
 
-All decision nodes are restricted to the single AGE feature to demonstrate that our visualization forces the same horizontal axis range for all nodes testing the same feature, leaving blank regions rather than zooming in. As we descend through decision nodes, the sample AGE values are boxed into narrower and narrower regions.  Combining the AGE feature-target space (regions) from two siblings yields the parent's feature-target space. For example, combining the AGE regions in nodes 1 and 8, yields the node 0 feature-target space and combining the AGE regions from nodes 9 and 12 yields the node 8 feature-target space. The prediction leaves are not very pure and using a single variable leads to a poor model, but this restricted example demonstrates how decision trees carve up feature space.
+As you can see, each `AGE` feature axis uses the same range, rather than zooming in, to make it easier to compare decision nodes. As we descend through decision nodes, the sample `AGE` values are boxed into narrower and narrower regions. For example, the `AGE` feature space in node 0 is split into the regions of `AGE` future space shown in nodes 1 and 8. Node 1's space is then split into the chunks shown in nodes 2 and 5. The prediction leaves are not very pure because training a model on just a single variable leads to a poor model, but this restricted example demonstrates how decision trees carve up feature space.
 
-While a decision tree implementation is virtually identical for both classifier and regressor decision trees, the way we interpret them is very different so our visualizations are distinct for the two cases.  For a regressor, showing feature-target space is best done with a scatterplot of feature versus target.  For classifier, however, the target is a category rather than a number and so we chose to illustrate feature-target space using histograms as an indicator of feature space distributions.  Here's a classifier tree trained on the USER KNOWLEDGE data, again with a single feature (PEG) and with nodes labeled for discussion purposes:
+While a decision tree implementation is virtually identical for both classifier and regressor decision trees, the way we interpret them is very different, so our visualizations are distinct for the two cases.  For a regressor, showing feature-target space is best done with a scatterplot of feature versus target.  For classifiers, however, the target is a category, rather than a number, so we chose to illustrate feature-target space using histograms as an indicator of feature space distributions.  Here's a classifier tree trained on the USER KNOWLEDGE data, again with a single feature (PEG) and with nodes labeled for discussion purposes:
 
 [<img src="images/knowledge-TD-PEG.svg" width="100%">](images/knowledge-TD-PEG.svg)
 
-Ignoring color, the histogram shows the PEG feature space distribution.  Adding color, gives us an indication of the relationship between feature space and target class. For example, in node 0, we can see that samples with `very_low` target class are clustered at the low end of PEG feature space and samples with `High` target class are clustered at the high-end. As with the regressor, the feature space of a left child is everything to the left of the parent's split point in the same  feature space; similarly for the right child.  For example, combining the histograms of nodes 9 and 12 yields the histogram of node 8. We force the horizontal axis range to be the same for all PEG decision nodes so that decision nodes lower in the tree clearly box in narrower regions that are more and more pure.
+Ignoring color, the histogram shows the PEG feature space distribution.  Adding color gives us an indication of the relationship between feature space and target class. For example, in node 0 we can see that samples with `very_low` target class are clustered at the low end of PEG feature space and samples with `High` target class are clustered at the high-end. As with the regressor, the feature space of a left child is everything to the left of the parent's split point in the same  feature space; similarly for the right child.  For example, combining the histograms of nodes 9 and 12 yields the histogram of node 8. We force the horizontal axis range to be the same for all PEG decision nodes so that decision nodes lower in the tree clearly box in narrower regions that are more and more pure.
 
 We use a stacked histogram so that overlap is clear in the feature space between samples with different target classes.  Note that the height in the Y axis of the stacked histogram is the total number of samples from all classes; multiple class counts are stacked on top of each other. 
 
-When there are more than four or five classes, the stacked histograms are difficult to read and so we recommend setting the histogram type parameter to `bar` not `barstacked` in this case.  With high cardinality target categories, the overlapping distributions are harder to visualize and things break down, so we set a limit of 10 target classes. Here's a shallow tree example using the 10-class DIGITS data set using non-stacked histograms:
+When there are more than four or five classes, the stacked histograms are difficult to read, so we recommend setting the histogram type parameter to `bar` not `barstacked` in this case.  With high cardinality target categories, the overlapping distributions are harder to visualize and things break down, so we set a limit of 10 target classes. Here's a shallow tree example using the 10-class Digits data set using non-stacked histograms:
 
 [<img src="images/samples/digits-TD-2.svg" width="65%">](images/samples/digits-TD-2.svg)
 
@@ -211,7 +215,7 @@ Turning to regressor trees now, we make sure that the target (vertical) axis of 
 
 <img src="images/boston-dec-node.png" width="30%">
 
-Regressor leaves also show the same range vertically for the target space. We use a strip plot rather than, say, a box plot because the strip plot shows the distribution explicitly while implicitly showing the number of samples by the number of dots. (We also write out the number of samples in text for leaves.) The leaf prediction is the distribution center of mass (mean) of the strip plot, which we highlight with a dashed line.
+Regressor leaves also show the same range vertically for the target space. We use a [strip plot](https://seaborn.pydata.org/generated/seaborn.stripplot.html) rather than, say, a box plot, because the strip plot shows the distribution explicitly while implicitly showing the number of samples by the number of dots. (We also write out the number of samples in text for leaves.) The leaf prediction is the distribution center of mass (mean) of the strip plot, which we highlight with a dashed line.
 
 <img src="images/boston-leaf.png" width="25%">
 
@@ -225,7 +229,7 @@ There are also a number of miscellaneous details that we think improve the quali
 	<li>We draw outlines of bars in bar charts and slices in pie charts
 </ul>
 
-<subsection title="Visualizing tree interpretation of a single observation">
+<subsection label="run-X" title="Visualizing tree interpretation of a single observation">
 
 To figure out how model training arrives at a specific tree, all of the action is in the feature-space splits of the decision nodes, which we just discussed. Now, let's take a look at visualizing how a specific feature vector yields a specific prediction. The key here is to examine the decisions taken along the path from the root to the leaf predictor node. 
 
@@ -237,7 +241,7 @@ Decision-making within a node is straightforward: take the left path if feature 
 		<th width="50%">
 			<tr>
 				<td>KNOWLEDGE data with test vector
-				<td>DIABETES data with test vector
+				<td>Diabetes data with test vector
 	<tr>
 		<td>[<img src="images/samples/knowledge-TD-3-X.svg" width="100%">](images/samples/knowledge-TD-3-X.svg)
 		<td>[<img src="images/samples/diabetes-TD-3-X.svg" width="100%">](images/samples/diabetes-TD-3-X.svg)
@@ -254,14 +258,14 @@ Some users have a preference for left-to-right orientation instead of top-down a
 	<tr>
 		<th width="45%"><th width="45%">
 	<tr>
-		<td>WINE
-		<td>DIABETES
+		<td>Wine
+		<td>Diabetes
 	<tr>
 		<td>[<img src="images/samples/wine-LR-3.svg" width="100%">](images/samples/wine-LR-3.svg)
 		<td>[<img src="images/samples/diabetes-LR-3.svg" width="100%">](images/samples/diabetes-LR-3.svg)
 	<tr>
-		<td>WINE with sample $\vec{x}$
-		<td>DIABETES with sample $\vec{x}$
+		<td>Wine showing a prediction
+		<td>Diabetes showing a prediction
 	<tr>
 		<td>[<img src="images/samples/wine-LR-2-X.svg" width="100%">](images/samples/wine-LR-2-X.svg)
 		<td>[<img src="images/samples/diabetes-LR-2-X.svg" width="100%">](images/samples/diabetes-LR-2-X.svg) 
@@ -269,7 +273,7 @@ Some users have a preference for left-to-right orientation instead of top-down a
 	
 <subsection title="Simplified non-fancy layout">
 
-To evaluate the generality of a decision tree, if it often helps to get a high-level overview of the tree.  This generally means examining things like tree shape and size, but more importantly, it means looking at the leaves.  We'd like to know how many samples each leaf has, how pure the target values are, and just generally where most of the weight of samples falls.   Getting an overview is harder when the visualization is too large and so we provide a non-fancy option that generates smaller visualizations while retaining key leaf information. Here are a sample classifier and a regressor in non-fancy mode with top-down orientation:
+To evaluate the generality of a decision tree, if it often helps to get a high-level overview of the tree.  This generally means examining things like tree shape and size, but more importantly, it means looking at the leaves.  We'd like to know how many samples each leaf has, how pure the target values are, and just generally where most of the weight of samples falls.   Getting an overview is harder when the visualization is too large and so we provide a "non-fancy" option that generates smaller visualizations while retaining key leaf information. Here are a sample classifier and a regressor in non-fancy mode with top-down orientation:
 	
 	[<img src="images/samples/knowledge-TD-15-X-simple.svg" width="55%">](images/samples/knowledge-TD-15-X-simple.svg)
 
@@ -300,22 +304,18 @@ To evaluate the generality of a decision tree, if it often helps to get a high-l
 		
 		<img src="images/non-strip-plot.png" width="30%">
 		
-	That is misleading because the horizontal axis is usually feature space. We more or less just scrunched that into a strip plot.
+	That is misleading because the horizontal axis is usually feature space. We scrunched that into a strip plot.
 		
 <section title="Code sample">
 
-This section gives a sample visualization for the Boston regression data set and the WINE classification data set.  You can also check out the	
+This section gives a sample visualization for the Boston regression data set and the Wine classification data set.  You can also check out the	
 [full gallery](https://github.com/parrt/animl/tree/master/testing/samples) 
 of sample visualizations and the [code to generate the samples](https://github.com/parrt/animl/blob/master/testing/gen_samples.py).
 
-<subsection title="BOSTON regression tree visualization">
+<subsection title="Boston regression tree visualization">
 	
-	Here is a code snippet to load the BOSTON data and train a regression tree with a maximum depth of three decision nodes:
+	Here is a code snippet to load the Boston data and train a regression tree with a maximum depth of three decision nodes:
 ```
-from animl.trees import *
-from animl.viz.trees import *
-from IPython.display import Image, display_svg
-
 boston = load_boston()
 
 X_train = boston.data
@@ -338,14 +338,11 @@ viz.view()             # pop up window to display image
 
 [<img src="images/samples/boston-TD-3-X.svg" width="45%">](images/samples/boston-TD-3-X.svg)
 
-<subsection title="WINE classification tree visualization">
+<subsection title="Wine classification tree visualization">
 	
-	Here is a code snippet to load the WINE data and train a classifier tree with a maximum depth of three decision nodes:
-```
-from animl.trees import *
-from animl.viz.trees import *
-from sklearn.datasets import load_wine
+	Here is a code snippet to load the Wine data and train a classifier tree with a maximum depth of three decision nodes:
 
+```
 clf = tree.DecisionTreeClassifier(max_depth=3)
 wine = load_wine()
 
@@ -370,11 +367,10 @@ In Jupyter notebooks, the object returned from `dtreeviz()` has a `_repr_svg_()`
 	
 	<img src="images/bad-jupyter-svg.png" width="45%">
 		
-	The good news is that github displays them properly as does Jupyter Lab.
+	The good news is that github displays them properly as does [JupyterLab](https://jupyterlab.readthedocs.io/en/stable/getting_started/overview.html).
 	
 	Use `Image(viz.topng())` to display (poorly) in Juypter notebook or simply call `viz.view()`, which will pop up a window that displays things properly.
 </aside>
-
 
 <section title="Our implementation">
 	
@@ -410,7 +406,7 @@ LSTAT3 -> leaf5 [penwidth=0.3 color="#444443" label=<>]
 }
 ```
 
-For the most part, we always use HTML labels on graphviz nodes rather than just text labels when text is necessary. It just gives much more control over text display and provides an ability to show tabular data as tables. For example, when displaying a test vector run down the tree, the test vector is shown using an HTML table:
+We usually use HTML labels on graphviz nodes rather than just text labels because they give much more control over text display and provide an ability to show tabular data as actual tables. For example, when displaying a test vector run down the tree, the test vector is shown using an HTML table:
 
 <img src="images/X.png" width="25%">
 
@@ -433,13 +429,13 @@ We use matplotlib to generate the decision and leaf nodes and, to get the images
 
 The 94806 number is the process ID, which helps isolate multiple instances of `animl` running on the same machine. Without this, it's possible for multiple processes to overwrite the same temporary files.
 
-Because we wanted scalable, vector graphics, we tried importing SVG images initially but we could not get graphviz to accept those files (pdf neither). This was very frustrating because graphviz clearly knew how to generate SVG and must have and be using an SVG library, we reasoned. It took us four hours to figure out  that generating and importing SVG were two different things and we needed the following magic incantation on OS X using `--with-librsvg`:
+Because we wanted scalable, vector graphics, we tried importing SVG images initially but we could not get graphviz to accept those files (pdf neither).  It took us four hours to figure out  that generating and importing SVG were two different things and we needed the following magic incantation on OS X using `--with-librsvg`:
 
 ```
 $ brew install graphviz --with-librsvg --with-app --with-pango
 ```
 
-Originally, when we resorted to generating PNG files from matplotlib, we set the dots per inch (dpi) to be 450 so that they looked okay on high resolution screens like the iMac. Unfortunately, that meant we had to specify the actual size we wanted for the overall tree using an HTML table in graphviz using `width` and `height` parameters on `<td>` tags. That cause a lot of trouble because we had to figure out what the aspect ratio was coming out of matplotlib.  Once we moved to SVG files, we unnecessarily parsed the SVG files to get the size for use in the HTML; as we wrote at this document we realized  extracting the size information from SVG files was unnecessary.
+Originally, when we resorted to generating PNG files from matplotlib, we set the dots per inch (dpi) to be 450 so that they looked okay on high resolution screens like the iMac. Unfortunately, that meant we had to specify the actual size we wanted for the overall tree using an HTML table in graphviz using `width` and `height` parameters on `<td>` tags. That cause a lot of trouble because we had to figure out what the aspect ratio was coming out of matplotlib.  Once we moved to SVG files, we unnecessarily parsed the SVG files to get the size for use in the HTML; as we wrote this document we realized  extracting the size information from SVG files was unnecessary.
 
 Unfortunately, graphviz's SVG output simply referenced the node files that we imported, rather than embedding the node images within the overall tree image. This is a very inconvenient form because sending a single tree visualization means sending a zip of files rather than a single file. We spent the time to parse SVG XML and embed all referenced images within a single large meta-SVG file. That worked great and there was much celebration.
 
@@ -453,16 +449,12 @@ Then we noticed that Jupyter notebook has a bug where it does not display those 
 
 		Sometimes solving a programming problem is less about algorithms and more about working within the constraints and capabilities of the programming ecosystem, such as tools and libraries.  That is definitely the case with this decision tree visualization software. The programming was not hard; it was more a matter of fearlessly bashing our way to victory through an appropriate mashup of graphics tools and libraries.  
 
-		Designing the actual visualization also required a seemingly infinite number of experiments and tweaks. Generating high quality vector-based images required pathological determination and a trail of dead code left along the circuitous path to success.
+		Designing the actual visualization also required a seemingly infinite number of experiments and tweaks. Generating high quality vector-based images also required pathological determination and a trail of dead code left along the circuitous path to success.
 	
-	We are definitely not visualization aficionados, but for this specific problem we banged on it until we got effective diagrams.
-
-		there are lots of visual effects one can choose from to visualize data: color, line thickness, line style, different kinds of plots, size (area, length, graph height, ...), alpha, text styles (color, font, bold, italics, size), graph annotations, visual flow.  Everything has to be for a reason don't just use color because colors are nice. they have to mean something.  In Tufte's seminar I learned that you can pack a lot of information into a rich diagram; humans can deal with it, but it can't be a mishmash.
+	We are definitely not visualization aficionados, but for this specific problem we banged on it until we got effective diagrams.  In [Edward Tufte's seminar](https://www.edwardtufte.com/tufte/courses) I learned that you can pack a lot of information into a rich diagram, as long as it's not an arbitrary mishmash; the human eye can resolve lots of details.  We used a number of elements from the design pallete to visualize decision trees: color, line thickness, line style, different kinds of plots, size (area, length, graph height, ...), color transparency (alpha), text styles (color, font, bold, italics, size), graph annotations, and visual flow.  All visual elements had to be motivated. For example, we didn't use colored just because colors are nice. We used color to  highlight an important dimension (target category) because humans quickly and easily pick out color differences.  Node size differences should also be picked out easily by the human eye (is that a kitty cat or lion?), so we used that to indicate leaf size.
 	
-	as our subtlety list shows, there's more to it.  same axis, same scale etc.
-	
-
 <section title="Future work">
 
-bottom-justify histograms in classifier trees. some wedge labels overlap with axis. thicken incoming edges for nodes with lots of samples.
+	The visualizations described in this document are part of the [animl](https://github.com/parrt/animl) machine learning library, which is just getting started. We'll likely moved the [rfpimp](https://github.com/parrt/random-forest-importances) permutation importance library into `animl` soon.  At this point, we haven't tested the visualizations on anything but OS X. We'd welcome instructions from programmers on other platforms so that we could include those installation steps in the documentation.
 	
+	There are a couple of tweaks we like to do, such as bottom justifying the histograms and classifier trees so that it's easier to compare notes. Also, some of the wedge labels overlap with the axis labels.  Finally, it would be interesting to see what the trees look like with incoming edge thicknesses proportional to the number of samples in that node.	
