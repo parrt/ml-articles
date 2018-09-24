@@ -12,9 +12,9 @@
 Please send comments, suggestions, or fixes to [Terence](mailto:parrt@cs.usfca.edu).
 </copyright>
 
-<metadata title="How to visualize decision tree models"
-	imageurl="http://explained.ai/decision-tree-viz/images/icons/knowledge-TD-3-X-icon.png"
-	description="."
+<metadata title="How to visualize decision tree"
+	imageurl="http://explained.ai/decision-tree-viz/images/samples/knowledge-TD-3-X.svg"
+	description="Decision trees are the fundamental building block of gradient boosting machines and Random Forests(tm), probably the two most popular machine learning models for structured data. Visualizing decision trees is a tremendous aid when learning how these models work and when interpreting models. Unfortunately, current visualization packages are rudimentary and not immediately helpful to the novice. For example, we couldn't find a library that visualizes how decision nodes split up the feature space. So, we've created a general package (part of the animl library) for scikit-learn decision tree visualization and model interpretation."
 	url="http://explained.ai/decision-tree-viz/index.html"
 	pagetype="article"
 	twitterhandle="@the_antlr_guy"
