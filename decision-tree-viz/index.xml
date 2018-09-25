@@ -7,7 +7,7 @@ So, we've created a general package for [scikit-learn](https://github.com/scikit
 
 [<img src="images/samples/wine-TD-2.svg" width="70%">](images/samples/wine-TD-2.svg)
 
-This article demonstrates the results of this work, details the specific choices we made for visualization, and outlines the tools and techniques used in the implementation. The visualization software is part of a nascent Python machine learning library called [animl](https://github.com/parrt/animl).  We assume you're familiar with the basic mechanism of decision trees if you're interested in visualizing them, but let's start with a brief summary so that we're all using the same terminology. (If you're not familiar with decision trees, check out [fast.ai's Introduction to Machine Learning for Coders MOOC](http://course.fast.ai/ml1).)
+This article demonstrates the results of this work, details the specific choices we made for visualization, and outlines the tools and techniques used in the implementation. The visualization software is part of a nascent Python machine learning library called [animl](https://github.com/parrt/animl).  We assume you're familiar with the basic mechanism of decision trees if you're interested in visualizing them, but let's start with a brief summary so that we're all using the same terminology. (If you're not familiar with decision trees, check out [fast.ai's Introduction to Machine Learning for Coders MOOC](http://course.fast.ai/ml).)
 
 <section title="Decision tree review">
 
