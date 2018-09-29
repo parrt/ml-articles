@@ -7,7 +7,7 @@ So, we've created a general package for [scikit-learn](https://github.com/scikit
 
 [<img src="images/samples/wine-TD-2.svg" width="70%">](images/samples/wine-TD-2.svg)
 
-This article demonstrates the results of this work, details the specific choices we made for visualization, and outlines the tools and techniques used in the implementation. The visualization software is part of a nascent Python machine learning library called [animl](https://github.com/parrt/animl).  We assume you're familiar with the basic mechanism of decision trees if you're interested in visualizing them, but let's start with a brief summary so that we're all using the same terminology. (If you're not familiar with decision trees, check out [fast.ai's Introduction to Machine Learning for Coders MOOC](http://course.fast.ai/ml).)
+This article demonstrates the results of this work, details the specific choices we made for visualization, and outlines the tools and techniques used in the implementation. The visualization software is part of a nascent Python machine learning library called [dtreeviz](https://github.com/parrt/dtreeviz).  We assume you're familiar with the basic mechanism of decision trees if you're interested in visualizing them, but let's start with a brief summary so that we're all using the same terminology. (If you're not familiar with decision trees, check out [fast.ai's Introduction to Machine Learning for Coders MOOC](http://course.fast.ai/ml).)
 
 <section title="Decision tree review">
 
@@ -40,8 +40,8 @@ Decision tree visualizations should highlight the following important elements, 
 <section title="Gallery of decision tree visualizations">
 	
 Before digging into the previous state-of-the-art visualizations, we'd like to give a little spoiler to show what's possible. This section highlights some samples visualizations we built from scikit regression and classification decision trees on a few data sets. You can also check out the	
-[full gallery](https://github.com/parrt/animl/tree/master/testing/samples) 
-and [code to generate all samples](https://github.com/parrt/animl/blob/master/testing/gen_samples.py).
+[full gallery](https://github.com/parrt/dtreeviz/tree/master/testing/samples) 
+and [code to generate all samples](https://github.com/parrt/dtreeviz/blob/master/testing/gen_samples.py).
 
 <table>
 	<tr>
@@ -81,7 +81,7 @@ and [code to generate all samples](https://github.com/parrt/animl/blob/master/te
 
 <section title="A comparison to previous state-of-the-art visualizations">
 	
-If you search for "visualizing decision trees" you will quickly find a **Python** solution provided by the awesome scikit folks: [sklearn.tree.export_graphviz](http://scikit-learn.org/stable/modules/generated/sklearn.tree.export_graphviz.html).  With more work, you can find visualizations for [R](http://scikit-learn.org/stable/modules/tree.html) and even [SAS](http://support.sas.com/documentation/cdl/en/vaug/68027/HTML/default/viewer.htm#n0q3i0zwng79kin1kb1zvpo9k312.htm) and [IBM](https://www.ibm.com/support/knowledgecenter/en/SS4QC9/com.ibm.solutions.wa_an_overview.2.0.0.doc/wa_discover_viz_expl_insigths_dec_tree.html). In this section, we collect the various decision tree visualizations we could find and compare them to the visualizations made by our `animl` library. We give a more detailed discussion of our visualizations in the next section.
+If you search for "visualizing decision trees" you will quickly find a **Python** solution provided by the awesome scikit folks: [sklearn.tree.export_graphviz](http://scikit-learn.org/stable/modules/generated/sklearn.tree.export_graphviz.html).  With more work, you can find visualizations for [R](http://scikit-learn.org/stable/modules/tree.html) and even [SAS](http://support.sas.com/documentation/cdl/en/vaug/68027/HTML/default/viewer.htm#n0q3i0zwng79kin1kb1zvpo9k312.htm) and [IBM](https://www.ibm.com/support/knowledgecenter/en/SS4QC9/com.ibm.solutions.wa_an_overview.2.0.0.doc/wa_discover_viz_expl_insigths_dec_tree.html). In this section, we collect the various decision tree visualizations we could find and compare them to the visualizations made by our `dtreeviz` library. We give a more detailed discussion of our visualizations in the next section.
 
 
 Let's start with the [default scitkit visualization](http://scikit-learn.org/stable/modules/tree.html) of a decision tree on the well-known [Iris](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_iris.html#sklearn.datasets.load_iris) data set (click on images to enlarge).
@@ -92,7 +92,7 @@ Let's start with the [default scitkit visualization](http://scikit-learn.org/sta
 		<th width="50%">
 			<tr>
 				<td>Default scikit Iris visualization
-				<td>Our `animl` Iris visualization
+				<td>Our `dtreeviz` Iris visualization
 	<tr>
 		<td>[<img src="images/iris-scikit.png" width="100%">](images/iris-scikit.png)
 		<td>[<img src="images/samples/iris-TD-5.svg" width="100%">](images/samples/iris-TD-5.svg)
@@ -100,7 +100,7 @@ Let's start with the [default scitkit visualization](http://scikit-learn.org/sta
 		
 The scikit tree does a good job of representing the tree structure, but we have a few quibbles.  The colors aren't the best and it's not immediately obvious why some of the nodes are colored and some aren't.  If the colors represent predicted class for this classifier, one would think just the leaves would be colored because only leaves have predictions. (It turns out the non-colored nodes have no majority prediction.) Including the gini coefficient (certainty score) costs space and doesn't help with interpretation. The count of samples of the  various target classes in each node is somewhat useful, but a histogram would be even better. A target class color legend would be nice.  Finally, using true and false as the edge labels isn't as clear as, say, labels $<$ and $\ge$. The most obvious difference is that our decision nodes show feature distributions as overlapping stacked-histograms, one histogram per target class. Also, our leaf size is proportional to the number of samples in that leaf.
 
-Scikit uses the same visualization approach for decision tree regressors. For example, here is scikit's visualization using the [Boston](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_boston.html) data set, with `animl`'s version for comparison (click to enlarge images):
+Scikit uses the same visualization approach for decision tree regressors. For example, here is scikit's visualization using the [Boston](http://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_boston.html) data set, with `dtreeviz`'s version for comparison (click to enlarge images):
 
 <table>
 	<tr>
@@ -108,7 +108,7 @@ Scikit uses the same visualization approach for decision tree regressors. For ex
 		<th width="50%">
 			<tr>
 				<td>Default scikit Boston visualization
-				<td>Our `animl` Boston visualization
+				<td>Our `dtreeviz` Boston visualization
 	<tr>
 		<td>[<img src="images/boston-scikit.png" width="100%">](images/boston-scikit.png)
 		<td>[<img src="images/samples/boston-TD-3.svg" width="100%">](images/samples/boston-TD-3.svg)
@@ -179,7 +179,7 @@ Other than the educational animation in [A visual introduction to machine learni
 
 <subsection title="Visualizing feature-target space">
 
-Training of a decision node chooses feature $x_i$ and split value within $x_i$'s range of values (feature space) to group samples with similar target values into two buckets.  Just to be clear, training involves examining the relationship between features and target values. Unless decision nodes show feature-target space in some way, the viewer cannot see how and why training arrived at the split value. To highlight how decision nodes carve up the feature space, we trained a regressor and classifier with a single (AGE) feature ([code to generate images](https://github.com/parrt/animl/blob/master/testing/paper_examples.py)).  Here's a regressor decision tree trained using a single feature from the Boston data, `AGE`, and with node ID labeling turned on for discussion purposes here:
+Training of a decision node chooses feature $x_i$ and split value within $x_i$'s range of values (feature space) to group samples with similar target values into two buckets.  Just to be clear, training involves examining the relationship between features and target values. Unless decision nodes show feature-target space in some way, the viewer cannot see how and why training arrived at the split value. To highlight how decision nodes carve up the feature space, we trained a regressor and classifier with a single (AGE) feature ([code to generate images](https://github.com/parrt/dtreeviz/blob/master/testing/paper_examples.py)).  Here's a regressor decision tree trained using a single feature from the Boston data, `AGE`, and with node ID labeling turned on for discussion purposes here:
 
 [<img src="images/boston-TD-AGE.svg" width="100%">](images/boston-TD-AGE.svg)
 
@@ -309,8 +309,8 @@ To evaluate the generality of a decision tree, if it often helps to get a high-l
 <section title="Code sample">
 
 This section gives a sample visualization for the Boston regression data set and the Wine classification data set.  You can also check out the	
-[full gallery](https://github.com/parrt/animl/tree/master/testing/samples) 
-of sample visualizations and the [code to generate the samples](https://github.com/parrt/animl/blob/master/testing/gen_samples.py).
+[full gallery](https://github.com/parrt/dtreeviz/tree/master/testing/samples) 
+of sample visualizations and the [code to generate the samples](https://github.com/parrt/dtreeviz/blob/master/testing/gen_samples.py).
 
 <subsection title="Boston regression tree visualization">
 	
@@ -360,7 +360,7 @@ viz.view()
 
 [<img src="images/samples/wine-LR-3.svg" width="45%">](images/samples/wine-LR-3.svg)
 	
-In Jupyter notebooks, the object returned from `dtreeviz()` has a `_repr_svg_()` function that Jupyter uses to display the object automatically. See [notebook of examples](https://github.com/parrt/animl/blob/master/notebooks/examples.ipynb).
+In Jupyter notebooks, the object returned from `dtreeviz()` has a `_repr_svg_()` function that Jupyter uses to display the object automatically. See [notebook of examples](https://github.com/parrt/dtreeviz/blob/master/notebooks/examples.ipynb).
 
 <aside title="BUG IN JUPYTER NOTEBOOK">
 	Jupyter notebooks currently, as of September 2018, do not display the SVG generated by this library properly. The fonts etc... are all messed up:
@@ -383,7 +383,7 @@ Our initial coding experiments led us to create a shadow tree wrapping the decis
 <subsection title="Shadow trees for scikit decision trees">
 		
 The decision trees for classifiers and regressors from scikit-learn
-are built for efficiency, not necessarily ease of tree walking or extracting node information. We created [animl.trees.ShadowDecTree](https://github.com/parrt/animl/blob/master/animl/trees.py) and `animl.trees.ShadowDecTreeNode` classes as an easy-to-use (traditional binary tree) wrapper for all tree information.  Here's how to create a shadow tree from a scikit classifier or regressor tree model: 
+are built for efficiency, not necessarily ease of tree walking or extracting node information. We created [dtreeviz.shadow.ShadowDecTree](https://github.com/parrt/dtreeviz/blob/master/dtreeviz/shadow.py) and `dtreeviz.shadow.ShadowDecTreeNode` classes as an easy-to-use (traditional binary tree) wrapper for all tree information.  Here's how to create a shadow tree from a scikit classifier or regressor tree model: 
 
 ```
 shadow_tree = ShadowDecTree(tree_model, X_train, y_train, feature_names, class_names)
@@ -427,7 +427,7 @@ We use matplotlib to generate the decision and leaf nodes and, to get the images
 <img src="/tmp/node3_94806.svg"/>
 ```
 
-The 94806 number is the process ID, which helps isolate multiple instances of `animl` running on the same machine. Without this, it's possible for multiple processes to overwrite the same temporary files.
+The 94806 number is the process ID, which helps isolate multiple instances of `dtreeviz` running on the same machine. Without this, it's possible for multiple processes to overwrite the same temporary files.
 
 Because we wanted scalable, vector graphics, we tried importing SVG images initially but we could not get graphviz to accept those files (pdf neither).  It took us four hours to figure out  that generating and importing SVG were two different things and we needed the following magic incantation on OS X using `--with-librsvg`:
 
@@ -455,6 +455,6 @@ Then we noticed that Jupyter notebook has a bug where it does not display those 
 	
 <section title="Future work">
 
-	The visualizations described in this document are part of the [animl](https://github.com/parrt/animl) machine learning library, which is just getting started. We'll likely moved the [rfpimp](https://github.com/parrt/random-forest-importances) permutation importance library into `animl` soon.  At this point, we haven't tested the visualizations on anything but OS X. We'd welcome instructions from programmers on other platforms so that we could include those installation steps in the documentation.
+	The visualizations described in this document are part of the [dtreeviz](https://github.com/parrt/dtreeviz) machine learning library, which is just getting started. We'll likely moved the [rfpimp](https://github.com/parrt/random-forest-importances) permutation importance library into `dtreeviz` soon.  At this point, we haven't tested the visualizations on anything but OS X. We'd welcome instructions from programmers on other platforms so that we could include those installation steps in the documentation.
 	
 	There are a couple of tweaks we like to do, such as bottom justifying the histograms and classifier trees so that it's easier to compare notes. Also, some of the wedge labels overlap with the axis labels.  Finally, it would be interesting to see what the trees look like with incoming edge thicknesses proportional to the number of samples in that node.	
