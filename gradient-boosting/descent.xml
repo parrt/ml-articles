@@ -104,7 +104,7 @@ Now, let's take the partial derivative of the loss function with respect to a sp
 
 <latex>
 \begin{eqnarray*}
-\frac{\partial}{\partial \hat y_j} L(\vec y, \hat{\vec y}) &=& \frac{\partial}{\partial \hat y_j} \sum_{i=1}^{N} (y_i - \hat y_j)^2 \\
+\frac{\partial}{\partial \hat y_j} L(\vec y, \hat{\vec y}) &=& \frac{\partial}{\partial \hat y_j} \sum_{i=1}^{N} (y_i - \hat y_i)^2 \\
 &=& \frac{\partial}{\partial \hat y_j} (y_j - \hat y_j)^2\\
 &=& 2 (y_j - \hat y_j) \frac{\partial}{\partial \hat y_j} (y_j - \hat y_j)\\
  &=& - 2 (y_j - \hat y_j)
