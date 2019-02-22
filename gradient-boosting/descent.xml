@@ -133,7 +133,7 @@ The partial derivative with respect to a specific approximation $\hat y_j$ is:
 
 <latex>
 \begin{eqnarray*}
-\frac{\partial}{\partial \hat y_j} L(\vec y, \hat{\vec y}) &=& \frac{\partial}{\partial \hat y_j} \sum_{i=1}^{N} |y_i - \hat y_j| \\
+\frac{\partial}{\partial \hat y_j} L(\vec y, \hat{\vec y}) &=& \frac{\partial}{\partial \hat y_j} \sum_{i=1}^{N} |y_i - \hat y_i| \\
  &=& \frac{\partial}{\partial \hat y_j} |y_j - \hat y_j|\\
  &=& sign(y_j - \hat y_j) \frac{\partial}{\partial \hat y_j} (y_j - \hat y_j)\\
  &=& - sign(y_j - \hat y_j)
