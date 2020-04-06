@@ -2,7 +2,77 @@
 	 author={[Terence Parr](http://parrt.cs.usfca.edu)}>
 
 
-<section title="The intuition behind ...">
+<section title="Motivation">
 
-<img src="images/directions.png" width="30%">
+	some text goes here and more text and more fdffsd
 
+	
+<pyeval label=reg hide=true output="df">
+import numpy as np
+import pandas as pd
+from matplotlib import pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import cm
+from matplotlib.patches import Circle
+import mpl_toolkits.mplot3d.art3d as art3d
+from sklearn.linear_model import LinearRegression, Ridge, Lasso, LogisticRegression
+
+df = pd.DataFrame(data=[[0.0,1.053880874257158],
+[1.1111111111111112,1.6930723862524246],
+[2.2222222222222223,-0.04867559455082526],
+[3.3333333333333335,2.5201150366216343],
+[4.444444444444445,4.978339964087746],
+[5.555555555555555,5.78858680886268],
+[6.666666666666667,7.023970174897514],
+[7.777777777777779,6.026499123031133],
+[8.88888888888889,9.58117222322382],
+[10.0,10.762637572334718]], columns=['x','y'])
+</pyeval>
+
+<table>
+<tr>
+	<td><img src="images/ols.svg" width="80%">
+	<td><img src="images/ols_outlier.svg" width="80%">
+	<td><img src="images/lasso.svg" width="80%">
+</table>
+	
+<section title="How regularization works conceptually">
+
+page 71 "Shrinkage Methods"	 from "The Elements of Statistical Learning" by Hastie, Tibshirani, Friedman
+
+<img src="images/ESL_reg.png" width="50%">
+	
+	shrinkage refers to constraining coefficients.
+	
+	Lasso: "least absolute shrinkage and selection operator"
+	
+	why ridge?  the original paper says it's because the surface plots of loss functions can look like ridges, due to the  quadratic nature.  for more good-natured poking of fun see [Statisticians say the darndest things](https://explained.ai/statspeak/index.html)
+	
+
+<img src="images/reg1D.svg" width="50%">
+	
+<img src="images/reg2D.svg" width="50%">
+
+<table>
+<tr>
+	<td><img src="images/l2-frame-0.svg" width="100%">
+	<td><img src="images/l2-frame-1.svg" width="100%">
+		<td><img src="images/l2-frame-2.svg" width="100%">
+		<td><img src="images/l2-frame-3.svg" width="100%">
+</table>
+
+<table>
+<tr>
+	<td><img src="images/l1-cloud.png" width="80%">
+	<td><img src="images/l2-cloud.png" width="80%">
+	</table>
+	
+<section title="Resources">
+
+[Regularized Regression](https://uc-r.github.io/regularized_regression) from University of Cincinnati.
+
+[Lecture notes on ridge regression](https://arxiv.org/pdf/1509.09169.pdf) by Wessel N. van Wieringen.
+
+[Ridge Regression: Biased Estimation for Nonorthogonal Problems](https://www.math.arizona.edu/~hzhang/math574m/Read/RidgeRegressionBiasedEstimationForNonorthogonalProblems.pdf) by Hoerl and Kennard, Journal Technometrics, 1970.
+
+[ Regression Shrinkage and Selection via the Lasso](http://www-stat.stanford.edu/~tibs/lasso/lasso.pdf) by Tibshirani in Journal of the Royal Statistical Society, 1996.
