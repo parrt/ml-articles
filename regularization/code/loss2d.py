@@ -92,6 +92,8 @@ def plot_loss(boundary, reg, show_contours=True, contour_levels=50, show_loss_eq
     fig,ax = plt.subplots(1,1,figsize=(3.8,3.8))
     if show_loss_eqn:
         ax.set_title(eqn, fontsize=10)
+    ax.set_xlabel("x", fontsize=12, labelpad=0)
+    ax.set_ylabel("y", fontsize=12, labelpad=-10)
     ax.set_xticks([-10,-5,0,5,10])
     ax.set_yticks([-10,-5,0,5,10])
     ax.set_xlabel(r"$\beta_1$", fontsize=12)
@@ -125,15 +127,18 @@ def plot_loss(boundary, reg, show_contours=True, contour_levels=50, show_loss_eq
 
 np.random.seed(5) # get reproducible sequence
 n_trials = 4
-reg = 'l2'
 contour_levels=50
 
-if reg == 'l1':
-    boundary = diamond(lmbda=lmbda, n=100)
-else:
-    boundary = circle(lmbda=lmbda, n=100)
-for i in range(n_trials):
-    plot_loss(boundary=boundary, reg=reg, contour_levels=contour_levels)
-    print(f"../images/{reg}-frame-{i}.svg")
-    plt.savefig(f"../images/{reg}-frame-{i}.svg", bbox_inches=0, pad_inches=0)
+def doit(reg):
+    if reg == 'l1':
+        boundary = diamond(lmbda=lmbda, n=100)
+    else:
+        boundary = circle(lmbda=lmbda, n=100)
+    for i in range(n_trials):
+        plot_loss(boundary=boundary, reg=reg, contour_levels=contour_levels)
+        print(f"../images/{reg}-frame-{i}.svg")
+        plt.savefig(f"../images/{reg}-frame-{i}.svg", bbox_inches=0, pad_inches=0)
 
+
+doit(reg='l1')
+doit(reg='l2')

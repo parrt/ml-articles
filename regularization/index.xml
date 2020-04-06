@@ -1,11 +1,51 @@
 <chapter title="How to explain L1 Lasso and L2 Ridge regularization of linear models"
 	 author={[Terence Parr](http://parrt.cs.usfca.edu)}>
 
+Linear and logistic regression models are interpretable, fast, and form the basis of deep learning neural networks.  They are also extremely simple; we're just fitting lines through training data. Unfortunately, linear models have a tendency to chase outliers in the training data, which often leads to models that don't generalize well to new data. To produce models that generalize better, we all know to *regularize* our models.  There are many forms of regularization, such as *early stopping* and *dropout* for deep learning, but for single linear models, *Lasso* and *Ridge* regularization are most common. (We'll call Lasso *L1* and Ridge *L2* for reasons that'll become clear later.)
 
+My goal in this article is to explain the key intuition that helped me understand exactly how regularization works for linear models. Here it is upfront: **the math used to implement regularization does not correspond to the pictures used to explain regularization**. Take a look at the oft-copied picture on page 71 "Shrinkage Methods" from *The Elements of Statistical Learning* (Hastie, Tibshirani, Friedman):
+
+<img src="images/ESL_reg.png" width="40%">
+	
+Students see this multiple times in their careers but have trouble mapping that to the relatively straightforward mathematics used to regularize linear model training. The simple reason is that those graphs show how we  regularize models conceptually, not how we actually implement regularization!  This single disconnect has no doubt caused untold amounts of consternation for those trying to deeply understand regularization. Read on to learn the real story.
+
+I also want to answer key questions regarding L1 Lasso regularization: 
+
+<ol>
+<li> *Does L1 encourage model coefficients to shrink to zero or does it simply not discourage zeroes?* (**It encourages zeros.**)
+<li> *If L1 encourages zero coefficients, why/how does it do that?!* (**The answer requires a picture, see below.**)
+</ol>
+
+These are not easy questions to answer, even for mathematicians. Try explaining simply, without handwaving, to an inquisitive and persistent student; you'll find that you're not exactly sure. ;)
+
+<section title="Review of linear regression">
+
+*going to ignore logistic*
+	
+For example, here's the single-variable linear regression model familiar to us from high school algebra: $y = \beta_0 + \beta_1 x$, where (coefficient) $\beta_0$ is the $y$-intercept and $\beta_1$ is the slope of the line. 
+	 
 <section title="Motivation">
 
-	some text goes here and more text and more fdffsd
+linear models Simple, interpretable, super fast. Combining multiple linear models into a lattice with a nonlinear function as glue yields a neural network; those are insanely useful and powerful. Logistic regression model is a 1-neuron neural network
 
+```
+lm = LinearRegression()
+lm.fit(X, y)
+y_pred = lm.predict(X_test)
+```
+
+```
+lm = Lasso(alpha=45)
+lm.fit(X, y)
+y_pred = lm.predict(X_test)
+```
+
+important to deep learning. here is tensorflow keras
+		
+```
+layer = layers.Dense(100, activation='relu', activity_regularizer=regularizers.l1(0.05)
+model.add(layer)
+```
 	
 <pyeval label=reg hide=true output="df">
 import numpy as np
@@ -31,18 +71,16 @@ df = pd.DataFrame(data=[[0.0,1.053880874257158],
 
 <table>
 <tr>
-	<td><img src="images/ols.svg" width="80%">
-	<td><img src="images/ols_outlier.svg" width="80%">
-	<td><img src="images/lasso.svg" width="80%">
+	<td><img src="images/ols.svg" width="85%">
+	<td><img src="images/ols_outlier.svg" width="85%">
+	<td><img src="images/lasso.svg" width="85%">
 </table>
+	
+
 	
 <section title="How regularization works conceptually">
 
-page 71 "Shrinkage Methods"	 from "The Elements of Statistical Learning" by Hastie, Tibshirani, Friedman
 
-<img src="images/ESL_reg.png" width="50%">
-	
-	shrinkage refers to constraining coefficients.
 	
 	Lasso: "least absolute shrinkage and selection operator"
 	
@@ -53,22 +91,40 @@ page 71 "Shrinkage Methods"	 from "The Elements of Statistical Learning" by Hast
 	
 <img src="images/reg2D.svg" width="50%">
 
+(click to enlarge)
+
 <table>
 <tr>
 	<td><img src="images/l2-frame-0.svg" width="100%">
 	<td><img src="images/l2-frame-1.svg" width="100%">
-		<td><img src="images/l2-frame-2.svg" width="100%">
-		<td><img src="images/l2-frame-3.svg" width="100%">
+	<td><img src="images/l2-frame-2.svg" width="100%">
+	<td><img src="images/l2-frame-3.svg" width="100%">
 </table>
 
 <table>
 <tr>
-	<td><img src="images/l1-cloud.png" width="80%">
-	<td><img src="images/l2-cloud.png" width="80%">
-	</table>
+	<td><img src="images/l1-frame-0.svg" width="100%">
+	<td><img src="images/l1-frame-1.svg" width="100%">
+	<td><img src="images/l1-frame-2.svg" width="100%">
+	<td><img src="images/l1-frame-3.svg" width="100%">
+</table>
+
+<table>
+<tr>
+	<td><img src="images/l1-symmetric-cloud.png" width="60%">
+	<td><img src="images/l2-symmetric-cloud.png" width="60%">
+</table>
+
+<table>
+<tr>
+	<td><img src="images/l1-cloud.png" width="60%">
+	<td><img src="images/l2-cloud.png" width="60%">
+</table>
 	
 <section title="Resources">
 
+	[Deep Learning Basics Lecture 3: Regularization I (slides)](https://www.cs.princeton.edu/courses/archive/spring16/cos495/slides/DL_lecture3_regularization_I.pdf) by Yingyu Liang at  Princeton University.
+	
 [Regularized Regression](https://uc-r.github.io/regularized_regression) from University of Cincinnati.
 
 [Lecture notes on ridge regression](https://arxiv.org/pdf/1509.09169.pdf) by Wessel N. van Wieringen.
