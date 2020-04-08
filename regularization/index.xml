@@ -1,4 +1,4 @@
-<chapter title="How to explain L1 Lasso and L2 Ridge regularization of linear models"
+<chapter title="A visual explanation of L1 Lasso and L2 Ridge regularization for linear models"
 	 author={[Terence Parr](http://parrt.cs.usfca.edu)}>
 
 Linear and logistic regression models are interpretable, fast, and form the basis of deep learning neural networks.  They are also extremely simple; we're just fitting lines through training data. Unfortunately, linear models have a tendency to chase outliers in the training data, which often leads to models that don't generalize well to new data. To produce models that generalize better, we all know to *regularize* our models.  There are many forms of regularization, such as *early stopping* and *dropout* for deep learning, but for single linear models, *Lasso* and *Ridge* regularization are most common. (We'll call Lasso *L1* and Ridge *L2* for reasons that'll become clear later.)
@@ -7,7 +7,7 @@ My goal in this article is to explain the key intuition that helped me understan
 
 <img src="images/ESL_reg.png" width="40%">
 	
-Students see this multiple times in their careers but have trouble mapping that to the relatively straightforward mathematics used to regularize linear model training. The simple reason is that those graphs show how we  regularize models conceptually, not how we actually implement regularization!  This single disconnect has no doubt caused untold amounts of consternation for those trying to deeply understand regularization. Read on to learn the real story.
+Students see this multiple times in their careers but have trouble mapping that to the relatively straightforward mathematics used to regularize linear model training. The simple reason is that those graphs show how we  regularize models conceptually, with *hard constraints*, not how we actually implement regularization, with *soft constraints*! We'll go into that in detail shortly.  This single disconnect has no doubt caused untold amounts of consternation for those trying to deeply understand regularization. Read on to learn the real story.
 
 I also want to answer key questions regarding L1 Lasso regularization: 
 
@@ -94,6 +94,7 @@ df = pd.DataFrame(data=[[0.0,1.053880874257158],
 (click to enlarge)
 
 <table>
+<tr><th>(a)<th>(b)<th>(c)<th>(d)
 <tr>
 	<td><img src="images/l2-frame-0.svg" width="100%">
 	<td><img src="images/l2-frame-1.svg" width="100%">
@@ -102,6 +103,7 @@ df = pd.DataFrame(data=[[0.0,1.053880874257158],
 </table>
 
 <table>
+<tr><th>(a)<th>(b)<th>(c)<th>(d)
 <tr>
 	<td><img src="images/l1-frame-0.svg" width="100%">
 	<td><img src="images/l1-frame-1.svg" width="100%">
@@ -120,6 +122,13 @@ df = pd.DataFrame(data=[[0.0,1.053880874257158],
 	<td><img src="images/l1-cloud.png" width="60%">
 	<td><img src="images/l2-cloud.png" width="60%">
 </table>
+
+<table>
+<tr>
+	<td><img src="images/l1-orthogonal-cloud.png" width="60%">
+	<td><img src="images/l2-orthogonal-cloud.png" width="60%">
+</table>
+
 	
 <section title="Resources">
 

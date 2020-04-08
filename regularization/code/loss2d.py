@@ -58,11 +58,22 @@ def loss(b0, b1,
     return a * (b0 - cx) ** 2 + b * (b1 - cy) ** 2 + c * (b0 - cx) * (b1 - cy)
 
 
-def select_parameters(lmbda, reg):
+def select_parameters(lmbda, reg, force_symmetric_loss, force_one_nonpredictive):
     while True:
         a = np.random.random() * 10
         b = np.random.random() * 10
         c = np.random.random() * 4 - 1.5
+        if force_symmetric_loss:
+            b = a # make symmetric
+            c = 0
+        elif force_one_nonpredictive:
+            if np.random.random() > 0.5:
+                a = np.random.random() * 15 - 5
+                b = .1
+            else:
+                b = np.random.random() * 15 - 5
+                a = .1
+            c = 0
 
         # get x,y outside of circle radius lmbda
         x, y = 0, 0
@@ -85,8 +96,13 @@ def select_parameters(lmbda, reg):
     return Z, a, b, c, x, y
 
 
-def plot_loss(boundary, reg, show_contours=True, contour_levels=50, show_loss_eqn=False):
-    Z, a, b, c, x, y = select_parameters(lmbda, reg)
+def plot_loss(boundary, reg,
+              force_symmetric_loss=False, force_one_nonpredictive=False,
+              show_contours=True, contour_levels=50, show_loss_eqn=False):
+    Z, a, b, c, x, y = \
+        select_parameters(lmbda, reg,
+                          force_symmetric_loss=force_symmetric_loss,
+                          force_one_nonpredictive=force_one_nonpredictive)
     eqn = f"{a:.2f}(b0 - {x:.2f})^2 + {b:.2f}(b1 - {y:.2f})^2 + {c:.2f} b0 b1"
 
     fig,ax = plt.subplots(1,1,figsize=(3.8,3.8))
@@ -98,8 +114,13 @@ def plot_loss(boundary, reg, show_contours=True, contour_levels=50, show_loss_eq
     ax.set_yticks([-10,-5,0,5,10])
     ax.set_xlabel(r"$\beta_1$", fontsize=12)
     ax.set_ylabel(r"$\beta_2$", fontsize=12)
-    ax.set_title("L2 constraint w/loss function", fontsize=12)
 
+    shape = ""
+    if force_symmetric_loss:
+        shape = "symmetric "
+    elif force_one_nonpredictive:
+        shape = "orthogonal "
+    ax.set_title(f"L2 constraint w/{shape}loss function", fontsize=11)
 
     if show_contours:
         ax.contour(B0, B1, Z, levels=contour_levels, linewidths=1.0, cmap='coolwarm')
@@ -122,23 +143,36 @@ def plot_loss(boundary, reg, show_contours=True, contour_levels=50, show_loss_eq
     coeff = boundary[minloss_idx]
     ax.scatter([coeff[0]], [coeff[1]], s=90, c='#D73028')
     plt.tight_layout()
-    # plt.show()
 
 
 np.random.seed(5) # get reproducible sequence
 n_trials = 4
 contour_levels=50
 
-def doit(reg):
+def show_example(reg, force_symmetric_loss=False, force_one_nonpredictive=False):
     if reg == 'l1':
         boundary = diamond(lmbda=lmbda, n=100)
     else:
         boundary = circle(lmbda=lmbda, n=100)
     for i in range(n_trials):
-        plot_loss(boundary=boundary, reg=reg, contour_levels=contour_levels)
-        print(f"../images/{reg}-frame-{i}.svg")
-        plt.savefig(f"../images/{reg}-frame-{i}.svg", bbox_inches=0, pad_inches=0)
+        plot_loss(boundary=boundary, reg=reg,
+                  force_symmetric_loss=force_symmetric_loss,
+                  force_one_nonpredictive=force_one_nonpredictive,
+                  contour_levels=contour_levels)
+
+        shape_fname = ""
+        if force_symmetric_loss:
+            shape_fname = "symmetric-"
+        elif force_one_nonpredictive:
+            shape_fname = "orthogonal-"
+        print(f"../images/{reg}-{shape_fname}{i}.svg")
+        plt.savefig(f"../images/{reg}-{shape_fname}{i}.svg", bbox_inches=0, pad_inches=0)
+        plt.show()
 
 
-doit(reg='l1')
-doit(reg='l2')
+show_example(reg='l1')
+show_example(reg='l2')
+show_example(reg='l1', force_symmetric_loss=True)
+show_example(reg='l2', force_symmetric_loss=True)
+show_example(reg='l1', force_one_nonpredictive=True)
+show_example(reg='l2', force_one_nonpredictive=True)
