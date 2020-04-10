@@ -97,6 +97,8 @@ def select_parameters(lmbda, reg, force_symmetric_loss, force_one_nonpredictive)
 
 
 def plot_loss(boundary, reg,
+              boundary_color='#2D435D',
+              boundary_dot_color='#E32CA6',
               force_symmetric_loss=False, force_one_nonpredictive=False,
               show_contours=True, contour_levels=50, show_loss_eqn=False):
     Z, a, b, c, x, y = \
@@ -120,7 +122,7 @@ def plot_loss(boundary, reg,
         shape = "symmetric "
     elif force_one_nonpredictive:
         shape = "orthogonal "
-    ax.set_title(f"L2 constraint w/{shape}loss function", fontsize=11)
+    ax.set_title(f"{reg} constraint w/{shape}loss function", fontsize=11)
 
     if show_contours:
         ax.contour(B0, B1, Z, levels=contour_levels, linewidths=1.0, cmap='coolwarm')
@@ -130,22 +132,30 @@ def plot_loss(boundary, reg,
     # Draw axes
     ax.plot([-w,+w],[0,0], '-', c='k')
     ax.plot([0, 0],[-h,h], '-', c='k')
-    ax.plot(boundary[:,0], boundary[:,1], '-', lw=1.5, c='#A22396')
+
+    # Draw boundary
+    ax.plot(boundary[:,0], boundary[:,1], '-', lw=1.5, c=boundary_color)
 
     # Draw center of loss func
     ax.scatter([x],[y], s=90, c='k')
 
     # Draw point on boundary
     eqn = f"{a:.2f}(b0 - {x:.2f})^2 + {b:.2f}(b1 - {y:.2f})^2 + {c:.2f} (b0-{x:.2f}) (b1-{y:.2f})"
-    print(eqn)
+    # print(eqn)
     losses = [loss(*edgeloc, a=a, b=b, c=c, cx=x, cy=y) for edgeloc in boundary]
     minloss_idx = np.argmin(losses)
     coeff = boundary[minloss_idx]
-    ax.scatter([coeff[0]], [coeff[1]], s=90, c='#D73028')
+    ax.scatter([coeff[0]], [coeff[1]], s=90, c=boundary_dot_color)
+
+    if force_symmetric_loss:
+        if reg=='l2':
+            ax.plot([x,0],[y,0], ':', c='k')
+        else:
+            ax.plot([x,coeff[0]],[y,coeff[1]], ':', c='k')
+
     plt.tight_layout()
 
 
-np.random.seed(5) # get reproducible sequence
 n_trials = 4
 contour_levels=50
 
@@ -170,9 +180,17 @@ def show_example(reg, force_symmetric_loss=False, force_one_nonpredictive=False)
         plt.show()
 
 
+np.random.seed(5) # get reproducible sequence
 show_example(reg='l1')
+np.random.seed(5)
 show_example(reg='l2')
+
+np.random.seed(6)
 show_example(reg='l1', force_symmetric_loss=True)
+np.random.seed(7)
 show_example(reg='l2', force_symmetric_loss=True)
+
+np.random.seed(5)
 show_example(reg='l1', force_one_nonpredictive=True)
+np.random.seed(5)
 show_example(reg='l2', force_one_nonpredictive=True)
