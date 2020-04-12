@@ -198,7 +198,7 @@ def ols2D_outlier():
 	ax.contour(B0, B1, Z.T, levels=30, linewidths=1.0, cmap='coolwarm')
 	ax.scatter([opt_beta0],[opt_beta1], s=90, c='k')
 	plt.tight_layout()
-	plt.savefig(f"../images/ols_loss_2D.svg", bbox_inches=0, pad_inches=0)
+	plt.savefig(f"../images/ols_loss_2D_outlier.svg", bbox_inches=0, pad_inches=0)
 	plt.show()
 
 

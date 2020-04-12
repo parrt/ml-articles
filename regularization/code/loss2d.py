@@ -176,13 +176,14 @@ def show_example(reg, force_symmetric_loss=False, force_one_nonpredictive=False)
         elif force_one_nonpredictive:
             shape_fname = "orthogonal-"
         print(f"../images/{reg}-{shape_fname}{i}.svg")
+        plt.tight_layout()
         plt.savefig(f"../images/{reg}-{shape_fname}{i}.svg", bbox_inches=0, pad_inches=0)
         plt.show()
 
 
 np.random.seed(5) # get reproducible sequence
 show_example(reg='l1')
-np.random.seed(5)
+np.random.seed(9)
 show_example(reg='l2')
 
 np.random.seed(6)
