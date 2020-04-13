@@ -3,6 +3,8 @@
 
 <section title="Introduction">
 
+	*in progress*
+	
 ADD LINKS TO IMAGES
 	
 Linear and logistic regression models are important because they are interpretable, fast, and form the basis of deep learning neural networks.  They are also extremely simple; we're just fitting lines (or hyperplanes) through training data. Unfortunately, linear models have a tendency to chase outliers in the training data, which often leads to models that don't generalize well to new data. To produce models that generalize better, we all know to *regularize* our models.  There are many forms of regularization, such as *early stopping* and *dropout* for deep learning, but for isolated linear models, *Lasso* and *Ridge* regularization are most common. (We'll call Lasso *L1* and Ridge *L2* for reasons that will become clear later.)
@@ -248,11 +250,11 @@ Now, let's take a look at the other common form of regularization.
 
 <subsection title="L1 Lasso regularization">
 
-If we use a diamond shape rather than a circle around the origin as the boundary region, we get *Lasso regularization*, which we will call L1 regularization because it constrains $\beta_i$ coefficients using the L1 norm (a diamond shape).  Lasso stands for "Least Absolute Shrinkage and Selection Operator," according to the [original paper](http://www-stat.stanford.edu/~tibs/lasso/lasso.pdf). Why we would choose a diamond over a circle will become clear shortly.
+If we use a diamond shape rather than a circle around the origin as the boundary region, we get *Lasso regularization*, which we will call L1 regularization because it constrains $\beta_i$ coefficients using the L1 norm. The L1 norm gives us a diamond shape, obtained by constraining the sum of coefficient magnitudes to some constant, $t$.  Lasso stands for "Least Absolute Shrinkage and Selection Operator," according to the [original paper](http://www-stat.stanford.edu/~tibs/lasso/lasso.pdf). Why we would choose a diamond over a circle will become clear shortly.
 	
-The plots in [L1symm] show the L1 diamond constraint regions in the special case where the loss function is symmetric. The regularized ($\beta_1,\beta_2$) coefficient location on the diamond occurs where the perpendicular line emanates from the diamond to the minimum loss location. The dotted lines in [L1symm] show these perpendicular lines. Contrast this with L2 regularization, which draws a line from the origin to the minimum loss location for symmetric loss functions.
+The plots in [L1symm] show the L1 diamond constraint regions in the special case where the loss function is symmetric. The regularized ($\beta_1,\beta_2$) coefficient location on the diamond occurs where a perpendicular line emanates from the diamond to the minimum loss location. The dotted lines in [L1symm] show these perpendicular lines. Contrast this with L2 regularization, which draws a line from the origin to the minimum loss location for symmetric loss functions.
 
-<figure label="L1symm" caption="blort">
+<figure label="L1symm" caption=" boundary distance from origin is some of coefficient magnitudes less than some constant, t.">
 <table>
 <tr><th>(a)<th>(b)<th>(c)<th>(d)
 <tr>
@@ -263,7 +265,7 @@ The plots in [L1symm] show the L1 diamond constraint regions in the special case
 </table>
 </figure>
 
-In [L1asymm], you'll see the general case where the loss functions are asymmetric. One of the key takeaways from these examples is that three out of four loss functions have a zero coefficient (the red dot is on an axis at a diamond peak). This is despite the fact that the minimum loss functions look to be nowhere near an axis. This is the difference between L1 and L2 in a nutshell: L1 tends to give a lot more zero coefficients than L2.
+In [L1asymm], you'll see the general case where the loss functions are asymmetric. One of the key takeaways from these examples is that three out of four loss functions have a zero coefficient (the red dot is on an axis at a diamond peak). This is despite the fact that the minimum loss function locations look to be nowhere near an axis, which brings us to the difference between L1 and L2 in a nutshell: **L1 tends to give a lot more zero coefficients than L2**.
 
 <figure label="L1asymm" caption="blort">
 <table>
@@ -280,7 +282,7 @@ To find regularized coefficients, we follow the same rule we did for L2, except 
  
 **Finding the L1 coefficients location**: The L1 regularized coefficients sit on the L1 boundary diamond where the loss function has the minimum value. So, just walk around the diamond and identify the location with the minimum loss function value. (Unless the minimum loss location is inside the diamond, in which case the regularized coefficient location is the same as the minimum loss location.)
 
-Just as we did for L2, regularizing the loss function means adding a "subject to" constraint. The only difference is that we are summing the coefficient magnitudes (absolute values) rather than the square coefficient values:
+Just as we did for L2, regularizing the loss function means adding a "subject to" constraint. The only difference is that we are summing the coefficient magnitudes (absolute values) rather than the squared coefficient values:
 
 \[
 MSE(\beta_0,\beta_1,t) = \frac{1}{n} \sum_{i=1}^{n} (y^{(i)} - (\beta_0 + \beta_1 x_1^{(i)} + \beta_2 x_2^{(i)}))^2 \text{ subject to } (|\beta_1| + |\beta_2|) < t
@@ -288,17 +290,19 @@ MSE(\beta_0,\beta_1,t) = \frac{1}{n} \sum_{i=1}^{n} (y^{(i)} - (\beta_0 + \beta_
 
 As before, we don't care what the value of $t$ is *per se*; we find the $t$ through brute force that gives the lowest validation error.
 
-If you've made it this far, you now understand exactly how L1 Lasso and L2 Ridge regularization work conceptually. The next step is to compare the two in detail.
+If you've made it this far, you now understand exactly how L1 Lasso and L2 Ridge regularization work conceptually. The next step is to compare the two in detail and then we'll be ready to describe the actual implementation of regularization (versus the conceptual mechanism we've seen so far).
 
 <aside title="The Ridge and Lasso terms seem backwards">
 In case you haven't noticed, the Ridge and Lasso terms seem kind of backwards. The circular boundary of Ridge looks more like a lasso and the constraint region for Lasso, with lots of pointy discontinuities, looks like a bunch of ridges. Ha! For more good-natured teasing of statisticians, see [Statisticians say the darndest things](https://explained.ai/statspeak/index.html).
 </aside>
 
-<section title="The difference between L1 vs L2">
+<section title="The difference between L1 and L2 regularization">
 
- From a practical standpoint, the difference between L1 and L2 regularization is that L1 tends to shrink coefficients to zero whereas L2 tends to shrink coefficients evenly. In fact, it's fair to say that L2 discourages coefficients from going all the way to zero.
- 	
-	Does L1 encourage model coefficients to shrink to zero or does it simply not discourage zeroes? 
+If both of these regularization techniques work well, you might be wondering why we need both. It turns out they have different but equally useful properties. From a practical standpoint, L1 tends to shrink coefficients to zero whereas L2 tends to shrink coefficients evenly. L1 is therefore useful for feature selection, as we can drop any variables associated with coefficients that go to zero. L2, on the other hand, is useful when you have collinear/codependent features.  Codependence tends to increase coefficient variance, making coefficients unreliable/unstable, which hurts model  generality. L2 reduces the variance of these estimates, which counteracts the effect of codependencies.
+
+<subsection title="L1 regularization encourages zero coefficients">
+
+One of the key questions that I want to answer is: "*Does L1 encourage model coefficients to shrink to zero?*" (The answer is, Yes!) So, let's do some two-variable simulations of random quadratic loss functions at random locations and see how many end up with a coefficient at zero. There is no guarantee that these random paraboloid loss functions in any way represent real data sets, but it's a way to at least compare L1 and L2 regularization. Let's start out with symmetric loss functions that look like bowls of various  sizes and locations. 
 
 <table>
 <tr>
@@ -306,13 +310,23 @@ In case you haven't noticed, the Ridge and Lasso terms seem kind of backwards. T
 	<td><img src="images/l2-symmetric-cloud.png" width="60%">
 </table>
 
+As you can see in the simulations (6000 trials), the L1 diamond constraint zeros a coefficient for any loss function whose minimum is in the zone perpendicular to the diamond edges. The L2 circular constraint only zeros a coefficient for loss function minimums on one of the axes. The gradation from green to purple represents the minimum distance of a coefficient pair on the circle to any of the coefficient zeros (North, South, East, West compass points). Clearly, L1 gives many more zero coefficients (66%) than L2 (3%) for symmetric loss functions.
+
+Here's what the same simulation looks like for general (potentially asymmetric and at an angle) loss functions:
+
 <table>
 <tr>
 	<td><img src="images/l1-cloud.png" width="60%">
 	<td><img src="images/l2-cloud.png" width="60%">
 </table>
 
-<figure label="fig:split-sets" caption="blort">
+Because of the various angles and shapes, such as we saw in [L2nonsym], more of the regularized coefficients for both L1 (73%) and L2 (5%) constraints become zero. So this basically answers the question: Yes, L1 regularized coefficients are much more likely to become zeros than L2 coefficients.
+
+<subsection title="L1 and L2 regularization encourage zero coefficients for less predictive features">
+
+On the other hand, we actually want to answer a more specific question: "*Does L1 encourage zero coefficients for less predictive or useless features?*" (Yep!) To answer that, we need to know what  loss functions look like for less predictive features. Imagine one feature is pretty important and the other is not. That would imply that the loss function looks like a taco shell or canoe, and at 90 degrees to one of the axes. [L1ortho] shows some examples for the L1 constraint. If $\beta_1$ is not very predictive as in subfigure (c), then movement left and right does not increase the cost very much, whereas, moving up and down costs a lot (we're crossing a lot of contour lines).
+
+<figure label="L1ortho" caption="blort">
 <table>
 <tr><th>(a)<th>(b)<th>(c)<th>(d)
 <tr>
@@ -323,11 +337,28 @@ In case you haven't noticed, the Ridge and Lasso terms seem kind of backwards. T
 </table>
 </figure>
 
+With the shape of those orthogonal loss functions in mind, let's do another simulation and see how many regularized coefficients go to zero:
+
 <table>
 <tr>
 	<td><img src="images/l1-orthogonal-cloud.png" width="60%">
 	<td><img src="images/l2-orthogonal-cloud.png" width="60%">
 </table>
+
+Orthogonal loss functions result in more zero coefficients than the general case, which is what we would expect, but the effect is not huge; 73% to 80%. L2, on the other hand, sees a huge boost in the number of zero coefficients, from 5% to 43%!  We definitely want more zero coefficients for the case where one of the features is less predictive.  Fortunately, both L1 and L2 deliver in this case! 
+
+A more scientific approach would also do simulations for the many variable case, but I think this article provides enough evidence for me to believe L1 encourages zeros. Besides, James D. Wilson, a statistician and fellow faculty member, told me there's a theorem that says that the probability of a coefficient going to zero approaches 100% as the number of features goes to infinity. Apparently, as the number of features goes to infinity, the diamond-shaped collapses in on itself to a point.
+
+
+<aside title="Random loss functions used in simulation" label="foo">
+For math nerds, this is the equation used to generate the random loss functions:
+
+\[
+a (\beta_1 - c_1)^2 + b(\beta_2 - c_2)^2 + c(\beta_1 - c_1)(\beta_2 - c_2)
+\]
+
+where $a \sim U(0,10)$ scales the bowl in the $\beta_1$ direction, $b \sim U(0,10)$ scales the $\beta_2$ direction, $c \sim U(-2,2)$ controls the amount of tilt/angle away from vertical or horizontal, and ($c_1 \sim U(-10,10)$,$c_2 \sim U(-10,10)$) is the position in coefficient space of the minimum loss function value. ($U(k,l)$ means uniform random variable between $k$ and $l$.)
+</aside>
 
 <section title="How we implement L1 and L2 regularization">
 
