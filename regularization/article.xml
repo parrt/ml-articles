@@ -2,7 +2,10 @@
       googletracking="UA-118361649-1"
       watermark="<a href='http://explained.ai/regularization/index.html'>Main article</a><br>Brought to you by <a href='http://explained.ai'>explained.ai</a>">
 
-<include file="index.xml">
+<include file="intro.xml">
+<include file="constraints.xml">
+<include file="L1vsL2.xml">
+<include file="impl.xml">
 
 <css file="css/article.css">
 

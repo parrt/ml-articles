@@ -6,7 +6,10 @@ O="/tmp/regularization"
 while true
 do
 	if test $I/css/article.css -nt $O/index.html || \
-           test $I/index.xml -nt $O/index.html
+           test $I/intro.xml -nt $O/intro.html || \
+           test $I/constraints.xml -nt $O/constraints.html || \
+           test $I/impl.xml -nt $O/impl.html || \
+           test $I/L1vsL2.xml -nt $O/L1vsL2.html
 	then
 		java -jar /Users/parrt/github/bookish/target/bookish-1.0-SNAPSHOT.jar -target html -o $O $I/article.xml
 	fi

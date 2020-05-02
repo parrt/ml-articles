@@ -1,0 +1,120 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-118361649-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-118361649-1');
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+<link rel="stylesheet" type="text/css" href="css/article.css"/>
+<title>A visual explanation of regularization for linear models</title>
+<!-- META -->
+<!-- LinkedIn meta -->
+<meta property='og:title' content="How to explain gradient boosting"/>
+<meta property='og:image' content="http://explained.ai/regularization/images/reg3D.svg">
+<meta property='og:description' content=""/>
+<meta property='og:url' content="http://explained.ai/regularization/index.html"/>
+
+<!-- Facebook meta -->
+<meta property="og:type" content="article" />
+
+<!-- Twitter meta -->
+<meta name="twitter:title" content="How to explain gradient boosting">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@the_antlr_guy">
+<meta name="twitter:creator" content="@the_antlr_guy">
+<meta name="twitter:description" content="">
+<meta name="twitter:image" content="http://explained.ai/regularization/images/reg3D.svg">
+<!-- END META -->
+</head>
+<body>
+<div class="watermark">
+<i><a href='http://explained.ai/regularization/index.html'>Main article</a><br>Brought to you by <a href='http://explained.ai'>explained.ai</a></i><br>
+</div>
+
+<h1>A visual explanation of regularization for linear models</h1>
+
+<p></p>
+
+<p><a href="http://parrt.cs.usfca.edu">Terence Parr</a></p>
+
+<p style="font-size: 80%">(Terence teaches in <a href="https://www.usfca.edu/arts-sciences/graduate-programs/data-science">University of San Francisco's MS in Data Science program</a>. You might know Terence as the creator of the ANTLR parser generator.)
+<p>Please send comments, suggestions, or fixes to <a href="mailto:parrt@cs.usfca.edu">Terence</a>.</p>
+</p>
+
+
+
+<div id="toc">
+<p class="toc_title">Contents</p>
+<ul>
+	<li><a href="#sec:1.1">Introduction</a>
+	<ul>
+	</ul>
+	</li>
+	<li><a href="#sec:1.2">Review of linear regression</a>
+	<ul>
+	</ul>
+	</li>
+	<li><a href="#sec:1.3">Motivation</a>
+	<ul>
+	</ul>
+	</li>
+	<li><a href="#sec:1.4">The premise and trade-off of regularization</a>
+	<ul>
+	</ul>
+	</li>
+	<li><a href="#sec:1.5">How regularization works conceptually</a>
+	<ul>
+			<li><a href="#sec:1.5.1">L2 Ridge regularization</a></li>
+			<li><a href="#sec:1.5.2">L1 Lasso regularization</a></li>
+
+	</ul>
+	</li>
+	<li><a href="#sec:1.6">The difference between L1 and L2 regularization</a>
+	<ul>
+			<li><a href="#sec:1.6.1">L1 regularization encourages zero coefficients</a></li>
+			<li><a href="#sec:1.6.2">L1 and L2 regularization encourage zero coefficients for less predictive features</a></li>
+
+	</ul>
+	</li>
+	<li><a href="#impl">How we implement L1 and L2 regularization</a>
+	<ul>
+	</ul>
+	</li>
+	<li><a href="#sec:1.8">Resources</a>
+	<ul>
+	</ul>
+	</li>
+
+</ul>
+</div>
+
+<h2 id="overview">Roadmap</h3>
+
+<p><b>Acknowledgements</b>. I'd like to thank mathematicians Steve Devlin and David Uminsky, also faculty in <a href="https://www.usfca.edu/arts-sciences/graduate-programs/data-science">University of San Francisco's MS in Data Science program</a>, for helping me understand the mathematics and why L1 regularization encourages zero coefficients.</p>
+
+<h2>Resources</h2>
+
+
+<p>My MSDS621 project <a href="https://github.com/parrt/msds621/raw/master/projects/linreg/linreg.pdf">Using gradient descent to fit regularized linear models</a></p>
+
+<p>	<a href="https://www.cs.princeton.edu/courses/archive/spring16/cos495/slides/DL_lecture3_regularization_I.pdf">Deep Learning Basics Lecture 3: Regularization I (slides)</a> by Yingyu Liang at  Princeton University.</p>
+
+<p><a href="https://uc-r.github.io/regularized_regression">Regularized Regression</a> from University of Cincinnati.</p>
+
+<p><a href="https://arxiv.org/pdf/1509.09169.pdf">Lecture notes on ridge regression</a> by Wessel N. van Wieringen.</p>
+
+<p><a href="https://www.math.arizona.edu/~hzhang/math574m/Read/RidgeRegressionBiasedEstimationForNonorthogonalProblems.pdf">Ridge Regression: Biased Estimation for Nonorthogonal Problems</a> by Hoerl and Kennard, Journal Technometrics, 1970.</p>
+
+<p><a href="http://www-stat.stanford.edu/~tibs/lasso/lasso.pdf">Regression Shrinkage and Selection via the Lasso</a> by Tibshirani in Journal of the Royal Statistical Society, 1996.</p>
+
+
+
+</body>
+</html>
