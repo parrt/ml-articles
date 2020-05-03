@@ -218,17 +218,17 @@ def just_contour(reg):
 
 just_contour(reg='l2')
 
-# np.random.seed(5) # get reproducible sequence
-# show_example(reg='l1')
-# np.random.seed(9)
-# show_example(reg='l2')
-#
-# np.random.seed(6)
-# show_example(reg='l1', force_symmetric_loss=True)
-# np.random.seed(7)
-# show_example(reg='l2', force_symmetric_loss=True)
-#
-# np.random.seed(5)
-# show_example(reg='l1', force_one_nonpredictive=True)
-# np.random.seed(5)
-# show_example(reg='l2', force_one_nonpredictive=True)
+np.random.seed(5) # get reproducible sequence
+show_example(reg='l1')
+np.random.seed(9)
+show_example(reg='l2')
+
+np.random.seed(6)
+show_example(reg='l1', force_symmetric_loss=True)
+np.random.seed(7)
+show_example(reg='l2', force_symmetric_loss=True)
+
+np.random.seed(5)
+show_example(reg='l1', force_one_nonpredictive=True)
+np.random.seed(5)
+show_example(reg='l2', force_one_nonpredictive=True)

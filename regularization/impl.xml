@@ -1,2 +1,70 @@
-<chapter title="How we implement L1 and L2 regularization"
+<chapter title="How regularization works in practice"
 	 author={[Terence Parr](http://parrt.cs.usfca.edu)}>
+
+
+If we think about regularization as just constraining how close we can get to the true loss function minimum, regularization is not that hard to understand (assuming you understand linear models, of course). Conceptually, regularization uses a circle or diamond as a hard constraint. If the loss function minimum is outside the constraint region, the regularized version will appear somewhere on the boundary of the constraint region. We saw this earlier, and depicted the constraint region as a simple gray circle for L2 regularization:
+
+<img src="images/reg3D.svg" width="30%">
+
+So, this is conceptually how things work, but it's not easy to implement this way.  Let's review the mathematics notation that describes the conceptual constraints; then we can move on to how we actually express regularization for implementation purposes.
+
+<section title="A quick hard constraint regularization recap">
+	
+We want to fit a linear model with three coefficients and two variables to some data:
+
+$\hat{y} = \beta_0 + \beta_1 x_1 + \beta_2 x_2$
+
+To do that, we want to pick $\beta_j$ coefficients that minimize the loss function; the loss function just says how good of a fit the equation is to the training data. The mean squared error is the usual loss function and it is the average squared difference between the known true $y^{(i)}$ values and our predictions, $\hat{y}^{(i)}$:
+
+\[
+MSE(\beta_0,\beta_1) = \frac{1}{n} \sum_{i=1}^{n} (y^{(i)} - \hat{y}^{(i)})^2
+\]
+
+By substituting $\hat{y}^{(i)}$ into the loss function, we get the typical equation that describes fitting a linear model:
+
+\[
+MSE(\beta_0,\beta_1) = \frac{1}{n} \sum_{i=1}^{n} (y^{(i)} - (\beta_0 + \beta_1 x_1^{(i)} + \beta_2 x_2^{(i)}))^2
+\]
+
+To add a hard constraint, we add "subject to." For L2 it, looks like this:
+
+\[
+MSE(\beta_0,\beta_1,t) = \frac{1}{n} \sum_{i=1}^{n} (y^{(i)} - (\beta_0 + \beta_1 x_1^{(i)} + \beta_2 x_2^{(i)}))^2 \text{ subject to } (\beta_1^2 + \beta_2^2) < t
+\]
+
+and, for L1, it looks like:
+
+\[
+MSE(\beta_0,\beta_1,t) = \frac{1}{n} \sum_{i=1}^{n} (y^{(i)} - (\beta_0 + \beta_1 x_1^{(i)} + \beta_2 x_2^{(i)}))^2 \text{ subject to } (|\beta_1| + |\beta_2|) < t
+\]
+
+<section title="Recasting hard constraints as soft constraints">
+
+To implement a loss function with a hard constraint, we could use a gradient descent minimization approach as usual. The problem is that, at each step moving us closer to the loss function minimum, we'd need an IF-statement asking if $(\beta_1,\beta_2)$ had exceeded the constraint. Certainly that would work, but it would definitely slow down the computation. (Insert discussion of branching, pipeline bubbles, etc... on modern processors). 
+
+An alternative approach is to convert the constraint into just another term of the loss function, thus, making it a *soft constraint*. For L2, replace "subject to $(\beta_1^2 + \beta_2^2) < t$" with $\lambda (\beta_1^2 + \beta_2^2)$:
+
+\[
+MSE(\beta_0,\beta_1,\lambda) = \frac{1}{n} \sum_{i=1}^{n} (y^{(i)} - (\beta_0 + \beta_1 x_1^{(i)} + \beta_2 x_2^{(i)}))^2 + \lambda (\beta_1^2 + \beta_2^2)
+\]
+
+and, for L1, we get the analogous:
+
+\[
+MSE(\beta_0,\beta_1,\lambda) = \frac{1}{n} \sum_{i=1}^{n} (y^{(i)} - (\beta_0 + \beta_1 x_1^{(i)} + \beta_2 x_2^{(i)}))^2 + \lambda (|\beta_1| + |\beta_2|)
+\]
+
+This replacement is mathematically legal because there exists a $\lambda$ value that is equivalent to some $t$ for the hard constraint, per the magic of [Lagrange multipliers](https://en.wikipedia.org/wiki/Lagrange_multiplier). $\lambda$ is unknown just like $t$, but at least now we have a single function to minimize, rather than a function subject to a constraint. To find $\lambda$, we try a bunch of $\lambda$ values and see which one gives us a regularized linear model that has the smallest validation set error.
+
+The loss function now has two terms, one for MSE (blue) and one for throttling down coefficient values (orange). Visually, we get two bowl-shaped quadratic surfaces, where the soft constraint is centered at the origin (0,0), as shown in [softconstraint]. The larger the coefficient(s), the higher the orange penalty term and, hence, the higher the loss function. It keeps coefficients low, like a hard constraint, but not at a fixed boundary.
+
+<figure label="softconstraint" caption="MSE loss function + soft constraint to penalize coefficients that get too big.">
+	<table>
+	<tr>
+		<td><img src="images/constraint3D.svg" width="100%">
+		<td><img src="images/constraint2D.svg" width="100%">
+		</table>
+	</figure>
+
+Net effect is that regularization pulls min loss location closer to origin!
+	
