@@ -66,13 +66,13 @@ A more scientific approach would also do simulations for the many variable case,
 
 We now have empirical evidence that L1 tends to get more zero coefficients than L2 for lots of different loss functions (symmetric, asymmetric, and vertical/horizontal). Why exactly is this happening?! To answer that, let's zoom in on the constraint regions for a loss function where $\beta_1$ is very  predictive, but $\beta_2$ is not, as depicted in [L1L2zoom]. As before, the black dot indicates the $(\beta_1,\beta_2)$ location where the loss function is minimum, which is where training for a non-regularized linear regression model would put them. Each curved contour line represents the same loss function value, and the closer the contour lines, the steeper the slope across those lines. (Recall these are projections of a 3D bowl or taco shaped surface onto a two-dimensional plane.)
 
-<figure label="L1L2zoom" caption="L1 and L2 constraint regions get different coefficient locations, on the diamond and circle, for the same loss function. For illustration purposes, I've drawn the circular constraint region to be slightly smaller than the diamond region so that the purple dot is on a contour line. Keep in mind that there are an infinite number of contour lines, so this tweak does not affect the generality.">
+<figure label="L1L2zoom" caption="L1 and L2 constraint regions get different coefficient locations, on the diamond and circle, for the same loss function. Keep in mind that there are an infinite number of contour lines and there is a contour line exactly meeting the L2 purple dot.">
 	<table>
 	<tr>
 		<th>(a) L1 Constraint Diamond <th>(b) L2 Constraint Circle
 	<tr>
-		<td><img src="images/L1contour.png" width="75%">
-		<td><img src="images/L2contour.png" width="75%">
+		<td><img src="images/L1contour.png" width="65%">
+		<td><img src="images/L2contour.png" width="65%">
 	</table>
 </figure>
 
@@ -80,6 +80,11 @@ Because the minimum location is outside the constraint regions, we know that the
 
 Let's optimize the L1 case in [L1L2zoom] (a) first. I claim that the optimal $(\beta_1,\beta_2)$ location is the purple dot at the diamond tip. To show this is true, all I have to do is prove to you that any movement of $(\beta_1,\beta_2)$ away from that spot increases the loss. Take a look at the dashed contour line, emanating from the purple dot. The associated ellipse has the same loss value at all locations. Any $(\beta_1,\beta_2)$ position outside of that ellipse, away from the black dot, has higher loss; any inside that ellipse have lower loss.  Any movement along the diamond edge, away from the purple dot, increases the loss because $(\beta_1,\beta_2)$ immediately moves outside of the dashed contour.
 
-For the L2 case in [L1L2zoom] (b), I claim that the optimal $(\beta_1,\beta_2)$ location is at the new purple dot location, not on the axis like the L1 case.  The ellipse associated with the dashed contour again represents the same loss function value, and any $(\beta_1,\beta_2)$ outside of that ellipse will have higher loss. That means any movement of $(\beta_1,\beta_2)$ along the circular constraint boundary pulls it away from the contour of the purple dot towards higher loss values. That is why the orange dots cannot be the optimal regularized $(\beta_1,\beta_2)$ position. (Note that there is a contour line that exactly meets the $\beta_1$ axis, but the visualization only shows so many contrary lines.)
+For the L2 case in [L1L2zoom] (b), I claim that the optimal $(\beta_1,\beta_2)$ location is at the new purple dot location, not on the axis like the L1 case.  Please keep in mind that there are an infinite number of contour lines, and so there is a contour line that exactly meets the purple dot.  It's just not shown to prevent over-drawing.  The ellipse associated with the dashed contour again represents the same loss function value along its extent, and any $(\beta_1,\beta_2)$ outside of that ellipse will have higher loss. That means any movement of $(\beta_1,\beta_2)$ along the circular constraint boundary pulls it away from the contour of the purple dot towards higher loss values. That is why the orange dots cannot represent the optimal regularized $(\beta_1,\beta_2)$ position.
 
+At least for this case, L1 gets a zero coefficient, $\beta_2=0$, whereas, L2 does not. The L1 and L2 $\beta_1$ constraint is exactly the same length and the loss function is exactly the same, but we can see that L2's purple dot is far from the axis.  To convince you that L2 has a harder time getting a zero coefficient, let's zoom in even further, but this time with an optimal location much closer to the $\beta_1$ axis:
+
+<img src="images/L1L2contour.png" width="20%">
+
+For the L1 case, the key is to notice that no matter how we move $(\beta_1,\beta_2)$, the loss immediately goes up because the sharp backward angle of the diamond forces movement away from the black dot. For L2, the constraint circle is almost a completely vertical line for a very short distance, which matches a contour line. That means that we can move $\beta_2$ upwards along the contour line, closer to the black dot with no or very little leftwards $\beta_1$ movement. As the black dot loss function minimum approaches the $\beta_1$ axis, the L2 purple dot will approach the $\beta_1$ axis. In contrast, L1 gets to $\beta_2=0$ even when the black dot is far from the $\beta_1$ axis.
 
