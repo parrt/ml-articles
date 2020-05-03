@@ -25,6 +25,16 @@ In the more general case, loss functions can be asymmetric and at an angle, whic
 
 Because of the various angles and shapes, such as we saw in [L2nonsym], more of the regularized coefficients for both L1 (72%) and L2 (5%) constraints become zero.  Also notice that there are a number of orange dots not clustered around the axes for L2; they are more spread out than for symmetric loss functions.  This might not be a perfect simulation, I think it's good enough to get our answer: *Yes, L1 regularized coefficients are much more likely to become zeros than L2 coefficients.*
 
+<aside title="Random loss functions used in simulation" label="foo">
+For math nerds, this is the equation used to generate the random loss functions:
+
+\[
+loss = a (\beta_1 - c_1)^2 + b(\beta_2 - c_2)^2 + c(\beta_1 - c_1)(\beta_2 - c_2)
+\]
+
+where $a \sim U(0,10)$ scales the bowl in the $\beta_1$ direction, $b \sim U(0,10)$ scales the $\beta_2$ direction, $c \sim U(-2,2)$ controls the amount of tilt/angle away from vertical or horizontal, and ($c_1 \sim U(-10,10)$,$c_2 \sim U(-10,10)$) is the position in coefficient space of the minimum loss function value. $U(k,l)$ means uniform random variable between $k$ and $l$.
+</aside>
+
 <section title="L1 and L2 regularization encourage zero coefficients for less predictive features">
 
 On the other hand, we actually want to answer a more specific question: "*Does L1 encourage zero coefficients for less predictive or useless features?*" To answer that, we need to know what  loss functions look like for less predictive features. Imagine one of two features is very important and the other is not. That would imply that the loss function looks like a taco shell or canoe, and at or close to 90 degrees to one of the axes. [L1ortho] shows some examples for the L1 constraint. If $\beta_1$ is not very predictive, as in (b)(c)(d), then movement left and right does not increase the cost very much, whereas, moving up and down costs a lot (we're crossing a lot of contour lines). If $\beta_2$ is not very predictive, as in (a), then changing $\beta_2$ does not cost very much but moving left and right with $\beta_1$ does, because we are crossing contour lines again.
@@ -48,17 +58,28 @@ With the shape of those orthogonal loss functions in mind, let's do another simu
 	<td><img src="images/l2-orthogonal-cloud.png" width="65%">
 </table>
 
-Orthogonal loss functions result in more zero coefficients than the general case, which is what we would expect, but the effect is not huge; 72% to 80%. L2, on the other hand, sees a huge boost in the number of zero coefficients, from 5% to 45%!  We definitely want more zero coefficients for the case where one of the features is less predictive.  Fortunately, both L1 and L2 deliver in this case! 
+Orthogonal loss functions result in more zero coefficients than the general case, which is what we would expect, but the effect is not huge; 72% to 80%. L2, on the other hand, sees a huge boost in the number of zero coefficients, from 5% to 45%!  We definitely want more zero coefficients for the case where one of the features is less predictive.  Fortunately, both L1 and L2 deliver in this case!
 
 A more scientific approach would also do simulations for the many variable case, but I think this article provides enough evidence for me to believe L1 encourages zeros. Besides, James D. Wilson, a statistician and fellow faculty member, told me there's a theorem that says that the probability of a coefficient going to zero approaches 100% as the number of features goes to infinity. Apparently, as the number of features goes to infinity, the diamond-shaped collapses in on itself to a point.
 
+<section title="Why is L1 more likely to zero coefficients than L2?" label="why">
 
-<aside title="Random loss functions used in simulation" label="foo">
-For math nerds, this is the equation used to generate the random loss functions:
+We now have empirical evidence that L1 tends to get more zero coefficients than L2 for lots of different loss functions (symmetric, asymmetric, and vertical/horizontal). Why exactly is this happening?! To answer that, let's zoom in on the constraint regions for a loss function where $\beta_1$ is very  predictive, but $\beta_2$ is not, as depicted in [L1L2zoom]. As before, the black dot indicates the $(\beta_1,\beta_2)$ location where the loss function is minimum, which is where training for a non-regularized linear regression model would put them. Each curved contour line represents the same loss function value, and the closer the contour lines, the steeper the slope across those lines. (Recall these are projections of a 3D bowl or taco shaped surface onto a two-dimensional plane.)
 
-\[
-loss = a (\beta_1 - c_1)^2 + b(\beta_2 - c_2)^2 + c(\beta_1 - c_1)(\beta_2 - c_2)
-\]
+<figure label="L1L2zoom" caption="L1 and L2 constraint regions get different coefficient locations, on the diamond and circle, for the same loss function. For illustration purposes, I've drawn the circular constraint region to be slightly smaller than the diamond region so that the purple dot is on a contour line. Keep in mind that there are an infinite number of contour lines, so this tweak does not affect the generality.">
+	<table>
+	<tr>
+		<th>(a) L1 Constraint Diamond <th>(b) L2 Constraint Circle
+	<tr>
+		<td><img src="images/L1contour.png" width="75%">
+		<td><img src="images/L2contour.png" width="75%">
+	</table>
+</figure>
 
-where $a \sim U(0,10)$ scales the bowl in the $\beta_1$ direction, $b \sim U(0,10)$ scales the $\beta_2$ direction, $c \sim U(-2,2)$ controls the amount of tilt/angle away from vertical or horizontal, and ($c_1 \sim U(-10,10)$,$c_2 \sim U(-10,10)$) is the position in coefficient space of the minimum loss function value. $U(k,l)$ means uniform random variable between $k$ and $l$.
-</aside>
+Because the minimum location is outside the constraint regions, we know that the regularized coefficients will sit on the constraint boundaries somewhere. We have to find the point on the boundary that has the lowest loss function value. Keep in mind that, for this special case where $\beta_1$ is much more predictive, even small changes in $\beta_1$ could give big swings in the loss function value.  On the other hand, we could move $\beta_2$ pretty far up and down without affecting loss function value very much. A good strategy is, therefore, to optimize the most sensitive parameter first.
+
+Let's optimize the L1 case in [L1L2zoom] (a) first. I claim that the optimal $(\beta_1,\beta_2)$ location is the purple dot at the diamond tip. To show this is true, all I have to do is prove to you that any movement of $(\beta_1,\beta_2)$ away from that spot increases the loss. Take a look at the dashed contour line, emanating from the purple dot. The associated ellipse has the same loss value at all locations. Any $(\beta_1,\beta_2)$ position outside of that ellipse, away from the black dot, has higher loss; any inside that ellipse have lower loss.  Any movement along the diamond edge, away from the purple dot, increases the loss because $(\beta_1,\beta_2)$ immediately moves outside of the dashed contour.
+
+For the L2 case in [L1L2zoom] (b), I claim that the optimal $(\beta_1,\beta_2)$ location is at the new purple dot location, not on the axis like the L1 case.  The ellipse associated with the dashed contour again represents the same loss function value, and any $(\beta_1,\beta_2)$ outside of that ellipse will have higher loss. That means any movement of $(\beta_1,\beta_2)$ along the circular constraint boundary pulls it away from the contour of the purple dot towards higher loss values. That is why the orange dots cannot be the optimal regularized $(\beta_1,\beta_2)$ position. (Note that there is a contour line that exactly meets the $\beta_1$ axis, but the visualization only shows so many contrary lines.)
+
+

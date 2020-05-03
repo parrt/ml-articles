@@ -13,10 +13,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
 <link rel="stylesheet" type="text/css" href="css/article.css"/>
-<title>A visual explanation of regularization for linear models</title>
+<title>A visual explanation of linear model regularization</title>
 <!-- META -->
 <!-- LinkedIn meta -->
-<meta property='og:title' content="How to explain gradient boosting"/>
+<meta property='og:title' content="A visual explanation of linear model regularization"/>
 <meta property='og:image' content="http://explained.ai/regularization/images/reg3D.svg">
 <meta property='og:description' content=""/>
 <meta property='og:url' content="http://explained.ai/regularization/index.html"/>
@@ -25,7 +25,7 @@
 <meta property="og:type" content="article" />
 
 <!-- Twitter meta -->
-<meta name="twitter:title" content="How to explain gradient boosting">
+<meta name="twitter:title" content="A visual explanation of linear model regularization">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:site" content="@the_antlr_guy">
 <meta name="twitter:creator" content="@the_antlr_guy">
@@ -38,7 +38,7 @@
 <i><a href='http://explained.ai/regularization/index.html'>Main article</a><br>Brought to you by <a href='http://explained.ai'>explained.ai</a></i><br>
 </div>
 
-<h1>A visual explanation of regularization for linear models</h1>
+<h1>A visual explanation of linear model regularization</h1>
 
 <p></p>
 
@@ -48,71 +48,63 @@
 <p>Please send comments, suggestions, or fixes to <a href="mailto:parrt@cs.usfca.edu">Terence</a>.</p>
 </p>
 
-
-
 <div id="toc">
 <p class="toc_title">Contents</p>
 <ul>
-	<li><a href="#sec:1.1">Introduction</a>
+	<li><a href="intro.html">Introduction</a>
 	<ul>
-	</ul>
+	<li><a href="intro.html#sec:1.1">Review of linear regression</a>
 	</li>
-	<li><a href="#sec:1.2">Review of linear regression</a>
+	<li><a href="intro.html#sec:1.2">Motivation</a>
+	</li>
+	<li><a href="intro.html#sec:1.3">The premise and trade-off of regularization</a>
+	</li>
+	</ul>
+	<li><a href="constraints.html">How regularization works conceptually</a>
 	<ul>
-	</ul>
+	<li><a href="#sec:2.1">L2 Ridge regularization</a>
 	</li>
-	<li><a href="#sec:1.3">Motivation</a>
+	<li><a href="#sec:2.2">L1 Lasso regularization</a>
+	</li>
+	</ul>
+	<li><a href="L1vsL2.html">The difference between L1 and L2 regularization</a>
 	<ul>
+		<li><a href="#sec:3.1">L1 regularization encourages zero coefficients</a>
+		</li>
+		<li><a href="#sec:3.2">L1 and L2 regularization encourage zero coefficients for less predictive features</a>
 	</ul>
-	</li>
-	<li><a href="#sec:1.4">The premise and trade-off of regularization</a>
-	<ul>
-	</ul>
-	</li>
-	<li><a href="#sec:1.5">How regularization works conceptually</a>
-	<ul>
-			<li><a href="#sec:1.5.1">L2 Ridge regularization</a></li>
-			<li><a href="#sec:1.5.2">L1 Lasso regularization</a></li>
-
-	</ul>
-	</li>
-	<li><a href="#sec:1.6">The difference between L1 and L2 regularization</a>
-	<ul>
-			<li><a href="#sec:1.6.1">L1 regularization encourages zero coefficients</a></li>
-			<li><a href="#sec:1.6.2">L1 and L2 regularization encourage zero coefficients for less predictive features</a></li>
-
-	</ul>
-	</li>
-	<li><a href="#impl">How we implement L1 and L2 regularization</a>
-	<ul>
-	</ul>
-	</li>
-	<li><a href="#sec:1.8">Resources</a>
-	<ul>
-	</ul>
-	</li>
-
+	</li>	
 </ul>
 </div>
 
 <h2 id="overview">Roadmap</h3>
 
-<p><b>Acknowledgements</b>. I'd like to thank mathematicians Steve Devlin and David Uminsky, also faculty in <a href="https://www.usfca.edu/arts-sciences/graduate-programs/data-science">University of San Francisco's MS in Data Science program</a>, for helping me understand the mathematics and why L1 regularization encourages zero coefficients.</p>
+<h2>Acknowledgements</h2>
+
+I'd like to thank mathematicians Steve Devlin and David Uminsky, also faculty in <a href="https://www.usfca.edu/arts-sciences/graduate-programs/data-science">University of San Francisco's MS in Data Science program</a>, for helping me understand the mathematics and why L1 regularization encourages zero coefficients.</p>
 
 <h2>Resources</h2>
 
-
 <p>My MSDS621 project <a href="https://github.com/parrt/msds621/raw/master/projects/linreg/linreg.pdf">Using gradient descent to fit regularized linear models</a></p>
 
-<p>	<a href="https://www.cs.princeton.edu/courses/archive/spring16/cos495/slides/DL_lecture3_regularization_I.pdf">Deep Learning Basics Lecture 3: Regularization I (slides)</a> by Yingyu Liang at  Princeton University.</p>
+<p><a href="https://arxiv.org/pdf/1509.09169.pdf">Lecture notes on ridge regression</a> by <i>Wessel N. van Wieringen</i>.</p>
 
-<p><a href="https://uc-r.github.io/regularized_regression">Regularized Regression</a> from University of Cincinnati.</p>
+<p><a href="https://www.math.arizona.edu/~hzhang/math574m/Read/RidgeRegressionBiasedEstimationForNonorthogonalProblems.pdf">Ridge Regression: Biased Estimation for Nonorthogonal Problems</a> by <i>Hoerl and Kennard, Journal Technometrics, 1970</i>.</p>
 
-<p><a href="https://arxiv.org/pdf/1509.09169.pdf">Lecture notes on ridge regression</a> by Wessel N. van Wieringen.</p>
+<p><a href="http://www-stat.stanford.edu/~tibs/lasso/lasso.pdf">Regression Shrinkage and Selection via the Lasso</a> by <i>Tibshirani</i> in Journal of the Royal Statistical Society, 1996.</p>
 
-<p><a href="https://www.math.arizona.edu/~hzhang/math574m/Read/RidgeRegressionBiasedEstimationForNonorthogonalProblems.pdf">Ridge Regression: Biased Estimation for Nonorthogonal Problems</a> by Hoerl and Kennard, Journal Technometrics, 1970.</p>
+<p>	<a href="https://www.cs.princeton.edu/courses/archive/spring16/cos495/slides/DL_lecture3_regularization_I.pdf">Deep Learning Basics Lecture 3: Regularization I (slides)</a> by <i>Yingyu Liang</i> at  Princeton University.</p>
 
-<p><a href="http://www-stat.stanford.edu/~tibs/lasso/lasso.pdf">Regression Shrinkage and Selection via the Lasso</a> by Tibshirani in Journal of the Royal Statistical Society, 1996.</p>
+<p><a href="https://uc-r.github.io/regularized_regression">Regularized Regression</a> from <i>@bradleyboehmke</i> at University of Cincinnati.</p>
+
+<b>Deep Learning related</b>
+
+<p><a href="https://www.fast.ai/2018/07/02/adam-weight-decay/#understanding-adamw-weight-decay-or-l2-regularization">Understanding AdamW: Weight decay or L2 regularization?</a> <i>Sylvain Gugger and Jeremy Howard</i>
+
+<p><a href="https://arxiv.org/abs/1810.12281">Three Mechanisms of Weight Decay Regularization</a> by <i>Guodong Zhang, Chaoqi Wang, Bowen Xu, Roger Grosse</i>
+	
+
+
 
 
 

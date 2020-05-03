@@ -5,8 +5,8 @@ O="/tmp/regularization"
 
 while true
 do
-	if test $I/css/article.css -nt $O/index.html || \
-           test $I/intro.xml -nt $O/intro.html || \
+	cp $I/index.html $O
+	if test $I/intro.xml -nt $O/intro.html || \
            test $I/constraints.xml -nt $O/constraints.html || \
            test $I/impl.xml -nt $O/impl.html || \
            test $I/L1vsL2.xml -nt $O/L1vsL2.html

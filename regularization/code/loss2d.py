@@ -100,11 +100,14 @@ def plot_loss(boundary, reg,
               boundary_color='#2D435D',
               boundary_dot_color='#E32CA6',
               force_symmetric_loss=False, force_one_nonpredictive=False,
-              show_contours=True, contour_levels=50, show_loss_eqn=False):
+              show_contours=True, contour_levels=50, show_loss_eqn=False,
+              show_min_loss=True):
     Z, a, b, c, x, y = \
         select_parameters(lmbda, reg,
                           force_symmetric_loss=force_symmetric_loss,
                           force_one_nonpredictive=force_one_nonpredictive)
+    x, y = 5, 5
+
     eqn = f"{a:.2f}(b0 - {x:.2f})^2 + {b:.2f}(b1 - {y:.2f})^2 + {c:.2f} b0 b1"
 
     fig,ax = plt.subplots(1,1,figsize=(3.8,3.8))
@@ -130,28 +133,31 @@ def plot_loss(boundary, reg,
         ax.contourf(B0, B1, Z, levels=contour_levels, cmap='coolwarm')
 
     # Draw axes
-    ax.plot([-w,+w],[0,0], '-', c='k')
-    ax.plot([0, 0],[-h,h], '-', c='k')
+    ax.plot([-w,+w],[0,0], '-', c='k', lw=.5)
+    ax.plot([0, 0],[-h,h], '-', c='k', lw=.5)
 
     # Draw boundary
-    ax.plot(boundary[:,0], boundary[:,1], '-', lw=1.5, c=boundary_color)
+    if boundary is not None:
+        ax.plot(boundary[:,0], boundary[:,1], '-', lw=1.5, c=boundary_color)
 
     # Draw center of loss func
-    ax.scatter([x],[y], s=90, c='k')
+    if show_min_loss:
+        ax.scatter([x],[y], s=90, c='k')
 
     # Draw point on boundary
     eqn = f"{a:.2f}(b0 - {x:.2f})^2 + {b:.2f}(b1 - {y:.2f})^2 + {c:.2f} (b0-{x:.2f}) (b1-{y:.2f})"
     # print(eqn)
-    losses = [loss(*edgeloc, a=a, b=b, c=c, cx=x, cy=y) for edgeloc in boundary]
-    minloss_idx = np.argmin(losses)
-    coeff = boundary[minloss_idx]
-    ax.scatter([coeff[0]], [coeff[1]], s=90, c=boundary_dot_color)
+    if boundary is not None:
+        losses = [loss(*edgeloc, a=a, b=b, c=c, cx=x, cy=y) for edgeloc in boundary]
+        minloss_idx = np.argmin(losses)
+        coeff = boundary[minloss_idx]
+        ax.scatter([coeff[0]], [coeff[1]], s=90, c=boundary_dot_color)
 
-    if force_symmetric_loss:
-        if reg=='l2':
-            ax.plot([x,0],[y,0], ':', c='k')
-        else:
-            ax.plot([x,coeff[0]],[y,coeff[1]], ':', c='k')
+        if force_symmetric_loss:
+            if reg=='l2':
+                ax.plot([x,0],[y,0], ':', c='k')
+            else:
+                ax.plot([x,coeff[0]],[y,coeff[1]], ':', c='k')
 
     plt.tight_layout()
 
@@ -181,17 +187,48 @@ def show_example(reg, force_symmetric_loss=False, force_one_nonpredictive=False)
         plt.show()
 
 
-np.random.seed(5) # get reproducible sequence
-show_example(reg='l1')
-np.random.seed(9)
-show_example(reg='l2')
+def just_contour(reg):
+    contour_levels = 200
+    cx, cy = 4, 5
+    Z = loss(B0, B1, a=9, b=1, c=0, cx=cx, cy=cy)
+    fig, ax = plt.subplots(1, 1, figsize=(3, 3))
+    ax.set_xlabel("x", fontsize=12, labelpad=2)
+    ax.set_ylabel("y", fontsize=12, labelpad=2)
+    ax.set_xlim(-2,10)
+    ax.set_ylim(-2,10)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_xlabel(r"$\beta_1$", fontsize=12)
+    ax.set_ylabel(r"$\beta_2$", fontsize=12)
 
-np.random.seed(6)
-show_example(reg='l1', force_symmetric_loss=True)
-np.random.seed(7)
-show_example(reg='l2', force_symmetric_loss=True)
+    ax.contour(B0, B1, Z, levels=contour_levels, linewidths=.8, cmap='coolwarm', vmax=400)
 
-np.random.seed(5)
-show_example(reg='l1', force_one_nonpredictive=True)
-np.random.seed(5)
-show_example(reg='l2', force_one_nonpredictive=True)
+    # Draw axes
+    ax.plot([-w, +w], [0, 0], '-', c='k', lw=.5)
+    ax.plot([0, 0], [-h, h], '-', c='k', lw=.5)
+
+    # Draw center of loss func
+    ax.scatter([cx], [cy], s=20, c='k')
+
+    print(f"../images/contour.png")
+    plt.tight_layout()
+    plt.savefig(f"../images/contour.png", bbox_inches=0, pad_inches=0, dpi=250)
+    plt.show()
+
+
+just_contour(reg='l2')
+
+# np.random.seed(5) # get reproducible sequence
+# show_example(reg='l1')
+# np.random.seed(9)
+# show_example(reg='l2')
+#
+# np.random.seed(6)
+# show_example(reg='l1', force_symmetric_loss=True)
+# np.random.seed(7)
+# show_example(reg='l2', force_symmetric_loss=True)
+#
+# np.random.seed(5)
+# show_example(reg='l1', force_one_nonpredictive=True)
+# np.random.seed(5)
+# show_example(reg='l2', force_one_nonpredictive=True)
