@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# WARNING: must edit index.html to remove unfinished chaps
-
 BUILD=/tmp/regularization
 WEB=/Users/parrt/github/website-explained.ai/regularization
 SRC=/Users/parrt/github/ml-articles/regularization
@@ -24,3 +22,7 @@ cp $SRC/images/ESL_reg.png $WEB/images
 
 # Content
 cp $BUILD/index.html $WEB
+cp $BUILD/intro.html $WEB
+cp $BUILD/constraints.html $WEB
+cp $BUILD/impl.html $WEB
+cp $BUILD/L1vsL2.html $WEB

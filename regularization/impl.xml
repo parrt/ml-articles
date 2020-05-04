@@ -67,4 +67,6 @@ The loss function now has two terms, one for MSE (blue) and one for throttling d
 	</figure>
 
 Net effect is that regularization pulls min loss location closer to origin!
+
+<img src="images/lagrange-animation.gif" width="60%">
 	
