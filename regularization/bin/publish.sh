@@ -7,7 +7,7 @@ SRC=/Users/parrt/github/ml-articles/regularization
 # Support
 mkdir -p $WEB
 mkdir -p $WEB/css; cp -r $BUILD/css $WEB
-mkdir -p $WEB/code; cp -r $BUILD/code $WEB
+mkdir -p $WEB/code; cp -r $SRC/code $WEB
 
 # Images
 mkdir -p $WEB/images
@@ -19,6 +19,10 @@ cp $SRC/images/l2-cloud.png $WEB/images
 cp $SRC/images/l2-orthogonal-cloud.png $WEB/images
 cp $SRC/images/l2-symmetric-cloud.png $WEB/images
 cp $SRC/images/ESL_reg.png $WEB/images
+cp $SRC/images/lagrange-animation.gif $WEB/images
+cp $SRC/images/L1L2contour.png $WEB/images
+cp $SRC/images/L1contour.png $WEB/images
+cp $SRC/images/L2contour.png $WEB/images
 
 # Content
 cp $BUILD/index.html $WEB

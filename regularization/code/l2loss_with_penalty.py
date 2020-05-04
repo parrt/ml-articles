@@ -21,60 +21,62 @@ def loss(b0, b1,
     return lmbda * (a * (b0 - cx) ** 2 + b * (b1 - cy) ** 2) + c * (b0 - cx) * (b1 - cy) + yintercept
 
 
-beta0 = np.linspace(-15, 20, 300)
-beta1 = np.linspace(-20, 20, 300)
-B0, B1 = np.meshgrid(beta0, beta1)
 
 for f in glob.glob(f'/tmp/constraint3D-frame-*.png'):
     os.remove(f)
 
 # repeat last one a few times to get pause
-last_lmbda = 5.0
-lmbdas = list(np.arange(0, last_lmbda, step=.2))
+last_lmbda = 6.0
+stepsize = .3
+lmbdas = list(np.arange(0, last_lmbda, step=stepsize))
 lmbdas = [0]*3 + lmbdas + [last_lmbda]*3
 for i,lmbda in enumerate(lmbdas):
-    w, h = 15, 15
     fig = plt.figure(figsize=(4.2, 3.1))
     ax = fig.add_subplot(111, projection='3d')
     ax.set_xlabel("$\\beta_1$", labelpad=0)
     ax.set_ylabel("$\\beta_2$", labelpad=0)
     ax.tick_params(axis='x', pad=0)
     ax.tick_params(axis='y', pad=0)
-    # ax.set_xlim(-15, 20)
-    # ax.set_ylim(-20, 20)
     ax.set_zlim(0, 1400)
 
-    cx = 0
-    cy = 0
-    Z1 = loss(B0, B1, a=1, b=1, c=0, cx=cx, cy=cy, lmbda=lmbda, yintercept=0)
+    cx = 15
+    cy = -15
 
-    cx = 12
-    cy = -12
-    Z2 = loss(B0, B1, a=5, b=5, c=0, cx=cx, cy=cy, yintercept=0)
-
-    # Create a figure and a 3D Axes
-    vmax = 3300
-    Z = Z1 + Z2
-    minx_idx = np.argmin(Z, axis=0)[0]
-    miny_idx = np.argmin(Z, axis=1)[0]
-    minx, miny = beta0[minx_idx], beta1[miny_idx]
-
-    ax.plot_surface(B0, B1, Z, alpha=1.0, cmap='coolwarm', vmax=vmax)
     ax.plot([cx], [cy], marker='x', markersize=10, color='black')
-    # ax.text(0, 0, 0, ".", fontsize=36)
-    ax.text(-10,20,800, f"$\lambda={lmbda:.1f}$", fontsize=14)
+    ax.text(-20,20,800, f"$\lambda={lmbda:.1f}$", fontsize=14)
 
-    # l2zone = Circle(xy=(0, 0), radius=lmbda, color='#BABABA', alpha=.5)
-    # ax.add_patch(l2zone)
-    # art3d.pathpatch_2d_to_3d(l2zone, z=0, zdir="z")
+    beta0 = np.linspace(-30, 30, 300)
+    beta1 = np.linspace(-30, 30, 300)
+    B0, B1 = np.meshgrid(beta0, beta1)
+    Z1 = loss(B0, B1, a=1, b=1, c=0, cx=0, cy=0, lmbda=lmbda, yintercept=0)
+    Z2 = loss(B0, B1, a=5, b=5, c=0, cx=cx, cy=cy, yintercept=0)
+    Z = Z1 + Z2
+
+    # minx_idx = np.argmin(Z, axis=0)[0]
+    # miny_idx = np.argmin(Z, axis=1)[0]
+    # minx, miny = beta0[minx_idx], beta1[miny_idx]
 
     origin = Circle(xy=(0, 0), radius=1, color='k')
     ax.add_patch(origin)
     art3d.pathpatch_2d_to_3d(origin, z=0, zdir="z")
 
-    contr = ax.contour(B0, B1, Z, levels=30, linewidths=.75,
+    scale = 1.5
+    vmax = 8000
+    contr = ax.contour(B0, B1, Z, levels=50, linewidths=.5,
                        cmap='coolwarm',
                        zdir='z', offset=0, vmax=vmax)
+
+    j = lmbda*scale
+    b0 = (j, 20-j)
+    beta0 = np.linspace(-j, 25-j, 300)
+    beta1 = np.linspace(-25+j, j, 300)
+    B0, B1 = np.meshgrid(beta0, beta1)
+    Z1 = loss(B0, B1, a=1, b=1, c=0, cx=0, cy=0, lmbda=lmbda, yintercept=0)
+    Z2 = loss(B0, B1, a=5, b=5, c=0, cx=cx, cy=cy, yintercept=0)
+    Z = Z1 + Z2
+
+    vmax = 2700
+    ax.plot_surface(B0, B1, Z, alpha=1.0, cmap='coolwarm', vmax=vmax)
 
     ax.view_init(elev=38, azim=-134)
 

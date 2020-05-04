@@ -20,42 +20,41 @@ def loss(b0, b1,
 
 
 def plot_constraint(ax):
-    lmbda = 3
-    beta0 = np.linspace(-15, 20, 100)
-    beta1 = np.linspace(-20, 20, 100)
-    B0, B1 = np.meshgrid(beta0, beta1)
-
-    vmax = 400
-    cx = 0
-    cy = 0
-    Z = loss(B0, B1, a=1, b=1, c=0, cx=cx, cy=cy, lmbda=7, yintercept=0)
-    # Z = np.where(Z<vmax,Z,np.inf)
-
     cmap = 'copper'
-    # Create a figure and a 3D Axes
-    ax.plot_surface(B0, B1, Z, alpha=0.7, cmap=cmap, vmin=0, vmax=vmax)
+    vmax = 300
+
+    beta0 = np.linspace(-10, 15, 100)
+    beta1 = np.linspace(-15, 15, 100)
+    B0, B1 = np.meshgrid(beta0, beta1)
+    Z = loss(B0, B1, a=1, b=1, c=0, cx=0, cy=0, lmbda=6, yintercept=0)
+
     contr = ax.contour(B0, B1, Z, levels=13, linewidths=.3, cmap='binary',
                        zdir='z', offset=0, vmax=vmax)
 
+    w = 7.8
+    beta0 = np.linspace(-w, w, 100)
+    beta1 = np.linspace(-w, w, 100)
+    B0, B1 = np.meshgrid(beta0, beta1)
+    Z = loss(B0, B1, a=1, b=1, c=0, cx=0, cy=0, lmbda=6, yintercept=0)
+    ax.plot_surface(B0, B1, Z, alpha=0.9, cmap=cmap, vmin=0, vmax=vmax)
+
 
 def plot_loss(ax):
-    lmbda = 3
+    vmax = 750
     beta0 = np.linspace(0, 20, 100)
     beta1 = np.linspace(0, -20, 100)
     B0, B1 = np.meshgrid(beta0, beta1)
-
-    cx = 12
-    cy = -12
-    Z = loss(B0, B1, a=5, b=5, c=0, cx=cx, cy=cy)
-    #Z = np.where(Z<500,Z,np.NAN)
-
-    # Create a figure and a 3D Axes
-    vmax = 1200
-    ax.plot_surface(B0, B1, Z, alpha=0.7, cmap='coolwarm', vmax=vmax)
-    ax.plot([cx], [cy], marker='x', markersize=10, color='black')
-
+    Z = loss(B0, B1, a=5, b=5, c=0, cx=12, cy=-12)
     contr = ax.contour(B0, B1, Z, levels=10, linewidths=1.5, cmap='coolwarm',
                        zdir='z', offset=0, vmax=vmax)
+
+    ax.plot([12], [-12], marker='x', markersize=10, color='black')
+
+    beta0 = np.linspace(3, 20, 100)
+    beta1 = np.linspace(-3, -20, 100)
+    B0, B1 = np.meshgrid(beta0, beta1)
+    Z = loss(B0, B1, a=5, b=5, c=0, cx=12, cy=-12)
+    ax.plot_surface(B0, B1, Z, alpha=0.9, cmap='coolwarm', vmax=vmax)
 
 
 w, h = 15, 15
