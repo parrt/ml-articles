@@ -1,7 +1,7 @@
 <chapter title="The difference between L1 and L2 regularization"
 	 author={[Terence Parr](http://parrt.cs.usfca.edu)}>
 
-If both of these regularization techniques work well, you might be wondering why we need both. It turns out they have different but equally useful properties. From a practical standpoint, L1 tends to shrink coefficients to zero whereas L2 tends to shrink coefficients evenly. L1 is therefore useful for feature selection, as we can drop any variables associated with coefficients that go to zero. L2, on the other hand, is useful when you have collinear/codependent features. (An example pair of codependent features is `gender` and `ispregnant` since, at the current level of medical technology, only females can be `ispregnant`.) Codependence tends to increase coefficient variance, making coefficients unreliable/unstable, which hurts model  generality. L2 reduces the variance of these estimates, which counteracts the effect of codependencies.
+If both L1 and L2 regularization work well, you might be wondering why we need both. It turns out they have different but equally useful properties. From a practical standpoint, L1 tends to shrink coefficients to zero whereas L2 tends to shrink coefficients evenly. L1 is therefore useful for feature selection, as we can drop any variables associated with coefficients that go to zero. L2, on the other hand, is useful when you have collinear/codependent features. (An example pair of codependent features is `gender` and `ispregnant` since, at the current level of medical technology, only females can be `ispregnant`.) Codependence tends to increase coefficient variance, making coefficients unreliable/unstable, which hurts model  generality. L2 reduces the variance of these estimates, which counteracts the effect of codependencies.
 
 <section title="L1 regularization encourages zero coefficients">
 
@@ -13,7 +13,7 @@ One of the key questions that I want to answer is: "*Does L1 encourage model coe
 	<td><img src="images/l2-symmetric-cloud.png" width="65%">
 </table>
 
-Green dots represent a random loss function that resulted in a  regularized coefficient being zero. Blue represents a random loss function where no regularized coefficient was zero (North, South, East, West compass points). Orange represents loss functions in L2 plots that had at least one coefficient close to zero (within 10% of the max distance of any coefficent pair.) As you can see in the simulations (5000 trials), the L1 diamond constraint zeros a coefficient for any loss function whose minimum is in the zone perpendicular to the diamond edges. The L2 circular constraint only zeros a coefficient for loss function minimums sitting really close to or on one of the axes. The orange zone indicates where L2 regularization gets close to a zero for a random loss function. Clearly, L1 gives many more zero coefficients (66%) than L2 (3%) for symmetric loss functions.
+Green dots represent a random loss function that resulted in a  regularized coefficient being zero. Blue represents a random loss function where no regularized coefficient was zero (North, South, East, West compass points). Orange represents loss functions in L2 plots that had at least one coefficient close to zero (within 10% of the max distance of any coefficent pair.) L1 tends not to give near misses and so the simulation on the left is just blue/green.  As you can see in the simulations (5000 trials), the L1 diamond constraint zeros a coefficient for any loss function whose minimum is in the zone perpendicular to the diamond edges. The L2 circular constraint only zeros a coefficient for loss function minimums sitting really close to or on one of the axes. The orange zone indicates where L2 regularization gets close to a zero for a random loss function. Clearly, L1 gives many more zero coefficients (66%) than L2 (3%) for symmetric loss functions.
 
 In the more general case, loss functions can be asymmetric and at an angle, which results in more zeros for L1 and slightly more zeros for L2:
 
@@ -25,7 +25,7 @@ In the more general case, loss functions can be asymmetric and at an angle, whic
 
 Because of the various angles and shapes, such as we saw in [L2nonsym], more of the regularized coefficients for both L1 (72%) and L2 (5%) constraints become zero.  Also notice that there are a number of orange dots not clustered around the axes for L2; they are more spread out than for symmetric loss functions.  This might not be a perfect simulation, I think it's good enough to get our answer: *Yes, L1 regularized coefficients are much more likely to become zeros than L2 coefficients.*
 
-<aside title="Random loss functions used in simulation" label="foo">
+<aside title="Random loss functions used in these simulations" label="foo">
 For math nerds, this is the equation used to generate the random loss functions:
 
 \[
@@ -50,7 +50,10 @@ On the other hand, we actually want to answer a more specific question: "*Does L
 </table>
 </figure>
 
-With the shape of those orthogonal loss functions in mind, let's do another simulation and see how many regularized coefficients go to zero:
+With the shape of those "orthogonal"[orthoname] loss functions in mind, let's do another simulation and see how many regularized coefficients go to zero:
+
+<sidenote label="orthoname">The term "orthogonal" for these taco-shaped paraboloids is probably not a good one, but I was too lazy to think of a better term; I just mean vertical or horizontal tacos projected onto the 2D plane.
+</sidenote>
 
 <table>
 <tr>
@@ -85,9 +88,9 @@ For the L2 case in [L1L2zoom] (b), I claim that the optimal $(\beta_1,\beta_2)$ 
 At least for this case, L1 gets a zero coefficient, $\beta_2=0$, whereas, L2 does not. The L1 and L2 $\beta_1$ constraint is exactly the same length and the loss function is exactly the same, but we can see that L2's purple dot is far from the axis.  To convince you that L2 has a harder time getting a zero coefficient, let's zoom in even further, but this time with a loss function optimal location much closer to the $\beta_1$ axis, as shown in [L1L2zoomzoom].
 
 <figure label="L1L2zoomzoom" caption="Moving away from the L1 diamond point immediately increases loss, but L2 can move upwards a little bit before moving leftward away from the loss function minimum.">
-<img src="images/L1L2contour.png" width="20%">
+<img src="images/L1L2contour.png" width="35%">
 </figure>
 
-For the L1 case, the key is to notice that no matter how we move $(\beta_1,\beta_2)$, the loss immediately goes up because the sharp backward angle of the diamond forces movement away from the black dot. For L2, the constraint circle is almost a completely vertical line for a very short distance, which matches a contour line. That means that we can move $\beta_2$ upwards along the contour line, closer to the black dot with no or very little leftwards $\beta_1$ movement. As the black dot loss function minimum approaches the $\beta_1$ axis, the L2 purple dot will approach the $\beta_1$ axis. In contrast, L1 gets to $\beta_2=0$ even when the black dot is far from the $\beta_1$ axis.
+For the L1 case, the key is to notice that no matter how we move $(\beta_1,\beta_2)$, the loss immediately goes up because the sharp backward angle of the diamond forces movement away from the black dot. For L2, the constraint circle is almost a completely vertical line for a very short distance. That means that we can move $\beta_2$ upwards, departing from the contour line, and getting closer to the black dot with no or very little leftwards $\beta_1$ movement. As the black dot loss function minimum approaches the $\beta_1$ axis, the L2 purple dot will approach the $\beta_1$ axis. In contrast, L1 gets to $\beta_2=0$ even when the black dot is far from the $\beta_1$ axis.
 
-This is been a long road, but I hope I've convinced you that there is  empirical evidence that L1 is more likely to get zero coefficients than L2, and there is a straightforward explanation! I think mathematicians understand intuitively why this is true, but I've never seen a decent explanation. I think [L1L2zoomzoom] nails it.
+This is been a long road, but I hope I've convinced you that there is  empirical evidence that L1 is more likely to get zero coefficients than L2, and there is a straightforward explanation! I think mathematicians understand intuitively why this is true, but I've never seen a decent explanation. I think [L1L2zoomzoom] nails it.  The only thing left to do is talk about loss function implementation differs from the conceptual circle and diamond constraint boundaries.

@@ -1,32 +1,9 @@
-<chapter title="An introduction to regularization of linear models"
+<chapter title="A quick review of linear regression"
 	 author={[Terence Parr](http://parrt.cs.usfca.edu)}>
 
-	*in progress*
-	
-ADD LINKS TO IMAGES
-	
-Linear and logistic regression models are important because they are interpretable, fast, and form the basis of deep learning neural networks.  They are also extremely simple; we're just fitting lines (or hyperplanes) through training data. Unfortunately, linear models have a tendency to chase outliers in the training data, which often leads to models that don't generalize well to new data. To produce models that generalize better, we all know to *regularize* our models.  There are many forms of regularization, such as *early stopping* and *dropout* for deep learning, but for isolated linear models, *Lasso* and *Ridge* regularization are most common. (We'll call Lasso *L1* and Ridge *L2* for reasons that will become clear later.)
-
-My goal in this article is to provide a visual explanation for regularization of linear models and to identify the critical stumbling block that makes it hard to understand how regularization works. Here it is upfront: **the math used to implement regularization does not correspond to the pictures everyone uses to explain regularization**. Take a look at the oft-copied picture on page 71 "Shrinkage Methods" from the excellent book *The Elements of Statistical Learning* (Hastie, Tibshirani, Friedman):
-
-<img src="images/ESL_reg.png" width="40%">
-	
-Students see this multiple times in their careers but have trouble mapping that to the relatively straightforward mathematics used to regularize linear model training. The simple reason is that those graphs show how we  regularize models conceptually, with *hard constraints*, not how we actually implement regularization, with *soft constraints*! We'll go into that in detail shortly.  This single disconnect has no doubt caused untold amounts of consternation for those trying to deeply understand regularization. Read on to learn the real story.
-
-I also want to answer key questions regarding L1 Lasso regularization: 
-
-<ol>
-<li> *Does L1 encourage model coefficients to shrink to zero or does it simply not discourage zeroes?* (**It encourages zeros.**)
-<li> *If L1 encourages zero coefficients, why/how does it do that?!* (**The answer requires a picture, see below.**)
-</ol>
-
-These are not easy questions to answer in detail, even for mathematicians. Try explaining simply, without handwaving, to an inquisitive and persistent student; you'll find that you're not exactly sure. ;)
-
-Regularization for linear and logistic regression is done through the same penalty term in the loss function and so I will focus on just linear regression in this article.
-
-<section title="Review of linear regression">
-
-I'm assuming that readers more or less understand the mathematics of linear models and how we find optimal model coefficients to fit lines, but let's take a minute to review the important equations so we're all on the same page. (My plan is to keep mathematics notation to a minimum in this article though.)
+	 I'm assuming that readers are more or less familiar with the mathematics of linear models and how we find optimal model coefficients to fit lines, but let's take a minute to review the important equations so we're all on the same page.[assume]
+	 
+	 <sidenote label="assume">My plan is to keep mathematics notation to a minimum in this article though. Also, regularization for linear and logistic regression is done through the same penalty term in the loss function and so I will focus on just linear regression in this article.</sidenote>
 
 <sidefig caption="Best fit line through 10 sample data points with ordinary least squares regression." label="xyplot">	
 <img src="images/ols.svg" width="80%">
@@ -108,7 +85,7 @@ It's important to see the relationship between [xyplot] and [ols3D]. So, just to
 	
 
 
-<section title="Motivation">
+<section title="Motivation for regularization">
 
 So far so good.  Given some data, we can fit a best fit line through the data where "best fit" means the line that minimizes the average squared between true $y$ values and those predicted by the model. Now, let's tweak the last $y$ value to be about 10 times as big: 
 

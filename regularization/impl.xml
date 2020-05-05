@@ -1,4 +1,4 @@
-<chapter title="How regularization works in practice"
+<chapter title="How we express regularization in practice"
 	 author={[Terence Parr](http://parrt.cs.usfca.edu)}>
 
 
@@ -17,25 +17,32 @@ $\hat{y} = \beta_0 + \beta_1 x_1 + \beta_2 x_2$
 To do that, we want to pick $\beta_j$ coefficients that minimize the loss function; the loss function just says how good of a fit the equation is to the training data. The mean squared error is the usual loss function and it is the average squared difference between the known true $y^{(i)}$ values and our predictions, $\hat{y}^{(i)}$:
 
 \[
-MSE(\beta_0,\beta_1) = \frac{1}{n} \sum_{i=1}^{n} (y^{(i)} - \hat{y}^{(i)})^2
+MSE = \frac{1}{n} \sum_{i=1}^{n} (y^{(i)} - \hat{y}^{(i)})^2
 \]
 
 By substituting $\hat{y}^{(i)}$ into the loss function, we get the typical equation that describes fitting a linear model:
 
 \[
-MSE(\beta_0,\beta_1) = \frac{1}{n} \sum_{i=1}^{n} (y^{(i)} - (\beta_0 + \beta_1 x_1^{(i)} + \beta_2 x_2^{(i)}))^2
+MSE = \frac{1}{n} \sum_{i=1}^{n} (y^{(i)} - (\beta_0 + \beta_1 x_1^{(i)} + \beta_2 x_2^{(i)}))^2
 \]
 
 To add a hard constraint, we add "subject to" language. For L2 it, looks like this:
 
 \[
-MSE(\beta_0,\beta_1,t) = \frac{1}{n} \sum_{i=1}^{n} (y^{(i)} - (\beta_0 + \beta_1 x_1^{(i)} + \beta_2 x_2^{(i)}))^2 \text{ subject to } (\beta_1^2 + \beta_2^2) < t
+MSE = \frac{1}{n} \sum_{i=1}^{n} (y^{(i)} - (\beta_0 + \beta_1 x_1^{(i)} + \beta_2 x_2^{(i)}))^2 \text{ subject to } (\beta_1^2 + \beta_2^2) < t
+\]
+
+\[
+Loss(\beta_0,\beta_1,\beta_2) \text{ subject to } (\beta_1^2 + \beta_2^2) < t
+\]
+\[
+Loss(\beta_0,\beta_1,\beta_2) + \lambda (\beta_1^2 + \beta_2^2)
 \]
 
 and, for L1, it looks like:
 
 \[
-MSE(\beta_0,\beta_1,t) = \frac{1}{n} \sum_{i=1}^{n} (y^{(i)} - (\beta_0 + \beta_1 x_1^{(i)} + \beta_2 x_2^{(i)}))^2 \text{ subject to } (|\beta_1| + |\beta_2|) < t
+MSE = \frac{1}{n} \sum_{i=1}^{n} (y^{(i)} - (\beta_0 + \beta_1 x_1^{(i)} + \beta_2 x_2^{(i)}))^2 \text{ subject to } (|\beta_1| + |\beta_2|) < t
 \]
 
 <section title="Recasting hard constraints as soft constraints">
@@ -85,4 +92,10 @@ Turning to L1 briefly, the exact same soft constraint mechanism is at play excep
 The difference between L1 and L2 is most pronounced when the coefficients become less than 1.0.  Imagine that $\beta_1 = \beta_2 = 0.1$ and $\lambda=1.0$ for simplicity. L1's penalty term $\lambda (|\beta_1| + |\beta_2|) = 0.2$ but L2's penalty term $\lambda (\beta_1^2 + \beta_2^2) = 0.02$, which is an order of magnitude smaller.  That implies that L1 has little problem pushing the loss function up and towards the origin until one or more coefficients become zero. L2, on the other hand, requires larger and larger $\lambda$ as it struggles to add loss to the complete loss function. When the coefficients get very close to zero, say, $\beta_1 = \beta_2 = .001$, the L2 penalty term is adding just 0.000002 to the overall loss function, whereas, L1 adds 0.002. The effect is that the L2 coefficients do not move towards the origin very quickly when less than 1.
 
 To summarize, regularization conceptually uses a hard constraint to prevent coefficients from getting too large. For implementation purposes, however, we convert the "subject to" hard constraint to a soft constraint by adding the constraint as a term to the loss function. This term is a soft constraint because there is no threshold or clipping; larger coefficients are simply more expensive. The effect is to shift the ordinary loss function "bowl" upwards and the loss function minimum towards the origin.
+
+<section title="Wrapping up">
+
+So, now you've got it all!  You know how regularization works conceptually, how L1 and L2 differ in terms of getting zero coefficients, and how we actually express regularization and practice. Congratulations if you've made it all this way!  If you'd like to learn how we use gradient descent to implement regularization, take a look at a project I give my first semester graduate students in data science: [Using gradient descent to fit regularized linear models](https://github.com/parrt/msds621/raw/master/projects/linreg/linreg.pdf).
+
+The end.
 	

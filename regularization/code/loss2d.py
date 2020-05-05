@@ -187,25 +187,33 @@ def show_example(reg, force_symmetric_loss=False, force_one_nonpredictive=False)
         plt.show()
 
 
-def just_contour(reg):
-    contour_levels = 200
-    cx, cy = 4, 5
-    Z = loss(B0, B1, a=9, b=1, c=0, cx=cx, cy=cy)
-    fig, ax = plt.subplots(1, 1, figsize=(3, 3))
-    ax.set_xlabel("x", fontsize=12, labelpad=2)
-    ax.set_ylabel("y", fontsize=12, labelpad=2)
-    ax.set_xlim(-2,10)
-    ax.set_ylim(-2,10)
+def just_contour():
+    contour_levels = 400
+    cx, cy = 4, .8
+    beta0 = np.linspace(-w, w, 300)
+    beta1 = np.linspace(-h, h, 300)
+    B0, B1 = np.meshgrid(beta0, beta1)
+    Z = loss(B0, B1, a=9, b=1, c=4.5, cx=cx, cy=cy)
+    fig, ax = plt.subplots(1, 1, figsize=(8, 8))
+    ax.set_xlim(-2,8)
+    ax.set_ylim(-2,8)
     ax.set_xticks([])
     ax.set_yticks([])
-    ax.set_xlabel(r"$\beta_1$", fontsize=12)
-    ax.set_ylabel(r"$\beta_2$", fontsize=12)
+    # ax.set_xlabel(r"$\beta_1$", fontsize=12)
+    # ax.set_ylabel(r"$\beta_2$", fontsize=12)
 
-    ax.contour(B0, B1, Z, levels=contour_levels, linewidths=.8, cmap='coolwarm', vmax=400)
+    ax.contour(B0, B1, Z, levels=contour_levels, linewidths=.8, cmap='coolwarm', vmax=380)
 
     # Draw axes
     ax.plot([-w, +w], [0, 0], '-', c='k', lw=.5)
     ax.plot([0, 0], [-h, h], '-', c='k', lw=.5)
+
+    lmbda = 2.58
+    boundary_color = '#2D435D'
+    boundary = diamond(lmbda=lmbda, n=200)
+    ax.plot(boundary[:, 0], boundary[:, 1], '-', lw=.5, c=boundary_color)
+    boundary = circle(lmbda=lmbda, n=200)
+    ax.plot(boundary[:, 0], boundary[:, 1], '-', lw=.5, c=boundary_color)
 
     # Draw center of loss func
     ax.scatter([cx], [cy], s=20, c='k')
@@ -216,19 +224,19 @@ def just_contour(reg):
     plt.show()
 
 
-just_contour(reg='l2')
+just_contour()
 
-np.random.seed(5) # get reproducible sequence
-show_example(reg='l1')
-np.random.seed(9)
-show_example(reg='l2')
-
-np.random.seed(6)
-show_example(reg='l1', force_symmetric_loss=True)
-np.random.seed(7)
-show_example(reg='l2', force_symmetric_loss=True)
-
-np.random.seed(5)
-show_example(reg='l1', force_one_nonpredictive=True)
-np.random.seed(5)
-show_example(reg='l2', force_one_nonpredictive=True)
+# np.random.seed(5) # get reproducible sequence
+# show_example(reg='l1')
+# np.random.seed(9)
+# show_example(reg='l2')
+#
+# np.random.seed(6)
+# show_example(reg='l1', force_symmetric_loss=True)
+# np.random.seed(7)
+# show_example(reg='l2', force_symmetric_loss=True)
+#
+# np.random.seed(5)
+# show_example(reg='l1', force_one_nonpredictive=True)
+# np.random.seed(5)
+# show_example(reg='l2', force_one_nonpredictive=True)
