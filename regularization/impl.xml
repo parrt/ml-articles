@@ -8,6 +8,8 @@ If we think about regularization as just constraining how close we can get to th
 
 So, this is conceptually how things work, but it's not easy/efficient to implement regularization this way.  Let's quickly review the mathematics notation that describes the conceptual constraints; then we can move on to how we actually express regularization for implementation purposes.
 
+(The [code to generate all images](https://github.com/parrt/website-explained.ai/tree/master/regularization/code) is available.)
+
 <section title="A quick hard constraint regularization recap">
 	
 We want to fit a linear model with three coefficients and two variables to some data:

@@ -8,6 +8,7 @@ SRC=/Users/parrt/github/ml-articles/regularization
 mkdir -p $WEB
 mkdir -p $WEB/css; cp -r $BUILD/css $WEB
 mkdir -p $WEB/code; cp -r $SRC/code $WEB
+cp ~/github/msds621/code/linreg/regularization_cloud.py $WEB/code
 
 # Images
 mkdir -p $WEB/images

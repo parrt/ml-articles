@@ -3,6 +3,8 @@
 
 If both L1 and L2 regularization work well, you might be wondering why we need both. It turns out they have different but equally useful properties. From a practical standpoint, L1 tends to shrink coefficients to zero whereas L2 tends to shrink coefficients evenly. L1 is therefore useful for feature selection, as we can drop any variables associated with coefficients that go to zero. L2, on the other hand, is useful when you have collinear/codependent features. (An example pair of codependent features is `gender` and `ispregnant` since, at the current level of medical technology, only females can be `ispregnant`.) Codependence tends to increase coefficient variance, making coefficients unreliable/unstable, which hurts model  generality. L2 reduces the variance of these estimates, which counteracts the effect of codependencies.
 
+(The [code to generate all images](https://github.com/parrt/website-explained.ai/tree/master/regularization/code) is available.)
+
 <section title="L1 regularization encourages zero coefficients">
 
 One of the key questions that I want to answer is: "*Does L1 encourage model coefficients to shrink to zero?*" (The answer is, Yes!) So, let's do some two-variable simulations of random quadratic loss functions at random locations and see how many end up with a coefficient at zero. There is no guarantee that these random paraboloid loss functions in any way represent real data sets, but it's a way to at least compare L1 and L2 regularization. Let's start out with symmetric loss functions, which look like bowls of various sizes and locations, and compare how many zero coefficients appear for L1 and L2 regularization:

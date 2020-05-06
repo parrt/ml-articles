@@ -3,6 +3,8 @@
 
 At this point, we've set the stage: Regularization is important for model generalization and the idea behind regularization is simply to constrain coefficients, at a small cost in overall accuracy.   Now, let's figure out how regularization constrains coefficients, at least conceptually. (In a later section, we'll look at how regularization actually works in practice.) 
 
+(The [code to generate all images](https://github.com/parrt/website-explained.ai/tree/master/regularization/code) is available.)
+
 <section title="Single-variable regularization">
 
 Take a look at the hypothetical loss function in [reg1beta], which is just $(\beta-2)^2$ for some $\beta$ coefficient. (In terms of high school $x$ and $y$, this is just $y= (x-2)^2$ or "a bowl shifted to 2".) The minimum loss is the bottom of the curve at $\beta = 2$. But, imagine we know that any coefficient bigger than 1.0 (or -1.0) will reduce generality. The best regularized coefficient is, therefore, $\beta = 1.0$, which is on the constraint  boundary in the direction of the minimum. By "best," we mean the closest we can get a coefficient to the loss function minimum location without exceeding our constraint.  

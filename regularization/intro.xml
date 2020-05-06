@@ -9,7 +9,7 @@
 <img src="images/ols.svg" width="80%">
 </sidefig>
 
-A single-variable linear regression model is familiar to us from high school algebra: $y = \beta_0 + \beta_1 x$, where (coefficient) $\beta_0$ is the $y$-intercept and $\beta_1$ is the slope of the line.  For example, let's say we have the following 10 training records and want to draw the *best fit* line through the points, as shown in [xyplot]. 
+A single-variable linear regression model is familiar to us from high school algebra: $y = \beta_0 + \beta_1 x$, where (coefficient) $\beta_0$ is the $y$-intercept and $\beta_1$ is the slope of the line.  For example, let's say we have the following 10 training records and want to draw the *best fit* line through the points, as shown in [xyplot]. 	 (The [code to generate all images](https://github.com/parrt/website-explained.ai/tree/master/regularization/code) is available.)
 
 <pyeval label=reg hide=true output="df">
 import numpy as np
