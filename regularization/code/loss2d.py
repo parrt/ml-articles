@@ -106,7 +106,6 @@ def plot_loss(boundary, reg,
         select_parameters(lmbda, reg,
                           force_symmetric_loss=force_symmetric_loss,
                           force_one_nonpredictive=force_one_nonpredictive)
-    x, y = 5, 5
 
     eqn = f"{a:.2f}(b0 - {x:.2f})^2 + {b:.2f}(b1 - {y:.2f})^2 + {c:.2f} b0 b1"
 
@@ -224,19 +223,20 @@ def just_contour():
     plt.show()
 
 
-just_contour()
 
-# np.random.seed(5) # get reproducible sequence
-# show_example(reg='l1')
-# np.random.seed(9)
-# show_example(reg='l2')
-#
-# np.random.seed(6)
-# show_example(reg='l1', force_symmetric_loss=True)
-# np.random.seed(7)
-# show_example(reg='l2', force_symmetric_loss=True)
-#
-# np.random.seed(5)
-# show_example(reg='l1', force_one_nonpredictive=True)
-# np.random.seed(5)
-# show_example(reg='l2', force_one_nonpredictive=True)
+np.random.seed(5) # get reproducible sequence
+show_example(reg='l1')
+np.random.seed(9)
+show_example(reg='l2')
+
+np.random.seed(6)
+show_example(reg='l1', force_symmetric_loss=True)
+np.random.seed(7)
+show_example(reg='l2', force_symmetric_loss=True)
+
+np.random.seed(5)
+show_example(reg='l1', force_one_nonpredictive=True)
+np.random.seed(5)
+show_example(reg='l2', force_one_nonpredictive=True)
+
+just_contour()
