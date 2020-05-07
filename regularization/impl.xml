@@ -34,13 +34,6 @@ To add a hard constraint, we add "subject to" language. For L2 it, looks like th
 MSE = \frac{1}{n} \sum_{i=1}^{n} (y^{(i)} - (\beta_0 + \beta_1 x_1^{(i)} + \beta_2 x_2^{(i)}))^2 \text{ subject to } (\beta_1^2 + \beta_2^2) < t
 \]
 
-\[
-Loss(\beta_0,\beta_1,\beta_2) \text{ subject to } (\beta_1^2 + \beta_2^2) < t
-\]
-\[
-Loss(\beta_0,\beta_1,\beta_2) + \lambda (\beta_1^2 + \beta_2^2)
-\]
-
 and, for L1, it looks like:
 
 \[
