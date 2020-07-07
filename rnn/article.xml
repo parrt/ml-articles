@@ -1,0 +1,21 @@
+<article
+      googletracking="UA-118361649-1"
+      watermark="<a href='http://explained.ai/rnn/index.html'>Main article</a><br>Brought to you by <a href='http://explained.ai'>explained.ai</a>">
+
+<include file="implementation.xml">
+<include file="minibatch.xml">
+<include file="gpu.xml">
+
+<css file="css/article.css">
+
+<copyright>
+(Terence teaches in [University of San Francisco's MS in Data Science program](https://www.usfca.edu/arts-sciences/graduate-programs/data-science). You might know Terence as the creator of the ANTLR parser generator.)
+</copyright>
+
+<metadata title="Explaining RNNs without neural networks"
+	imageurl="http://explained.ai/rnn/images/"
+	description=""
+	url="http://explained.ai/rnn/index.html"
+	pagetype="article"
+	twitterhandle="@the_antlr_guy"
+>
