@@ -4,7 +4,6 @@
 
 <include file="implementation.xml">
 <include file="minibatch.xml">
-<include file="gpu.xml">
 
 <css file="css/article.css">
 
