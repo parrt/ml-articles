@@ -6,11 +6,15 @@ def normal_transform(x, mean=0.0, std=0.01):
     return x*std + mean
 
 def randn(n1, n2,          
-          mean=0.0, std=0.01, requires_grad=False,
+          mean=0.0, std=0.01,
+          device=None,
+          requires_grad=False,
           dtype=torch.float64):
     x = torch.randn(n1, n2, dtype=dtype)
     x = normal_transform(x, mean=mean, std=std)
     x.requires_grad=requires_grad
+    if device is not None:
+        return x.to(device)
     return x
 
 def plot_history(history, yrange=(0.0, 5.00), figsize=(3.5,3)):
