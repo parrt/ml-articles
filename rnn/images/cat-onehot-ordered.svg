@@ -1,0 +1,362 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xl="http://www.w3.org/1999/xlink" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="-15.4375 735.1875 496.58704 220.2605" width="496.58704" height="220.2605">
+  <defs>
+    <font-face font-family="Monaco" font-size="16" units-per-em="1000" underline-position="-37.597656" underline-thickness="75.68359" slope="0" x-height="545.41016" cap-height="757.8125" ascent="1e3" descent="-250" font-weight="400">
+      <font-face-src>
+        <font-face-name name="Monaco"/>
+      </font-face-src>
+    </font-face>
+    <font-face font-family="Courier New" font-size="16" panose-1="2 7 6 9 2 2 5 2 4 4" units-per-em="1000" underline-position="-232.91016" underline-thickness="100.09766" slope="0" x-height="443.3594" cap-height="591.7969" ascent="832.5195" descent="-300.29297" font-weight="700">
+      <font-face-src>
+        <font-face-name name="CourierNewPS-BoldMT"/>
+      </font-face-src>
+    </font-face>
+    <font-face font-family="Courier New" font-size="16" panose-1="2 7 3 9 2 2 5 2 4 4" units-per-em="1000" underline-position="-232.91016" underline-thickness="41.015625" slope="0" x-height="422.85156" cap-height="571.28906" ascent="832.5195" descent="-300.29297" font-weight="400">
+      <font-face-src>
+        <font-face-name name="CourierNewPSMT"/>
+      </font-face-src>
+    </font-face>
+    <font-face font-family="Courier New" font-size="14" panose-1="2 7 3 9 2 2 5 2 4 4" units-per-em="1000" underline-position="-232.91016" underline-thickness="41.015625" slope="0" x-height="422.85156" cap-height="571.28906" ascent="832.5195" descent="-300.29297" font-weight="400">
+      <font-face-src>
+        <font-face-name name="CourierNewPSMT"/>
+      </font-face-src>
+    </font-face>
+    <font-face font-family="Times" font-size="22" panose-1="0 0 5 0 0 0 0 9 0 0" units-per-em="1000" underline-position="-75.68359" underline-thickness="49.316406" slope="-681.8182" x-height="446.28906" cap-height="652.34375" ascent="750" descent="-250" font-style="italic" font-weight="400">
+      <font-face-src>
+        <font-face-name name="Times-Italic"/>
+      </font-face-src>
+    </font-face>
+    <font-face font-family="Times" font-size="14" panose-1="0 0 5 0 0 0 0 9 0 0" units-per-em="1000" underline-position="-75.68359" underline-thickness="49.316406" slope="-1071.4286" x-height="446.28906" cap-height="652.34375" ascent="750" descent="-250" font-style="italic" font-weight="400">
+      <font-face-src>
+        <font-face-name name="Times-Italic"/>
+      </font-face-src>
+    </font-face>
+    <marker orient="auto" overflow="visible" markerUnits="strokeWidth" id="FilledArrow_Marker" stroke-linejoin="miter" stroke-miterlimit="10" viewBox="-1 -3 6 6" markerWidth="6" markerHeight="6" color="#415ba3">
+      <g>
+        <path d="M 4 0 L 0 -1.5 L 0 1.5 Z" fill="currentColor" stroke="currentColor" stroke-width="1"/>
+      </g>
+    </marker>
+    <font-face font-family="Helvetica Neue" font-size="16" panose-1="2 0 5 3 0 0 0 2 0 4" units-per-em="1000" underline-position="-100" underline-thickness="50" slope="0" x-height="517" cap-height="714" ascent="951.9958" descent="-212.99744" font-weight="400">
+      <font-face-src>
+        <font-face-name name="HelveticaNeue"/>
+      </font-face-src>
+    </font-face>
+    <marker orient="auto" overflow="visible" markerUnits="strokeWidth" id="FilledArrow_Marker_2" stroke-linejoin="miter" stroke-miterlimit="10" viewBox="-1 -3 6 6" markerWidth="6" markerHeight="6" color="black">
+      <g>
+        <path d="M 4 0 L 0 -1.5 L 0 1.5 Z" fill="currentColor" stroke="currentColor" stroke-width="1"/>
+      </g>
+    </marker>
+  </defs>
+  <metadata> Produced by OmniGraffle 7.11.5 
+    <dc:date>2020-07-04 17:51:50 +0000</dc:date>
+  </metadata>
+  <g id="char_vectors" fill="none" stroke-dasharray="none" stroke-opacity="1" stroke="none" fill-opacity="1">
+    <title>char vectors</title>
+    <g id="char_vectors: Layer 1">
+      <title>Layer 1</title>
+      <g id="Graphic_47">
+        <text transform="translate(14.674623 811.1445)" fill="black">
+          <tspan font-family="Monaco" font-size="16" font-weight="400" fill="black" x="0" y="16">= 2</tspan>
+        </text>
+      </g>
+      <g id="Graphic_46">
+        <rect x="48.080873" y="758.8125" width="25.3125" height="126" fill="white"/>
+        <rect x="48.080873" y="758.8125" width="25.3125" height="126" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
+      </g>
+      <g id="Graphic_44">
+        <rect x="-15.1875" y="759.875" width="25.3125" height="126" fill="white"/>
+        <rect x="-15.1875" y="759.875" width="25.3125" height="126" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
+      </g>
+      <g id="Graphic_48">
+        <text transform="translate(78.68328 811.1445)" fill="black">
+          <tspan font-family="Monaco" font-size="16" font-weight="400" fill="black" x="0" y="16">+</tspan>
+        </text>
+      </g>
+      <g id="Graphic_50">
+        <rect x="96.44108" y="758.8125" width="25.3125" height="126" fill="white"/>
+        <rect x="96.44108" y="758.8125" width="25.3125" height="126" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
+      </g>
+      <g id="Graphic_54">
+        <text transform="translate(103.45497 741.875)" fill="black">
+          <tspan font-family="Courier New" font-size="16" font-weight="700" fill="black" x="0" y="13">c</tspan>
+        </text>
+      </g>
+      <g id="Graphic_62">
+        <text transform="translate(194.33263 810.0195)" fill="black">
+          <tspan font-family="Monaco" font-size="16" font-weight="400" fill="black" x="0" y="16">= 2</tspan>
+        </text>
+      </g>
+      <g id="Graphic_61">
+        <rect x="229.9611" y="757.6875" width="25.3125" height="126" fill="white"/>
+        <rect x="229.9611" y="757.6875" width="25.3125" height="126" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
+      </g>
+      <g id="Graphic_60">
+        <text transform="translate(238.01405 758.75)" fill="black">
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="13">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="31">1</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="49">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="67">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="85">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="103">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="121">0</tspan>
+        </text>
+      </g>
+      <g id="Graphic_59">
+        <rect x="165.02606" y="758.75" width="25.3125" height="126" fill="white"/>
+        <rect x="165.02606" y="758.75" width="25.3125" height="126" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
+      </g>
+      <g id="Graphic_58">
+        <text transform="translate(261.67463 809.464)" fill="black">
+          <tspan font-family="Monaco" font-size="16" font-weight="400" fill="black" x="0" y="16">+</tspan>
+        </text>
+      </g>
+      <g id="Graphic_57">
+        <rect x="278.3213" y="757.6875" width="25.3125" height="126" fill="white"/>
+        <rect x="278.3213" y="757.6875" width="25.3125" height="126" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
+      </g>
+      <g id="Graphic_56">
+        <text transform="translate(285.3352 758.75)" fill="black">
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="13">1</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="31">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="49">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="67">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="85">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="103">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="121">0</tspan>
+        </text>
+      </g>
+      <g id="Graphic_55">
+        <text transform="translate(286.17678 740.1875)" fill="black">
+          <tspan font-family="Courier New" font-size="16" font-weight="700" fill="black" x="0" y="13">a</tspan>
+        </text>
+      </g>
+      <g id="Graphic_72">
+        <text transform="translate(373.02993 808.4327)" fill="black">
+          <tspan font-family="Monaco" font-size="16" font-weight="400" fill="black" x="0" y="16">= 2</tspan>
+        </text>
+      </g>
+      <g id="Graphic_71">
+        <rect x="407.22684" y="756.1007" width="25.3125" height="126" fill="white"/>
+        <rect x="407.22684" y="756.1007" width="25.3125" height="126" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
+      </g>
+      <g id="Graphic_70">
+        <text transform="translate(414.72424 757.1632)" fill="black">
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="13">1</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="31">2</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="49">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="67">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="85">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="103">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="121">0</tspan>
+        </text>
+      </g>
+      <g id="Graphic_69">
+        <rect x="342.61225" y="757.1632" width="25.3125" height="126" fill="white"/>
+        <rect x="342.61225" y="757.1632" width="25.3125" height="126" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
+      </g>
+      <g id="Graphic_68">
+        <text transform="translate(437.82925 808.4327)" fill="black">
+          <tspan font-family="Monaco" font-size="16" font-weight="400" fill="black" x="0" y="16">+</tspan>
+        </text>
+      </g>
+      <g id="Graphic_67">
+        <rect x="455.58704" y="756.1007" width="25.3125" height="126" fill="white"/>
+        <rect x="455.58704" y="756.1007" width="25.3125" height="126" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
+      </g>
+      <g id="Graphic_66">
+        <text transform="translate(462.0454 757.1632)" fill="black">
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="13">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="31">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="49">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="67">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="85">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="103">1</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="121">0</tspan>
+        </text>
+      </g>
+      <g id="Graphic_65">
+        <text transform="translate(462.0454 740.4148)" fill="black">
+          <tspan font-family="Courier New" font-size="16" font-weight="700" fill="black" x="0" y="13">t</tspan>
+        </text>
+      </g>
+      <g id="Graphic_73">
+        <text transform="translate(173.02843 759.875)" fill="black">
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="13">1</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="31">2</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="49">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="67">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="85">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="103">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="121">0</tspan>
+        </text>
+      </g>
+      <g id="Graphic_76">
+        <text transform="translate(350.4677 757.1007)" fill="black">
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="13">2</tspan>
+          <tspan font-family="Courier New" font-size="14" font-weight="400" fill="black" x=".60009766" y="30">4</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="47">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="65">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="83">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="101">1</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="119">0</tspan>
+        </text>
+      </g>
+      <g id="Graphic_137">
+        <text transform="translate(56.280516 758.8125)" fill="black">
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="13">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="31">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="49">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="67">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="85">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="103">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="121">0</tspan>
+        </text>
+      </g>
+      <g id="Graphic_138">
+        <text transform="translate(103.45497 759.875)" fill="black">
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="13">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="31">1</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="49">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="67">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="85">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="103">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="121">0</tspan>
+        </text>
+      </g>
+      <g id="Group_142">
+        <g id="Graphic_140">
+          <text transform="translate(-9.470922 880.6032)" fill="black">
+            <tspan font-family="Times" font-size="22" font-style="italic" font-weight="400" fill="black" x="0" y="22">h</tspan>
+          </text>
+        </g>
+        <g id="Graphic_141">
+          <text transform="translate(-.8754883 891.0407)" fill="black">
+            <tspan font-family="Times" font-size="14" font-style="italic" font-weight="400" fill="black" x="0" y="14">1</tspan>
+          </text>
+        </g>
+      </g>
+      <g id="Group_147">
+        <g id="Graphic_149">
+          <text transform="translate(102.1082 880.6032)" fill="black">
+            <tspan font-family="Times" font-size="22" font-style="italic" font-weight="400" fill="black" x="0" y="22">x</tspan>
+          </text>
+        </g>
+        <g id="Graphic_148">
+          <text transform="translate(110.08596 891.0407)" fill="black">
+            <tspan font-family="Times" font-size="14" font-style="italic" font-weight="400" fill="black" x="0" y="14">1</tspan>
+          </text>
+        </g>
+      </g>
+      <g id="Graphic_150">
+        <text transform="translate(-6.973742 759.875)" fill="black">
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="13">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="31">1</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="49">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="67">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="85">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="103">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="121">0</tspan>
+        </text>
+      </g>
+      <g id="Group_172">
+        <g id="Graphic_162">
+          <text transform="translate(53.08087 879.8267)" fill="black">
+            <tspan font-family="Times" font-size="22" font-style="italic" font-weight="400" fill="black" x="0" y="22">h</tspan>
+          </text>
+        </g>
+        <g id="Graphic_161">
+          <text transform="translate(62.8125 892.0142)" fill="black">
+            <tspan font-family="Times" font-size="14" font-style="italic" font-weight="400" fill="black" x="0" y="14">0</tspan>
+          </text>
+        </g>
+      </g>
+      <g id="Group_168">
+        <g id="Graphic_170">
+          <text transform="translate(169.22145 878.9025)" fill="black">
+            <tspan font-family="Times" font-size="22" font-style="italic" font-weight="400" fill="black" x="0" y="22">h</tspan>
+          </text>
+        </g>
+        <g id="Graphic_169">
+          <text transform="translate(177.81689 889.34)" fill="black">
+            <tspan font-family="Times" font-size="14" font-style="italic" font-weight="400" fill="black" x="0" y="14">2</tspan>
+          </text>
+        </g>
+      </g>
+      <g id="Group_165">
+        <g id="Graphic_167">
+          <text transform="translate(280.80058 878.9025)" fill="black">
+            <tspan font-family="Times" font-size="22" font-style="italic" font-weight="400" fill="black" x="0" y="22">x</tspan>
+          </text>
+        </g>
+        <g id="Graphic_166">
+          <text transform="translate(288.77834 889.34)" fill="black">
+            <tspan font-family="Times" font-size="14" font-style="italic" font-weight="400" fill="black" x="0" y="14">2</tspan>
+          </text>
+        </g>
+      </g>
+      <g id="Group_171">
+        <g id="Graphic_164">
+          <text transform="translate(231.77325 878.126)" fill="black">
+            <tspan font-family="Times" font-size="22" font-style="italic" font-weight="400" fill="black" x="0" y="22">h</tspan>
+          </text>
+        </g>
+        <g id="Graphic_163">
+          <text transform="translate(241.50488 890.3135)" fill="black">
+            <tspan font-family="Times" font-size="14" font-style="italic" font-weight="400" fill="black" x="0" y="14">1</tspan>
+          </text>
+        </g>
+      </g>
+      <g id="Group_179">
+        <g id="Graphic_181">
+          <text transform="translate(349.2401 877.929)" fill="black">
+            <tspan font-family="Times" font-size="22" font-style="italic" font-weight="400" fill="black" x="0" y="22">h</tspan>
+          </text>
+        </g>
+        <g id="Graphic_180">
+          <text transform="translate(357.83555 888.3665)" fill="black">
+            <tspan font-family="Times" font-size="14" font-style="italic" font-weight="400" fill="black" x="0" y="14">3</tspan>
+          </text>
+        </g>
+      </g>
+      <g id="Group_176">
+        <g id="Graphic_178">
+          <text transform="translate(460.81924 877.929)" fill="black">
+            <tspan font-family="Times" font-size="22" font-style="italic" font-weight="400" fill="black" x="0" y="22">x</tspan>
+          </text>
+        </g>
+        <g id="Graphic_177">
+          <text transform="translate(468.797 888.3665)" fill="black">
+            <tspan font-family="Times" font-size="14" font-style="italic" font-weight="400" fill="black" x="0" y="14">3</tspan>
+          </text>
+        </g>
+      </g>
+      <g id="Group_173">
+        <g id="Graphic_175">
+          <text transform="translate(411.7919 877.1525)" fill="black">
+            <tspan font-family="Times" font-size="22" font-style="italic" font-weight="400" fill="black" x="0" y="22">h</tspan>
+          </text>
+        </g>
+        <g id="Graphic_174">
+          <text transform="translate(421.52354 889.34)" fill="black">
+            <tspan font-family="Times" font-size="14" font-style="italic" font-weight="400" fill="black" x="0" y="14">2</tspan>
+          </text>
+        </g>
+      </g>
+      <g id="Line_182">
+        <path d="M 10.6875 760.5 C 26.904902 754.0467 33.12371 744.4459 59.344574 741.1381 C 85.56544 737.8303 139.65577 737.8934 168.02843 740.65136 C 193.7079 743.1475 206.52877 750.4293 223.94582 755.9991" marker-end="url(#FilledArrow_Marker)" stroke="#415ba3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2.0,2.0" stroke-width="1"/>
+      </g>
+      <g id="Line_183">
+        <path d="M 189.9522 758.7577 C 206.9335 752.0449 214.68033 741.9251 240.9012 738.6173 C 267.12207 735.3095 319.54577 736.0214 347.29313 738.90905 C 372.34434 741.5162 384.8265 748.6737 401.75903 754.2186" marker-end="url(#FilledArrow_Marker)" stroke="#415ba3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2.0,2.0" stroke-width="1"/>
+      </g>
+      <g id="Graphic_184">
+        <text transform="translate(332.7485 932)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" font-weight="400" fill="black" x="4369838e-19" y="15">Result</tspan>
+        </text>
+      </g>
+      <g id="Line_185">
+        <line x1="356.53783" y1="931.5" x2="356.53783" y2="915.0671" marker-end="url(#FilledArrow_Marker_2)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+    </g>
+  </g>
+</svg>

@@ -1,4 +1,4 @@
-<chapter title="Training an RNN with minibatch SGD"
+<chapter title="Training an RNN with vectorized minibatch SGD"
 	 author={[Terence Parr](http://parrt.cs.usfca.edu)}>
 
 	 In the previous section, we trained an RNN by updating model parameters $W$, $U$, $V$ after each input record (each word). The training loop computed the loss for a single record and used that to estimate partial derivatives. Those "noisy" partial derivatives (computed by backpropagation) were then used by the gradient descent optimizer to tweak the matrices. The goal of this section is to make a more efficient version of the training loop by (1) performing backpropagation less frequently and (2) using PyTorch vector operations (that are implemented in C++) to avoid Python a `for`-loop.  
