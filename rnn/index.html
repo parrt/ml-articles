@@ -67,7 +67,7 @@ In this article, I hope to contribute a simple and visually-focused data-transfo
 
 <p></p>
 
-For those readers who already have a good understanding of RNN concepts, let me summarize some of the key conceptual and implementation bits that I learned while coding these examples:
+For those readers who already have a good understanding of RNN concepts, I can save you some time by just summarizing some of the key conceptual and implementation bits that I learned while coding these examples.  The full article table of contents is given below.
 
 <ul>
 	<li>What exactly is <i>h</i> (sometimes called <i>s</i>) in the recurrence relation representing an RNN: <img src="images/blkeqn-F224DE1728AA3CC4724E5AE9C5429D65.svg"  style="vertical-align: -3pt;"> (leaving off the nonlinearity)? The variable name <i>h</i> is typically used because it represents the <b>h</b>idden state of the RNN. An RNN takes a variable-length input record of symbols (e.g., stock price sequence, document, sentence, or word) and generates a fixed-length vector in high dimensional space, called an embedding, that somehow meaningfully represents or encodes the input record. The vector is only associated with a single input record and is only meaningful in the context of a classification or regression problem; the RNN is just a component of a surrounding model.  For example, the <i>h</i> vector is often passed through a final linear layer <i>V</i> (multiclass logistic regressor) to get model predictions. 	</li>
