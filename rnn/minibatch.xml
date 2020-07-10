@@ -127,7 +127,7 @@ To figure out the appropriate data structure to represent our training set durin
 
 <img src="images/all-words.svg" width="50%">
 
-The most convenient single entity that aggregates all of those vectors is a three-dimensional matrix. Each row will represent a word, each column will represent a character, and the final dimension (going into the screen) will represent the one-hot encoding. To create that matrix, flip the column one-hot vectors representing characters so they are going back into the screen, then stack them up, one on top of the other. Because the words are of different length, and tensors all need to have the same length, we need to pad missing characters with zero one-hot vectors up to the max word length. The result is the right-padded 3-D matrix you see here on the left:
+The most convenient single entity that aggregates all of those vectors is a three-dimensional matrix. Each row will represent a word, each column will represent a character, and the final dimension (going into the screen) will represent the one-hot encoding. To create that matrix, flip the column one-hot vectors representing characters so they are going back into the screen, then stack them up, one on top of the other. Because the words are of different length, and tensors all need to have the same length, we need to pad missing characters with zero one-hot vectors up to the max word length. The result is the right-padded 3D matrix you see here on the left:
 
 	<table>
 	<tr>
@@ -141,16 +141,19 @@ The most convenient single entity that aggregates all of those vectors is a thre
 	</table>
 
 Unfortunately padding on the right screws up our computation. To see how, 
-let's look at the recurrence relation for a single one-hot vector again, ignoring the nonlinearity as is not relevant to this padding discussion:
+let's look at the recurrence relation for a single one-hot vector again, ignoring the nonlinearity as it's not relevant to this padding discussion:
 
 \[
 h_t = W h_{t-1} + U x_t
 \]
 
-After the final letter in *cat*, my initial reaction was that $x_t$ as the zero vector would not alter the $h_t$ vector, so padding on the right wouldn't be a problem. It turns out that's not correct. If we make $x_4$ and $x_5$ zero vectors, the recurrence relation ends up applying $W$ to $h_3$ twice, but we want $h_3$ to stay the same at steps 4 and 4.  Notice that $h_4$ would not be the same thing as $h_3$:
+After the final letter in *cat*, my initial reaction was that $x_t$ as the zero vector would not alter the $h_t$ vector, so padding on the right wouldn't be a problem. It turns out that's not correct. If we make $x_4$ and $x_5$ zero vectors, the recurrence relation ends up applying $W$ to $h_3$ two extra times, but we want $h_3$ to stay the same at steps 4 and 5.  Notice that $h_4$ would not be the same thing as $h_3$:
 
 \[
-h_4 = W h_3 + U \overrightarrow{0} = W h_3
+\begin{array}{l}
+h_4 = W h_3 + U \overrightarrow{0} = W h_3\\
+h_5 = W h_4 + U \overrightarrow{0} = W h_4 = W W h_3 = W^2 h_3
+\end{array}
 \]
 
 The way around this  is simple but looks weird: we left pad the matrix instead of right padding. See the diagram above on the right.  This is how left padding affects the recurrence relation for *cat*:
@@ -174,8 +177,8 @@ So, the `onehot_matrix()` function takes a batch or the entire training set and 
 x_step_t = batch_X[:,t].T # make it len(vocab) x batch_size
 ```
 
-The `:` in `batch_X[:,t]` spans all words in the batch and the `t` refers to the step. So, this gives us all characters at step `t` across all words. Since we did not mention the third dimension, the one-hot vector dimension, we get the entire one-hot vector for each character position. The resulting 2D matrix has dimensions batch size by vocabulary length, which means that the one-hot vectors are horizontal not vertical.  For the matrix algebra to work out, we need those one-hot vectors within the matrix to be vertical as we've done in the past. That's why we take the need the transpose, `batch_X[:,t].T`.
+The `:` in `batch_X[:,t]` spans all words in the batch and the `t` refers to the step. So, this gives us all characters at step `t` across all words. Since we did not mention the third dimension, the one-hot vector dimension, we get the entire one-hot vector for each character position. The resulting 2D matrix has dimensions `batch_size` by `len(vocab)`, which means that the one-hot vectors are horizontal not vertical.  For the matrix algebra to work out, we need those one-hot vectors within the matrix to be vertical as we've done in the past. That's why we take the need the transpose, `batch_X[:,t].T`.
 
 And there you have it. Those are all the details I had to figure out in order to implement an efficient RNN using matrices instead of neural network layers as raw components.  Our initial  non-vectorized SGD training loop, which updated model parameters after computing loss for each word, encompasses all of the RNN key ideas. For a realistic RNN, however, only the vectorized version is fast enough. The vectorized version requires minibatching and  all of the machinery required to get the 3D padded batch matrix set up properly. As usual, the theory is straightforward but actually building a practical RNN requires a much deeper understanding of the details. 
 
-You can check out the full implementation in the [vectorized minibatch SGD notebook](https://github.com/parrt/ml-articles/blob/master/rnn/notebooks/vectorized.ipynb) and the similar [GPU-enabled vectorized minibatch SGD notebook](https://github.com/parrt/ml-articles/blob/master/rnn/notebooks/gpu.ipynb).
+You can check out the full implementation in the [vectorized minibatch SGD notebook](https://colab.research.google.com/github/parrt/ml-articles/blob/master/rnn/notebooks/vectorized.ipynb) and the similar [GPU-enabled vectorized minibatch SGD notebook](https://colab.research.google.com/github/parrt/ml-articles/blob/master/rnn/notebooks/gpu.ipynb).
