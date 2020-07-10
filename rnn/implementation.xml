@@ -207,7 +207,7 @@ for x in ["cat,"chat","katze"]:
 	 <td><img src="images/equation-W-U.svg" width="90%">
 </table>
 
-(Matrices $W$, $U$ are called $W_hh$, $W_xh$ in Karpathy's article and `h_h`, `i_h` in Chapter 12 of the fastai book.)
+(Matrices $W$, $U$ are called $W_hh$, $W_xh$ in Karpathy's article and `h_h`, `i_h` in Section "Our Language Model in PyTorch" of [Chapter 12 in the fastai book](https://github.com/fastai/fastbook/blob/master/12_nlp_dive.ipynb).)
 	
 By transforming $x_t$'s one hot vector into a smaller dense vector using $U$, the $W$ matrix can be as small or big as we want. The cool thing is that the $U$ matrix acts like an embedding layer for a neural network. Multiplying $U$ times the $x_t$'s one hot vector effectively selects a column from $U$. So, the columns of $U$ are the character vector embeddings after we train a model containing this `h` update equation.
 
@@ -233,13 +233,13 @@ for x in ["cat,"chat","katze"]:
         h = torch.tanh(h) # NONLINEARITY, contrains h values to -1..1
 ```
 
-(The fastai book uses `relu` not `tanh` but that caused my `h` vectors to  explode in magnitude. I don't think it has anything to do with exploding gradients because I'm under the impression that `tanh` suffers from vanishing gradients not exploding. I guess this due to a lack of L2 weight decay regularization in my training loop. Karpathy's snippet also uses `tanh`.)
+(The [fastai book](https://github.com/fastai/fastbook/blob/master/12_nlp_dive.ipynb) uses `relu` not `tanh`, such as in `LMModel1` of Section "Our Language Model in PyTorch", but that caused my `h` vectors to explode in magnitude. I don't think it has anything to do with exploding gradients because I'm under the impression that `tanh` suffers from vanishing gradients not exploding. I guess this due to a lack of L2 weight decay regularization in my training loop. Karpathy's snippet also uses `tanh`.)
 
 <section title="Learning the RNN matrices by training a classifier">
 
 The `h` computed by the inner loop yields an embedding vector for each word, computed from the sequence of character one hot vectors for that word. That is just a representation of a word, which we could use in a random forest or any other classifier to make predictions (given suitable $W$ and $U$).  To learn the values in $W$ and $U$, though, we have to make the matrices part of a classifier model. Given a suitable loss function, we can tweak the values of $W$ and $U$ in the direction of lower loss, yielding more and more accurate predictions.
 
-To make a prediction from word vector `h`, we again use a matrix transformation that represents either a final linear layer of a neural network or a multi-class logistic regressor, depending on your preference. We transform `h` to a vector of length 3 because there are 3 target languages: English, French, and German. We'll use a new matrix, $V$, to transform the final `h` to the output of our classifier model. The last two lines of this code snippet represent the classifier:
+To make a prediction from word vector `h`, we again use a matrix transformation that represents either a final linear layer of a neural network or a multi-class logistic regressor, depending on your preference. We transform `h` to a vector of length 3 because there are 3 target languages: English, French, and German. We'll use a new matrix, $V$, to transform the final `h` to the output of our classifier model. ([Chapter 12 in the fastai book](https://github.com/fastai/fastbook/blob/master/12_nlp_dive.ipynb) uses `h_o` instead of $V$ and Karpathy uses matrix variable `Why`.) The last two lines of this code snippet represent the classifier:
 
 <table>
 <tr>
@@ -264,7 +264,7 @@ for x in ["cat,"chat","katze"]:
  <td><img src="images/equation-W-U-V.svg" width="95%">
 </table>
 
-(This code corresponds to models `RNN` in Karpathy `LMModel2` in chapter 12 of the fastai book.)
+(This code corresponds to models `RNN` in Karpathy and `LMModel2` in Section "Our First Recurrent Neural Network" of [Chapter 12 in the fastai book](https://github.com/fastai/fastbook/blob/master/12_nlp_dive.ipynb).)
 
 <aside title="Simplifications made in this code">
 	Some readers will notice that I'm not using any bias vectors in this code, which are typically included in neural network layers and logistic regression models. It turns out to work pretty well without them for this application and simplifies the code a lot.

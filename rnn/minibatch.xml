@@ -3,7 +3,7 @@
 
 	 In the previous section, we trained an RNN by updating model parameters $W$, $U$, $V$ after each input record (each word). The training loop computed the loss for a single record and used that to estimate partial derivatives. Those "noisy" partial derivatives (computed by backpropagation) were then used by the gradient descent optimizer to tweak the matrices. The goal of this section is to make a more efficient version of the training loop by (1) performing backpropagation less frequently and (2) using PyTorch vector operations (that are implemented in C++) to avoid Python a `for`-loop.  
 
-The idea of breaking up a training set into chunks is an important implementation detail, but keep in mind that it really has nothing to do with the concept of an RNN.  The words in our training set are very short so we can focus on slicing our training set in between input records.   If our input records were long documents instead of just simple words, we'd likely need to slice up even the individual records, not just between records. Long documents, as we'd use for a language model, complicate our lives and I'll leave that for another article. Or, you can check out section "Maintaining the State of an RNN" in fastai Chapter 12 or "The need for truncated backpropagation" in Trask Chapter 14.
+The idea of breaking up a training set into chunks is an important implementation detail, but keep in mind that it really has nothing to do with the concept of an RNN.  The words in our training set are very short so we can focus on slicing our training set in between input records.   If our input records were long documents instead of just simple words, we'd likely need to slice up even the individual records, not just between records. Long documents, as we'd use for a language model, complicate our lives and I'll leave that for another article. Or, you can check out Section "Maintaining the State of an RNN" of [Chapter 12 in the fastai book](https://github.com/fastai/fastbook/blob/master/12_nlp_dive.ipynb) or "The need for truncated backpropagation" in Trask Chapter 14.
 
 <section title="Computing loss using more than one input record">
 
@@ -46,7 +46,7 @@ and batch two:
 
 <img src="images/computation-batch2.svg" width="100%">
 
-We've been processing the input word by word, even in the batched non-vectorized case. Graphically, that means we process from left to right all of the computations for *cat* then move onto the next word, *chat* etc... This makes sense because there is a dependency between the partial `h`  results. Recall that our recurrence relation associated with the RNN is $h_t = W h_{t-1} + U x_t$ and then we run the last $h$ into $o = Vh$ to get the output vector holding the predicted probabilities of the target languages.  Here's a depiction of the dependencies for the *cat* computations:	
+We've been processing the input word by word, even in the batched non-vectorized case. Graphically, that means we process from left to right all of the computations for *cat* then move onto the next word, *chat* etc... This makes sense because there is a dependency between the partial `h`  results. Recall that our recurrence relation associated with the RNN is $h_t = W h_{t-1} + U x_t$ and then we run the last $h$ into $o = Vh$ to get the output vector holding the predicted probabilities of the target languages. Here's a depiction of the dependencies for the *cat* computations:	
 
 <img src="images/computation-depends.svg" width="100%">
 
