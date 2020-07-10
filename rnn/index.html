@@ -18,7 +18,7 @@
 <!-- LinkedIn meta -->
 <meta property='og:title' content="Explaining RNNs without neural networks"/>
 <meta property='og:image' content="http://explained.ai/rnn/images/vid-fast.gif">
-<meta property='og:description' content=""/>
+<meta property='og:description' content="This article explains how recurrent neural networks (RNN's) work without using the neural network metaphor. It uses a visually-focused data-transformation perspective to show how RNNs encode variable-length input vectors as fixed-length embeddings."/>
 <meta property='og:url' content="http://explained.ai/rnn/index.html"/>
 
 <!-- Facebook meta -->
@@ -29,7 +29,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:site" content="@the_antlr_guy">
 <meta name="twitter:creator" content="@the_antlr_guy">
-<meta name="twitter:description" content="">
+<meta name="twitter:description" content="This article explains how recurrent neural networks (RNN's) work without using the neural network metaphor. It uses a visually-focused data-transformation perspective to show how RNNs encode variable-length input vectors as fixed-length embeddings.">
 <meta name="twitter:image" content="http://explained.ai/rnn/images/vid-fast.gif">
 <!-- END META -->
 </head>
@@ -43,7 +43,7 @@
 <p style="line-height:1.1;"><a href="http://parrt.cs.usfca.edu">Terence Parr</a><br><span style="font-size: 85%; line-height:1.1;">Terence teaches in <a href="https://www.usfca.edu/arts-sciences/graduate-programs/data-science">University of San Francisco's MS in Data Science program</a> and you might know him as the creator of the ANTLR parser generator.</span></p>
 
 <p>
-Vanilla recurrent neural networks (RNNs) form the basis of more sophisticated models, such as LSTMs and GRUs. There are lots of great articles, books, and videos that describe the functionality, mathematics, and behavior of RNNs, and I'm not trying to add yet another rehash here. (See below for a list of resources.) My goal is to present an explanation that avoids the neural network metaphor, stripping it down to its essence&mdash;a series of vector transformations that result in embeddings for variable-length input vectors.
+Vanilla recurrent neural networks (RNNs) form the basis of more sophisticated models, such as LSTMs and GRUs. There are lots of great articles, books, and videos that describe the functionality, mathematics, and behavior of RNNs so, don't worry, this isn't yet another rehash. (See below for a list of resources.) My goal is to present an explanation that avoids the neural network metaphor, stripping it down to its essence&mdash;a series of vector transformations that result in embeddings for variable-length input vectors.
 </p>
 
 <p>
@@ -53,7 +53,7 @@ My learning style involves pounding away at something until I'm able to re-creat
 <p><a href="images/vid-fast.gif">
 <img align="right" src="images/vid-fast.gif" width="380" url="images/vid-fast.">
 </a>
-In this article, I hope to contribute a simple and visually-focused data-transformation perspective on RNNs using a trivial data set that maps words for "cat" to the associated natural language.   The animation on the right was taken (and speeded up) from a <a href="https://youtu.be/ppz0XdEcGF4">youtube clip</a> I made for this article. For my actual PyTorch-based implementations, I've provided notebooks that use a nontrivial <a href="https://raw.githubusercontent.com/hunkim/PyTorchZeroToAll/master/data/names_train.csv.gz">family name to natural language</a> data set. These links open the notebooks at colab:
+In this article, I hope to contribute a simple and visually-focused data-transformation perspective on RNNs using a trivial data set that maps words for "cat" to the associated natural language.   The animation on the right was taken (and speeded up) from a <a href="https://youtu.be/ppz0XdEcGF4">youtube clip</a> I made for this article. For my actual PyTorch-based implementations, I've provided notebooks that use a nontrivial <a href="https://raw.githubusercontent.com/hunkim/PyTorchZeroToAll/master/data/names_train.csv.gz">family name to natural language</a> data set. These links open my full implementation notebooks at colab:
 </p>
 
 <ul>
@@ -67,7 +67,7 @@ In this article, I hope to contribute a simple and visually-focused data-transfo
 
 <p></p>
 
-For those readers who already have a good understanding of RNN concepts, I can save you some time by just summarizing some of the key conceptual and implementation bits that I learned while coding these examples.  The full article table of contents is given below.
+As I tried to learn RNNs, my brain kept wondering about the implementation details and key concepts, such as what exactly was contained in the hidden state vector.  My brain appears to be so literal that it can't understand anything until it sees the entire picture in depth.   For those in a hurry, let me summarize some of the key things I learned by implementing RNNs with nothing but matrices and vectors.  The full table of contents for the full article appears below.
 
 <ul>
 	<li>What exactly is <i>h</i> (sometimes called <i>s</i>) in the recurrence relation representing an RNN: <img src="images/blkeqn-F224DE1728AA3CC4724E5AE9C5429D65.svg"  style="vertical-align: -3pt;"> (leaving off the nonlinearity)? The variable name <i>h</i> is typically used because it represents the <b>h</b>idden state of the RNN. An RNN takes a variable-length input record of symbols (e.g., stock price sequence, document, sentence, or word) and generates a fixed-length vector in high dimensional space, called an embedding, that somehow meaningfully represents or encodes the input record. The vector is only associated with a single input record and is only meaningful in the context of a classification or regression problem; the RNN is just a component of a surrounding model.  For example, the <i>h</i> vector is often passed through a final linear layer <i>V</i> (multiclass logistic regressor) to get model predictions. 	</li>
@@ -85,7 +85,7 @@ For those readers who already have a good understanding of RNN concepts, I can s
 
 <h2>Table of contents</h2>
 
-If you're like me, you like to see things laid out explicitly so you don't have to think too much 😀.   In the two main pages outlined below, I've tried to lay out all of the details I've learned, using as many pictures as I could.
+A broken up this article into two main sections. The first section tries to identify how an RNN encodes a variable-length input record is a fixed-length vector by reinventing the mechanism in baby steps.   The second section is all about minibatching details and vector rising our gradient descent training loop.
 
 <ul>
 <li><a href="implementation.html">1. An RNN built with matrices and trained with SGD</a>

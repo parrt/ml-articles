@@ -13,7 +13,7 @@
 
 <metadata title="Explaining RNNs without neural networks"
 	imageurl="http://explained.ai/rnn/images/vid-fast.gif"
-	description=""
+	description="This article explains how recurrent neural networks (RNN's) work without using the neural network metaphor. It uses a visually-focused data-transformation perspective to show how RNNs encode variable-length input vectors as fixed-length embeddings."
 	url="http://explained.ai/rnn/index.html"
 	pagetype="article"
 	twitterhandle="@the_antlr_guy"

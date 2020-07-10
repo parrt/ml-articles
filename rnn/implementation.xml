@@ -117,7 +117,7 @@ The **key take away** here is that, despite having a constant multiplier of 2, e
 
 <section title="Aggregating character vectors to encode words">
 
-As we discussed at the beginning, our goal is really to represent entire words by vectors in some higher dimensional space, not integers, which are 1D vectors.  We don't have a proper encoding vector for a word, but we can easily get the one hot vectors for individual characters.  So, we just have to find a way to convert these character one hot vectors to a suitable encoding for an entire word. The simplest way to combine the character vectors is to merge them or, equivalently, add them together into a *bag of words* (BOW), or bag of characters in this case:
+As we discussed at the beginning, our goal is really to represent entire words by vectors in some higher dimensional space, not integers, which are 1D vectors.  We don't have a proper encoding vector for a word, but we can easily get the one-hot vectors for individual characters.  So, we just have to find a way to convert these character one-hot vectors to a suitable encoding for an entire word. The simplest way to combine the character vectors is to merge them or, equivalently, add them together into a *bag of words* (BOW), or bag of characters in this case:
 
 <table>
  <tr>
@@ -134,9 +134,9 @@ for x in ["cat,"chat","katze"]:
 	 <td><img src="images/cat-onehot.svg" width="70%">
 </table>
 
-But, BOW vectors do not encode information about the order of the characters and the summation of a bunch of one hot vectors isn't more meaningful than the integer representation.
+But, BOW vectors do not encode information about the order of the characters and the summation of a bunch of one-hot vectors isn't much more meaningful than the integer representation.
 
-To combine the character vectors in an order dependent way, we can simply apply the same trick we did before to scale the previous value of `h`. The only difference between this and the previous version is that we use character vectors not character values and we initialize `h` to the zero vector rather than 0:
+To combine the character vectors in an order-dependent way, we can simply apply the same trick we did before to scale the previous value of `h`. The only difference between this and the previous version is that we use character vectors not character values and we initialize `h` to the zero vector rather than 0:
 
 <table>
  <tr>
@@ -155,7 +155,7 @@ for x in ["cat,"chat","katze"]:
 	
 
 Turning the crank three times yields $h_3$ as our encoding for *cat*. 
-Again, multiplying by 2 is nonsense, but the bigger issue is that multiplying by a single scalar is unlikely create a word encoding  meaningful enough to distinguish these words properly.
+Again, multiplying by 2 is nonsense, but the bigger issue is that multiplying by any single scalar is unlikely create a word encoding  meaningful enough to distinguish these words properly.
 
 To make a more sophisticated model, we need to multiply the `h` vector by a matrix $W$ (`@` is the matrix multiply operator), which represents many more model parameters than a lonely scalar value.  There are multiple useful interpretations of matrix-vector multiplication, but it makes the most sense in this case to think of matrix-vector multiplication as transforming a vector into a new space (possibly with different dimensionality). Let's start with the identity matrix as the transformation matrix to see what it looks like:
 
@@ -179,15 +179,15 @@ for x in ["cat,"chat","katze"]:
 
 (Section [Using identity vectors to sum word embeddings](https://www.amazon.com/Grokking-Deep-Learning-Andrew-Trask/dp/1617293709) in Trask Chapter 12 is a nice section on this topic.)
 
-Because  multiplying a vector by the identity matrix leaves the vector as-is, the update equation reduces to `h = h + onehot(c)`. That `h` update equation leads to a BOW word encoding because it just sums up the character one hot vectors. 
+Because  multiplying a vector by the identity matrix leaves the vector as-is, the update equation reduces to `h = h + onehot(c)`, which leads to a BOW word encoding because it just sums up the character one-hot vectors. 
 
 <section title="Encoding and aggregating character vectors through matrix transforms">
 
-So $W$ can start as the identity or random values, but we need to learn appropriate values for the elements of that matrix. In order to do that, the computation shown here must be part of a classification problem. The $W$ elements we learn will be appropriate  for the specific classification problem, although often they are useful for transfer learning purposes. For example, I often use the [GloVe word vectors](https://nlp.stanford.edu/projects/glove) from Stanford as a starting point to encode words as vectors. 
+So $W$ can start as the identity or random values, but we need to learn appropriate values for the elements of that matrix. In order to do that, the `h` update equation applying $W$ must be part of a classification (or regression) problem. The $W$ elements we learn will be appropriate  for a specific classification problem, although often `h` vectors are useful for transfer learning purposes. For example, I often use the [GloVe word vectors](https://nlp.stanford.edu/projects/glove) from Stanford as a starting point to encode words as vectors. 
 
 There's one more issue to deal with that makes our update equation a bit more complicated:  As it is now, the dimensions of $W$ must be the same size as the vocabulary, which could be in the hundreds of thousands, if we were dealing with words not characters.  If the  vocabulary were 100,000, $W$ would have 10 billion elements, which  would require 40GB on a CPU or GPU using 32-bit floating-point numbers.  We'd prefer a much smaller $W$, on the order of 100 x 100, depending on the problem. 
 
-To decouple the size of $W$ from the vocabulary size, let's introduce another matrix, $U$, that transforms the $x_t$'s sparse one hot vector from the size of the vocabulary to a dense vector of length `nhidden`. I've chosen `nhidden` to be four here to keep the diagrams small and because we have such a small training set to learn:
+To decouple the size of $W$ from the vocabulary size, let's introduce another matrix, $U$, that transforms the $x_t$'s sparse one-hot vector from the size of the vocabulary to a dense vector of length `nhidden`. I've chosen `nhidden` to be four here to keep the diagrams small and because we have such a small training set to learn:
 
 <table>
  <tr>
@@ -209,9 +209,9 @@ for x in ["cat,"chat","katze"]:
 
 (Matrices $W$, $U$ are called $W_hh$, $W_xh$ in Karpathy's article and `h_h`, `i_h` in Section "Our Language Model in PyTorch" of [Chapter 12 in the fastai book](https://github.com/fastai/fastbook/blob/master/12_nlp_dive.ipynb).)
 	
-By transforming $x_t$'s one hot vector into a smaller dense vector using $U$, the $W$ matrix can be as small or big as we want. The cool thing is that the $U$ matrix acts like an embedding layer for a neural network. Multiplying $U$ times the $x_t$'s one hot vector effectively selects a column from $U$. So, the columns of $U$ are the character vector embeddings after we train a model containing this `h` update equation.
+By transforming $x_t$'s one-hot vector into a smaller dense vector using $U$, the $W$ matrix can be as small or big as we want. The cool thing is that the $U$ matrix acts like an embedding layer for a neural network. Multiplying $U$ times the $x_t$'s one-hot vector effectively selects a column from $U$. So, the columns of $U$ are the character vector embeddings after we train a model containing this `h` update equation.
 
-As before with the scalar BOW encoding loop, if $W$ is the identity, then we are just adding up vector representations of the input characters. In this case, however, we would not be summing up the one hot representations. Instead, we'd be summing up the embeddings for $x_t$, which gives us a *continuous bag of words* (CBOW), not a BOW. CBOW simply means an aggregate of multiple symbol vectors that does not encode symbol order information. 
+As before with the scalar BOW encoding loop, if $W$ is the identity, then we are just adding up vector representations of the input characters. In this case, however, we would not be summing up the one-hot representations. Instead, we'd be summing up the embeddings for $x_t$, which gives us a *continuous bag of words* (CBOW), not a BOW. CBOW simply means an aggregate of multiple symbol vectors that does not encode symbol order information. 
 
 <aside title="CBOW term confusion">
 There is a bit of confusion surrounding the term CBOW from what I can tell reading articles on the net. People often use plain CBOW to refer to the model from the [original word2vec paper](https://arxiv.org/pdf/1301.3781.pdf) that predicted the middle focus word from surrounding context words: "*We denote this model further as CBOW, as unlike standard bag-of-words model, it uses continuous distributed representation of the context.*"  My interpretation is that CBOW refers to aggregate embeddings but "CBOW model" refers to the model in the word2vec paper that used focus words and context.
@@ -219,9 +219,9 @@ There is a bit of confusion surrounding the term CBOW from what I can tell readi
 
 It's easier to internalize this loop if we unroll it and watch it in action to see how the `h` partial results vectors get computed:
 
-<img src="images/unrolled.gif" width="40%">
+<img src="images/unrolled.gif" width="35%">
 
-Notice that $W$ and $U$ do not change as we compute the `h` partial results vector for a word. That's an important point, and we'll discuss how and when those matrices change below.
+Notice that $W$ and $U$ do not change as we compute the `h` partial results vector for a word. That's an important point, and we'll discuss how and when those matrices change below.  It's analogous to when we multiplied vectors by magic constant 2 above. Despite multiplying `h` by a constant matrix, each one-hot input vector is multiplied by a different matrix.
 	
 There's one more detail we need in the transformation loop. We can't just sum up the `h` partial results. Each `h` has to pass through a nonlinearity first, which will ultimately increase the predictive strength of the model but also ensures `h` stays within -1..1:
    
@@ -237,9 +237,9 @@ for x in ["cat,"chat","katze"]:
 
 <section title="Learning the RNN matrices by training a classifier">
 
-The `h` computed by the inner loop yields an embedding vector for each word, computed from the sequence of character one hot vectors for that word. That is just a representation of a word, which we could use in a random forest or any other classifier to make predictions (given suitable $W$ and $U$).  To learn the values in $W$ and $U$, though, we have to make the matrices part of a classifier model. Given a suitable loss function, we can tweak the values of $W$ and $U$ in the direction of lower loss, yielding more and more accurate predictions.
+The `h` computed by the inner loop yields an embedding vector for each word, computed from the sequence of character one-hot vectors for that word. That is just a representation of a word, which we could use in a random forest or any other classifier to make predictions (given suitable $W$ and $U$).  To learn the values in $W$ and $U$, though, we have to make the matrices part of a classifier model. Given a suitable loss function, we can tweak the values of $W$ and $U$ in the direction of lower loss, yielding more and more accurate predictions.
 
-To make a prediction from word vector `h`, we again use a matrix transformation that represents either a final linear layer of a neural network or a multi-class logistic regressor, depending on your preference. We transform `h` to a vector of length 3 because there are 3 target languages: English, French, and German. We'll use a new matrix, $V$, to transform the final `h` to the output of our classifier model. ([Chapter 12 in the fastai book](https://github.com/fastai/fastbook/blob/master/12_nlp_dive.ipynb) uses `h_o` instead of $V$ and Karpathy uses matrix variable `Why`.) The last two lines of this code snippet represent the classifier:
+To make a prediction from word vector `h`, we again use a matrix transformation that represents either a final linear layer of a neural network or a multi-class logistic regression model, depending on your preference. We transform `h` to a vector of length 3 because there are 3 target languages: English, French, and German. We'll use a new matrix, $V$, to transform the final `h` to the output of our classifier model.  The last two lines of this code snippet represent the classifier:
 
 <table>
 <tr>
@@ -264,7 +264,7 @@ for x in ["cat,"chat","katze"]:
  <td><img src="images/equation-W-U-V.svg" width="95%">
 </table>
 
-(This code corresponds to models `RNN` in Karpathy and `LMModel2` in Section "Our First Recurrent Neural Network" of [Chapter 12 in the fastai book](https://github.com/fastai/fastbook/blob/master/12_nlp_dive.ipynb).)
+(This code corresponds to models `RNN` in Karpathy and `LMModel2` in Section "Our First Recurrent Neural Network" of [Chapter 12 in the fastai book](https://github.com/fastai/fastbook/blob/master/12_nlp_dive.ipynb). The fastai book uses matrix `h_o` instead of $V$, and Karpathy uses matrix variable `Why`.)
 
 <aside title="Simplifications made in this code">
 	Some readers will notice that I'm not using any bias vectors in this code, which are typically included in neural network layers and logistic regression models. It turns out to work pretty well without them for this application and simplifies the code a lot.
@@ -303,10 +303,10 @@ In PyTorch, the update pseudocode line would look something like:
 ```
 loss = cross_entropy(o, y_train[i])
 optimizer.zero_grad()
-loss.backward() # autograd computes U.grad, M.grad, ...
+loss.backward() # autograd computes W.grad, U.grad, ...
 optimizer.step()
 ```
 
 where `optimizer` is an `Adam` or `RMSProp` optimizer,  for example.
 
-At this point, we've created an RNN that uses SGD to update $W$, $U$, $V$ after each input record.  You can check out the full implementation in the [SGD notebook](https://github.com/parrt/ml-articles/blob/master/rnn/notebooks/SGD.ipynb).  What we have is a good training procedure, but is very inefficient because computing the partial derivatives during back propagation is very expensive, and we do it after each record. To improve performance without sacrificing much in training accuracy, we can train a small batch of records before updating the matrices. That's called *minibatch* SGD, and is the subject of the [next section](minibatch.html).
+At this point, we've created an RNN that uses SGD to update $W$, $U$, $V$ after each input record.  You can check out the full implementation in the [SGD notebook](https://colab.research.google.com/github/parrt/ml-articles/blob/master/rnn/notebooks/SGD.ipynb).   This training procedure works well but is very inefficient because computing the partial derivatives during back propagation is very expensive, and we do it after each record. To improve performance without sacrificing much in training accuracy, we can train a small batch of records before updating the matrices. That's called *minibatch* SGD, and is the subject of the [next section](minibatch.html).

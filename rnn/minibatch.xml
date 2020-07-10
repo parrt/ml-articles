@@ -7,15 +7,13 @@ The idea of breaking up a training set into chunks is an important implementatio
 
 <section title="Computing loss using more than one input record">
 
-If computing partial derivatives is expensive, we want to avoid doing it after computing the `h` vector for each word. The subset of input records we use to compute the loss is called a *minibatch*.  The size of the minibatch is a knob we can turn: the larger the batches, the more accurate our partial derivative estimates, but our validation loss is likely to be higher. Here's a fun tweet and link to supporting evidence from LeCun:
-
-	<img src="images/lecunn-batch-size.png" width="30%"  url="https://twitter.com/ylecun/status/989610208497360896">
+	<img align="right" src="images/lecunn-batch-size.png" width="30%"  url="https://twitter.com/ylecun/status/989610208497360896">If computing partial derivatives is expensive, we want to avoid doing it after computing the `h` vector for each word. The subset of input records we use to compute the loss is called a *minibatch*.  The size of the minibatch is a knob we can turn: the larger the batches, the more accurate our partial derivative estimates, but our validation loss is likely to be higher. On the right is a fun tweet and link to supporting evidence from LeCun.
 
 To see how minibatching works, let's add *kat*, the Afrikaans word, to our classification problem so we have two batches of size two (the character vocabulary is the same):
 		 
 <img src="images/word-to-num-4.svg" width="25%">
 
-	To process records in batches instead of one at a time, we need a triply-nested loop instead of a doubly-nested loop. Previously we had an outer loop that iterated through each training record and an inner loop that processed the characters of a word. We still have the same inner loop, but we need to split the outer loop into one that advances from batch to batch and a nested loop that iterates through each batch:
+	To process records in batches instead of one at a time, we need a triply-nested loop instead of a doubly-nested loop. Previously we had an outer loop that iterated through each training record and an inner loop that processed the characters of a word. We still have the same inner loop, but we need to split the outer loop into one that advances from batch to batch and a nested loop that iterates through the words of each batch:
 
 <table>
 <tr>
@@ -30,9 +28,9 @@ To see how minibatching works, let's add *kat*, the Afrikaans word, to our class
 
 (Of course, the real implementation would require yet another outer loop to iterate over multiple epochs.)
 
-I've highlighted the inner loop, which is identical for both cases and I have circled the key difference in the loss computation. Instead of computing a single loss for a single `h` vector, we are summing up the losses for a batch of `h` vectors.  
+I've highlighted the inner loop, which is identical for both cases and I have circled the key difference in the loss computation. Instead of computing a single loss for a single `h` vector, we are summing up the losses obtained from multiple `h` vectors. (Note that, at any one time, we have at most one `h` vector in play.)
 
-The effect of minibatching is to delay updating the matrices representing the parameters of our model until after we've seen more than a single input record. This gives us a more accurate gradient and is a little more efficient because were not computing gradients for every input record. Because the gradient is more accurate, we can often afford (and often need) a higher learning rate than the one we use for single record gradient descent. You can check out the full implementation in the [minibatch SGD notebook](https://github.com/parrt/ml-articles/blob/master/rnn/notebooks/minibatch.ipynb).  
+The effect of minibatching is to delay updating the matrices representing the parameters of our model until after we've seen more than a single input record. This gives us a more accurate gradient and is a little more efficient because were not computing gradients for every input record. Because the gradient is more accurate, we can often afford (and often need) a higher learning rate than the one we use for single record gradient descent. You can check out the full implementation in the [minibatch SGD notebook](https://colab.research.google.com/github/parrt/ml-articles/blob/master/rnn/notebooks/minibatch.ipynb).  
 
 Reducing how often we compute partial derivatives increases training speed, but the biggest speed bump comes from converting the loop that iterates through a batch into vector operations.
 		
@@ -46,11 +44,11 @@ and batch two:
 
 <img src="images/computation-batch2.svg" width="100%">
 
-We've been processing the input word by word, even in the batched non-vectorized case. Graphically, that means we process from left to right all of the computations for *cat* then move onto the next word, *chat* etc... This makes sense because there is a dependency between the partial `h`  results. Recall that our recurrence relation associated with the RNN is $h_t = W h_{t-1} + U x_t$ and then we run the last $h$ into $o = Vh$ to get the output vector holding the predicted probabilities of the target languages. Here's a depiction of the dependencies for the *cat* computations:	
+We've been processing the input word by word, even in the batched non-vectorized case. Graphically, that means we process from left to right all of the computations for *cat* then move onto the next word, *chat*, etc... This makes sense because there is a dependency between the partial `h`  results. Recall that the recurrence relation associated with the RNN is $h_t = W h_{t-1} + U x_t$ and then we run the last $h$ into $o = Vh$ to get the output vector holding the predicted probabilities of the target languages. Here's a depiction of the dependencies for the *cat* computations:	
 
 <img src="images/computation-depends.svg" width="100%">
 
-To get the right answer for each word, that means computation must proceed left to right, one $h$ computation after the other.  That dependency, however, only exists within a word between time $t-1$ and $t$. So, we are free to process all words within a batch simultaneously, as long as we respect the time dependency. In other words, we process all characters at the same time position, $t$, simultaneously for all words in the batch. Here's the first batch of computations again, this time with blue boxes around the computations at time $t$ and dashed arrows indicating the sequence of operations:
+To get the right answer for each word, that computation must proceed left to right, one $h$ computation after the other.  That dependency, however, only exists within a word between time $t-1$ and $t$. So, we are free to process all words within a batch simultaneously, as long as we respect the time dependency. In other words, we can process all characters at the same time position, $t$, simultaneously for all words in the batch. Here's the first batch of computations again, this time with blue boxes around the computations at time $t$ and dashed arrows indicating the sequence of operations:
  
 <img src="images/computation-batch1-vector.svg" width="100%">
 
@@ -71,7 +69,7 @@ Imagine that I want to apply $W$ to three vectors $a$, $b$, and $c$. That's the 
 The resulting matrix  has columns $Wa$, $Wb$, and $Wc$.
 </aside>
 
-The RNN model with `H` as a matrix and batch input matrix `B` looks like this:
+The RNN model with matrix `H` and batch input matrix `B` looks like this:
 
 <img src="images/equation-vec-W-U-V.svg" width="63%">
 
