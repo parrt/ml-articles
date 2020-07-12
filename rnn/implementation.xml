@@ -197,7 +197,7 @@ To decouple the size of $W$ from the vocabulary size, let's introduce another ma
 	 <td align="left">
 ```
 nhidden=4; nfeatures=len(vocab)
-W = torch.eye(nhidden, nhidden)
+W = torch.eye(nhidden,   nhidden)
 U = torch.randn(nhidden, nfeatures)
 for x in ["cat,"chat","katze"]:
     h = torch.zeros(nhidden, 1)
@@ -249,8 +249,8 @@ To make a prediction from word vector `h`, we again use a matrix transformation 
  <td align="left">
 ```
 nhidden=4; nfeatures=len(vocab); nclasses=3
-W = torch.eye(nhidden, nhidden)
-U = torch.randn(nhidden, nfeatures)
+W = torch.eye(nhidden,    nhidden)
+U = torch.randn(nhidden,  nfeatures)
 V = torch.randn(nclasses, nhidden)
 for x in ["cat,"chat","katze"]:
    h = torch.zeros(nhidden, 1)
