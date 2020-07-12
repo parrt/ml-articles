@@ -251,7 +251,7 @@ To make a prediction from word vector `h`, we again use a matrix transformation 
 nhidden=4; nfeatures=len(vocab); nclasses=3
 W = torch.eye(nhidden, nhidden)
 U = torch.randn(nhidden, nfeatures)
-V = torch.randn(nclasses, nfeatures)
+V = torch.randn(nclasses, nhidden)
 for x in ["cat,"chat","katze"]:
    h = torch.zeros(nhidden, 1)
    for t in range(len(x)):
