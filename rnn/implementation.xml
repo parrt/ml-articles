@@ -122,7 +122,7 @@ As we discussed at the beginning, our goal is really to represent entire words b
 <table>
  <tr>
 	 <th width="45%">BOW encoding loop
-	 <th>Order-dependent word integer encoding
+	 <th>Order-independent word vector encoding
  <tr>
 	 <td align="left">
 ```
@@ -141,7 +141,7 @@ To combine the character vectors in an order-dependent way, we can simply apply 
 <table>
  <tr>
 	 <th width="40%">Weighted BOW encoding loop
-	 <th>Order-dependent word integer encoding
+	 <th>Order-dependent word vector encoding
  <tr>
 	 <td align="left">
 ```
@@ -162,7 +162,7 @@ To make a more sophisticated model, we need to multiply the `h` vector by a matr
 <table>
  <tr>
 	 <th width="50%">Matrix transform BOW encoding loop
-	 <th>Order-dependent word integer encoding
+	 <th>Order-dependent word vector encoding
  <tr>
 	 <td align="left">
 ```
@@ -192,7 +192,7 @@ To decouple the size of $W$ from the vocabulary size, let's introduce another ma
 <table>
  <tr>
 	 <th width="50%">Matrix transform BOW encoding loop
-	 <th>Order-dependent word integer encoding
+	 <th>Order-dependent word vector encoding
  <tr>
 	 <td align="left">
 ```
@@ -244,7 +244,7 @@ To make a prediction from word vector `h`, we again use a matrix transformation 
 <table>
 <tr>
  <th width="50%">Matrix transform BOW encoding loop
- <th>Order-dependent word integer encoding
+ <th>Order-dependent word vector encoding
 <tr>
  <td align="left">
 ```
