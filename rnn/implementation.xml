@@ -233,7 +233,7 @@ for x in ["cat,"chat","katze"]:
         h = torch.tanh(h) # NONLINEARITY, contrains h values to -1..1
 ```
 
-(The [fastai book](https://github.com/fastai/fastbook/blob/master/12_nlp_dive.ipynb) uses `relu` not `tanh`, such as in `LMModel1` of Section "Our Language Model in PyTorch", but that caused my `h` vectors to explode in magnitude. I don't think it has anything to do with exploding gradients because I'm under the impression that `tanh` suffers from vanishing gradients not exploding. I guess this due to a lack of L2 weight decay regularization in my training loop. Karpathy's snippet also uses `tanh`.)
+(The [fastai book](https://github.com/fastai/fastbook/blob/master/12_nlp_dive.ipynb) uses `relu` not `tanh`, such as in `LMModel1` of Section "Our Language Model in PyTorch", but that caused my `h` vectors to explode in magnitude. I don't think it has anything to do with exploding gradients because I'm under the impression that `tanh` suffers from vanishing gradients not exploding. I guess this due to a lack of L2 weight decay regularization in my training loop. Karpathy's snippet also uses `tanh`. Update: `relu` seems to work only with a bias term in `h` update equation! Make sure bias initialized to zero vector.)
 
 <section title="Learning the RNN matrices by training a classifier">
 
