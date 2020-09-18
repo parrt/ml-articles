@@ -1,7 +1,7 @@
 <chapter title="How to visualize decision trees"
          author={[Terence Parr](http://parrt.cs.usfca.edu) and [Prince Grover](https://www.linkedin.com/in/groverpr)}>
 		 
-**Update July 2020** [Tudor Lapusan](https://github.com/tlapusan) has become a major contributor to `dtreeviz` and, thanks to his work, `dtreeviz` can now visualize [XGBoost](https://xgboost.ai/) and [Spark](https://spark.apache.org) decision trees as well as sklearn.  Beyond what is described in this article, the library now also includes the following features.
+**Update July 2020** [Tudor Lapusan](https://github.com/tlapusan) has become a major contributor to `dtreeviz` and, thanks to his work, `dtreeviz` can now visualize [XGBoost](https://xgboost.ai/) and [Spark](https://spark.apache.org) decision trees as well as sklearn.  Beyond what is described in this article, the library now also includes the following features. See [dtreeviz_sklearn_visualisations.ipynb](https://github.com/parrt/dtreeviz/blob/master/notebooks/dtreeviz_sklearn_visualisations.ipynb) for examples.
 
 <table>
 	<tr>
