@@ -1,7 +1,33 @@
 <chapter title="How to visualize decision trees"
          author={[Terence Parr](http://parrt.cs.usfca.edu) and [Prince Grover](https://www.linkedin.com/in/groverpr)}>
 		 
-**Update July 2020** `dtreeviz` can now visualize XGBoost trees as well as sklearn.
+**Update July 2020** [Tudor Lapusan](https://github.com/tlapusan) has become a major contributor to `dtreeviz` and, thanks to his work, `dtreeviz` can now visualize [XGBoost](https://xgboost.ai/) and [Spark](https://spark.apache.org) decision trees as well as sklearn.  Beyond what is described in this article, the library now also includes the following features.
+
+<table>
+	<tr>
+<td>A visualization of just the path from the root to a decision tree leaf.
+	<td>An explanation in English how a decision tree makes a prediction for a specific record.
+	
+<tr>
+
+
+	<td><img src="images/dtreeviz_prediction_path1.png" width="100%">
+<td><img src="images/dtreeviz_prediction_path2.png" width="100%">
+
+</table>
+
+Visualizations for purity and distributions for individual leaves.
+
+<table>
+	<tr>
+		<td><img src="images/dtreeviz_leaves_1.png" width="100%">
+		<td><img src="images/dtreeviz_leaves_2.png" width="100%">
+		<td><img src="images/dtreeviz_leaves_4.png" width="150%">
+</table>
+	
+<html>
+	<hr>
+</html>
 
 Decision trees are the fundamental building block of [gradient boosting machines](http://explained.ai/gradient-boosting/index.html) and [Random Forests](https://en.wikipedia.org/wiki/Random_forest)\symbol{tm}, probably the two most popular machine learning models for structured data.  Visualizing decision trees is a tremendous aid when learning how these models work and when interpreting models.  Unfortunately, current visualization packages are rudimentary and not immediately helpful to the novice. For example, we couldn't find a library that visualizes how decision nodes split up the feature space. It is also uncommon for libraries to support visualizing a specific feature vector as it weaves down through a tree's decision nodes; we could only find one image showing this.
 
