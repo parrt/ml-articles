@@ -40,7 +40,7 @@
 	margin-left: 5px;
 }
 .inlinecode {
-    font-family: "Monaco", "Lucida Console", "Lucida Sans Typewriter", monospace;
+    font-family: "Consolas", "Monaco", "Lucida Console", "Lucida Sans Typewriter", monospace;
     font-size: 95%;	
 }
 .watermark {
@@ -52,21 +52,33 @@
     top: 30px;
 }
 .codeblk {
-    font-family: "Monaco", "Lucida Console", "Lucida Sans Typewriter", monospace;
-        font-size: 80%;
+    font-family: "Consolas", "Monaco", "Lucida Console", "Lucida Sans Typewriter", monospace;
+        font-size: 9pt;
         box-sizing: border-box;
     margin: 0 0 1em 0;
     border: #E3EDF3 1px solid;
-    width: 100%;
     padding: 2px;
     background: #F7FAFB;
     border-radius: 2px;
 	line-height: 1.3em;
 	white-space: pre-wrap;
 }
+.exception {
+    font-family: "Consolas", "Monaco", "Lucida Console", "Lucida Sans Typewriter", monospace;
+        font-size: 9pt;
+        box-sizing: border-box;
+    margin: 0 0 1em 0;
+    border: #E3EDF3 1px solid;
+    width: 100%;
+    padding: 2px;
+    background-color:#FEE4E5;
+    border-radius: 2px;
+	line-height: 1.3em;
+	white-space: pre-wrap;
+}
 .stdout {
-        font-family: Monaco;
-        font-size: 80%;
+        font-family: Consolas;
+        font-size: 9pt;
         margin: 0 0 1em 0;
         width: 100%;
         padding: 2px;
@@ -79,8 +91,8 @@
         left:2%;
 }
 .stderr {
-        font-family: Monaco;
-        font-size: 80%;
+        font-family: Consolas;
+        font-size: 9pt;
 		color: red;
 		margin: 0 0 1em 0;
 		width: 100%;
@@ -88,19 +100,6 @@
 		white-space: pre-wrap;
         padding-left:10px;
 		line-height: 1.3em;
-}
-.sidenote {
-	/* Adapted from https://github.com/edwardtufte/tufte-css/blob/gh-pages/tufte.css MIT license */
-	float: right;
-	clear: right;
-	margin-right: -35%;
-	width: 33%;
-	margin-top: 10px;
-	margin-bottom: 0;
-	font-size: 80%;
-	line-height: 1.3em;
-	vertical-align: baseline;
-	position: relative;
 }
 .aside { /* Box around content */
 	border: 1px;
@@ -145,17 +144,20 @@
 }
 
 table {
-	border-spacing: 15px 0px
+	border-spacing: 0px 0px
+}
+table td {
+	padding: 0px 5px;
 }
 body {
-	width: 100%;
+	width: 80%;
 	font-family: "Merriweather", serif;
-    font-size: 14px;
+    font-size: 11pt;
 	letter-spacing: 0.01rem;
 	line-height: 1.5em;
 	color: #3A4145;
 	background: #FFFFFF;
-	max-width: 700px;
+	max-width: 850px;
 	-webkit-text-size-adjust: 100%;
 }
 .scrollbar_wrapper {
@@ -232,12 +234,6 @@ h1 {
         font: 9pt Merriweather, serif;
         line-height: 1.3;
     }
-    img {
-        max-width: 300px;
-    }   
-    @page {
-        margin: 1.4cm;
-    }   
     #toc {
         font-size: 8px;
     }   

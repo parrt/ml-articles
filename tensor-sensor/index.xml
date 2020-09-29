@@ -4,5 +4,92 @@ foo
 
 <section title=" what's the problem">
 
-A decision tree is a 
+	foo
 
+<table>
+	<tr>
+		<th>NumPy
+			<th>PyTorch
+				<th>TensorFlow
+					<tr>
+						<td colspan="3">
+```
+n = 200         # number of instances
+d = 764         # number of instance features
+n_neurons = 100 # how many neurons in this layer?
+```
+	<tr>
+		<td align="left">
+```
+import numpy as np
+W = np.random.rand(n_neurons,d)
+b = np.random.rand(n_neurons,1)
+X = np.random.rand(n,d)
+Y = W @ X.T + b
+```
+<td align="left">
+```
+import torch
+W = torch.rand(d,n_neurons)
+b = torch.rand(n_neurons,1)
+X = torch.rand(n,d)
+Y = W @ X.T + b
+```
+<td align="left">
+```
+import tensorflow as tf
+W = tf.random.uniform((d,n_neurons))
+b = tf.random.uniform((n_neurons,1))
+X = tf.random.uniform((n,d))
+Y = W @ tf.transpose(X) + b
+```
+</table>
+	
+<html>
+<div class=exception><font color="grey">---------------------------------------------------------------------------
+ValueError
+---> 10 Y = W @ X.T + b  # compute output for one hidden-layer
+</font>ValueError: matmul: Input operand 1 has a mismatch in its core dimension 0, with gufunc signature (n?,k),(k,m?)->(n?,m?) (size 764 is different from 100)
+</div>
+</html>
+
+```
+import tsensor
+with tsensor.clarify():
+    Y = W @ X.T + b
+```
+
+<html>
+	<div class=exception><font color="grey">---------------------------------------------------------------------------
+ValueError
+---> 10 Y = W @ X.T + b  # compute output for one hidden-layer
+</font>ValueError: matmul: Input operand 1 has a mismatch in its core dimension 0, with gufunc signature (n?,k),(k,m?)->(n?,m?) (size 764 is different from 100)
+<font style="font-weight:bold" color=#A30328>Cause: @ on tensor operand W w/shape (764, 100) and operand X.T w/shape (764, 200)</font>
+</div>
+</html>
+
+<img src="images/numpy-mm.svg" width="30%">
+	
+```
+import torch
+
+n = 200         # number of instances
+d = 764         # number of instance features
+n_neurons = 100 # how many neurons in this layer?
+
+W = torch.rand(d,n_neurons)
+b = torch.rand(n_neurons,1)
+X = torch.rand(n,d)
+Y = W @ X.T + b  # compute output for one hidden-layer
+```
+
+<html>
+	<div class=exception><font color="grey">---------------------------------------------------------------------------
+RuntimeError
+      8 b = torch.rand(n_neurons,1)
+      9 X = torch.rand(n,d)
+---> 10 Y = W @ X.T + b  # compute output for one hidden-layer
+</font>RuntimeError: size mismatch, m1: [764 x 100], m2: [764 x 200] at /tmp/pip-req-build-as628lz5/aten/src/TH/generic/THTensorMath.cpp:41
+</div>
+</html>
+	
