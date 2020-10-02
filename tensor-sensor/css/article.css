@@ -68,6 +68,7 @@
         font-size: 9pt;
         box-sizing: border-box;
     margin: 0 0 1em 0;
+    text-align: left;
     border: #E3EDF3 1px solid;
     width: 100%;
     padding: 2px;

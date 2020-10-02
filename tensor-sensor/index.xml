@@ -1,57 +1,47 @@
-<chapter title="Clarifying exceptions and visualizing tensor operations in deep learning code" author={[Terence Parr](http://parrt.cs.usfca.edu)}>
+<chapter title="Clarifying exceptions and visualizing tensor operations in deep learning code" author={[Terence Parr](http://parrt.cs.usfca.edu) and [Oliver Zeigermann](https://zeigermann.eu)}>
 		 
-foo
+	One of the biggest challenges when writing code to implement deep learning networks, particularly for beginners, is getting all of the tensor (matrix and vector) dimensions to line up properly. It's really easy to lose track of tensor dimensionality in complicated expressions involving multiple tensors and tensor operations. In fact, it's perhaps best to start exploring deep learning using a high-level library, such as Keras or fastai, to avoid a lot of the details. Ultimately, however, we think it's important to understand the underlying tensor arithmetic by implementing your own network layers and so on. When you do, you're going to run into some less than helpful exception messages.
 
-<section title=" what's the problem">
+In this article, we demonstrate the functionality of a new library called [TensorSensor](https://github.com/parrt/tensor-sensor) (`pip install tensor-sensor`) that aims to help programmers debug tensor code.  what does it do: clarify to augment messages and visualize Python code indicating dimensions of tensor operand.
 
-	foo
+We assume familiarity with the fundamentals of neural networks, matrix algebra, etc...
 
-<table>
-	<tr>
-		<th>NumPy
-			<th>PyTorch
-				<th>TensorFlow
-					<tr>
-						<td colspan="3">
-```
-n = 200         # number of instances
-d = 764         # number of instance features
-n_neurons = 100 # how many neurons in this layer?
-```
-	<tr>
-		<td align="left">
+to understand the implementation part you need experience with language implementation.
+
+I think the audience is really people doing tensor math code which is not people doing keras and such.  maybe I need to say that up front
+
+<section title="Isolating issues in tensor code is maddening!">
+
+Even for experts, it can be hard to quickly identify the cause of an exception in a line of Python code performing tensor operations.  The debugging process usually involves adding a print statement in front of the offending line to emit the shape of each tensor operand.  That works but requires editing the code to create the debugging statement and rerunning the training process. Or, we can manually click or type commands to request all operand shapes using an interactive debugger. (This can be less practical in an IDE like PyCharm where executing code in debug mode is much slower.)
+
+Let's look at a simple tensor computation to illustrate the less-than-optimal information provided by the default exception message. Consider the following simple NumPy implementation for a hardcoded single (linear) network layer that contains a tensor dimension error.
+
 ```
 import numpy as np
-W = np.random.rand(n_neurons,d)
+
+n = 200                          # number of instances
+d = 764                          # number of instance features
+n_neurons = 100                  # how many neurons in this layer?
+
+W = np.random.rand(d,n_neurons)  # Ooops! Should be (n_neurons,d) <=======
 b = np.random.rand(n_neurons,1)
-X = np.random.rand(n,d)
-Y = W @ X.T + b
+X = np.random.rand(n,d)          # fake input matrix with n rows of d-dimensions
+
+Y = W @ X.T + b                  # pass all X instances through layer
 ```
-<td align="left">
-```
-import torch
-W = torch.rand(d,n_neurons)
-b = torch.rand(n_neurons,1)
-X = torch.rand(n,d)
-Y = W @ X.T + b
-```
-<td align="left">
-```
-import tensorflow as tf
-W = tf.random.uniform((d,n_neurons))
-b = tf.random.uniform((n_neurons,1))
-X = tf.random.uniform((n,d))
-Y = W @ tf.transpose(X) + b
-```
-</table>
-	
+
+Executing that code triggers an exception whose important elements are:
+
 <html>
-<div class=exception><font color="grey">---------------------------------------------------------------------------
-ValueError
----> 10 Y = W @ X.T + b  # compute output for one hidden-layer
-</font>ValueError: matmul: Input operand 1 has a mismatch in its core dimension 0, with gufunc signature (n?,k),(k,m?)->(n?,m?) (size 764 is different from 100)
-</div>
+<div class=exception>...
+---> 10 Y = W @ X.T + b
+	
+ValueError: matmul: Input operand 1 has a mismatch in its core dimension 0, with gufunc signature (n?,k),(k,m?)->(n?,m?) (size 764 is different from 100)</div>
 </html>
+
+The exception identifies the offending line and which operation (`matmul`: matrix multiply) but would be more useful if it gave the complete tensor dimensions. Also, the exception would be unable to distinguish between multiple matrix multiplications occurring in one line of Python.
+
+Next, let's see how TensorSensor makes debugging that statement much easier. If we wrap the statement using a Python `with` statement and `tsensor`'s `clarify()`, we get a visualization and an augmented error message. 
 
 ```
 import tsensor
@@ -60,36 +50,253 @@ with tsensor.clarify():
 ```
 
 <html>
-	<div class=exception><font color="grey">---------------------------------------------------------------------------
-ValueError
----> 10 Y = W @ X.T + b  # compute output for one hidden-layer
-</font>ValueError: matmul: Input operand 1 has a mismatch in its core dimension 0, with gufunc signature (n?,k),(k,m?)->(n?,m?) (size 764 is different from 100)
-<font style="font-weight:bold" color=#A30328>Cause: @ on tensor operand W w/shape (764, 100) and operand X.T w/shape (764, 200)</font>
-</div>
+<img src="images/numpy-mm-py.svg" width="20%">
+<div class=exception>...
+ValueError: matmul: Input operand ...
+Cause: @ on tensor operand W w/shape (764, 100) and operand X.T w/shape (764, 200)</div>
 </html>
 
-<img src="images/numpy-mm.svg" width="30%">
+It's clear from the visualization that `W`'s dimensions should be flipped to be `n_neurons x d`; the columns of `W` must match the rows of `X.T`. You can also checkout a [complete side-by-side image](images/numpy-mm.png) with and without `clarify()` to see what it looks like in a notebook.
+
+The `clarify()` functionality incurs no overhead on the executing program until an exception occurs. Upon exception, `clarify()`:
+
+<ol>
+	<li> Augments the exception object's message created by the underlying tensor library.
+	<li> Gives a visual representation of the tensor sizes involved in the offending operation; only the operands and operator involved in the exception are highlighted, while the other Python elements are de-highlighted.
+</ol>
+
+TensorSensor also clarifies tensor-related exceptions raised by PyTorch and TensorFlow. Here are the equivalent code snippets and resulting augmented exception error messages (`Cause: @ on tensor ...`) and visualization from TensorSensor:
 	
+<table>
+	<tr>
+			<th width="50%">PyTorch
+				<th>TensorFlow
+	<tr>
+<td align="left">
 ```
 import torch
-
-n = 200         # number of instances
-d = 764         # number of instance features
-n_neurons = 100 # how many neurons in this layer?
-
 W = torch.rand(d,n_neurons)
 b = torch.rand(n_neurons,1)
 X = torch.rand(n,d)
-Y = W @ X.T + b  # compute output for one hidden-layer
+with tsensor.clarify():
+    Y = W @ X.T + b
+```
+<td align="left">
+```
+import tensorflow as tf
+W = tf.random.uniform((d,n_neurons))
+b = tf.random.uniform((n_neurons,1))
+X = tf.random.uniform((n,d))
+with tsensor.clarify():
+    Y = W @ tf.transpose(X) + b
+```
+<tr>
+<td>
+<html>
+<img src="images/mm.svg" width="40%">
+<div class=exception>RuntimeError: size mismatch, m1: [764 x 100], m2: [764 x 200] at /tmp/pip-req-build-as628lz5/aten/src/TH/generic/THTensorMath.cpp:41
+Cause: @ on tensor operand W w/shape [764, 100] and operand X.T w/shape [764, 200]</div>
+
+<td>
+<html>
+<img src="images/mm.svg" width="40%">
+<div class=exception>InvalidArgumentError: Matrix size-incompatible: In[0]: [764,100], In[1]: [764,200] [Op:MatMul]
+Cause: @ on tensor operand W w/shape [764, 100] and operand X.T w/shape [764, 200]</div>
+</html>
+</table>
+
+The PyTorch message does not identify which operation triggered the exception but TensorFlow's message does indicate matrix multiplication. Both show the operand dimensions.  These messages are probably good enough for this simple tensor expression for a linear layer, but such exceptions are not as helpful for, say, an expression pulled from a Gated Recurrent Unit (GRU) implementation. 
+
+You might be wondering why NumPy doesn't generate an exception message identifying the Python variables involved.   It's not that the authors of the library simply didn't bother. The fundamental problem is that tensor exceptions are detected deep in the C or C++ implementations of the tensor libraries. The Python bits are usually just wrappers that call the highly-optimized C/C++, which has absolutely no access to the Python symbol spaces and call stack.
+
+probably a new section here.  maybe we start talking about explain() vs clarify()
+
+Quick! Where is the dimension mismatch in the following code using just the the fault exception message? (No peeking at the visualization or augmented error message!)
+
+```
+nhidden = 256
+Whh_ = torch.eye(nhidden, nhidden)
+Uxh_ = torch.randn(d, nhidden)
+bh_  = torch.zeros(nhidden, 1)
+X = torch.rand(n,d)             # fake input
+
+with tsensor.clarify():
+    h = torch.randn(nhidden, 1) # fake previous hidden state h
+    r = torch.randn(nhidden, 1) # fake this computation
+    h_ = torch.tanh(Whh_ @ (r*h) + Uxh_ @ X.T + bh_)
 ```
 
+<img src="images/torch-gru.svg" width="55%">
 <html>
-	<div class=exception><font color="grey">---------------------------------------------------------------------------
-RuntimeError
-      8 b = torch.rand(n_neurons,1)
-      9 X = torch.rand(n,d)
----> 10 Y = W @ X.T + b  # compute output for one hidden-layer
-</font>RuntimeError: size mismatch, m1: [764 x 100], m2: [764 x 200] at /tmp/pip-req-build-as628lz5/aten/src/TH/generic/THTensorMath.cpp:41
+<div class=exception>---> 10 h_ = torch.tanh(Whh_ @ (r*h) + Uxh_ @ X.T + bh_)
+RuntimeError: size mismatch, m1: [764 x 256], m2: [764 x 200] at /tmp/pip-req-build-as628lz5/aten/src/TH/generic/THTensorMath.cpp:41
+Cause: @ on tensor operand Uxh_ w/shape [764, 256] and operand X.T w/shape [764, 200]
 </div>
 </html>
+
+In this case, there are two matrix multiplications, two vector additions, and even a vector element-wise modification.  Without the augmented error message or visualization we wouldn't know which operator and operands caused the exception. TensorSensor's clarification makes it clear that `Uxh_` has its dimensions flipped; it should be:
+
+```
+Uxh_ = torch.randn(nhidden, d)
+```
+
+<section title="Clarifying deeply-buried tensor code">
+
+TensorSensor traps and augments exceptions triggered in any of your code  initiated from within the `with` statement block. For example, let's wrap the simple linear layer code from above into an object:
+	
+```
+class Linear:
+    def __init__(self, d, n_neurons):
+        self.W = torch.randn(n_neurons, d)
+        self.b = torch.zeros(n_neurons, 1)
+    def __call__(self, input):
+        return self.W @ input + self.b
+```
+
+Then, we can create a layer as an object and perform a forward computation using fake input `X`:
+
+```
+L = Linear(d, n_neurons) # create a layer
+X = torch.rand(n, d)     # fake input
+with tsensor.clarify():
+    Y = L(X)
+```
+
+The `Linear` layer has the correct dimensionality on weights `W` and bias `b`, but the equation in `__call__()` references `input` rather than the transpose of that input matrix, triggering an exception:
+ 	
+<img src="images/torch-linear.svg" width="35%">
+
+<html>
+<div class=exception>---------------------------------------------------------------------------
+RuntimeError                              Traceback (most recent call last)
+&lt;ipython-input-20-b6b1bd407c61> in &lt;module>
+      9 
+     10 with tsensor.clarify(hush_errors=False):
+---> 11     Y = L(X)
+
+&lt;ipython-input-16-678a8372f1c2> in __call__(self, x)
+      4         self.b = torch.zeros(n_neurons, 1)
+      5     def __call__(self, x):
+----> 6         return self.W@x + self.b
+
+RuntimeError: size mismatch, m1: [100 x 764], m2: [200 x 764] at /tmp/pip-req-build-as628lz5/aten/src/TH/generic/THTensorMath.cpp:41
+Cause: @ on tensor operand self.W w/shape [100, 764] and operand x w/shape [200, 764]</div>
+</html>
+
+In other words, the offending line of code does not have to be within the `with` block proper; it can be in any code invoked from that block.
+
+TensorSensor visualizes the last piece of code before it enters your chosen tensor library. For example, let's use the standard PyTorch `nn.Linear` linear layer but pass in an `X` matrix that is `n x n`, instead of the proper `n x d`:
+
+```
+L = torch.nn.Linear(d, n_neurons)
+X = torch.rand(n,n) # oops! Should be n x d
+with tsensor.clarify():
+    Y = L(X)
+```
+
+<table>
+	<tr>
+			<th width="30%">Visualization
+				<th>Augmented exception message
+	<tr><td><img src="images/torch-nn-linear.svg" width="47%">
+		<td><html>
+<div class=exception>RuntimeError: size mismatch, m1: [200 x 200], m2: [764 x 100] at /tmp/pip-req-build-as628lz5/aten/src/TH/generic/THTensorMath.cpp:41
+Cause: L(X) tensor arg X w/shape [200, 200]</div>
+</html>
+</table>
+
+<section title="Visualizing tensors with a variety of dimensions">
+
+Debugging tensor code that uses matrices beyond two dimensions can be even more challenging. For example, it's very common to train deep learning networks in batches for performance reasons.  That means reshaping the input matrix, `X`, into `n_batches x batch_size x d` rather than `n x d`. The following code simulates passing multiple batches through a linear layer but incorrectly passes the entire 3D `X` instead of 2D batches.
+
+```
+L = Linear(d,n_neurons) # Assume this is correct
+
+batch_size = 10
+n_batches = n // batch_size
+X = torch.rand(n_batches,batch_size,d)
+
+with tsensor.clarify():
+    for b in range(n_batches):
+        Y = L(X) # Oops! Should pass batch X[b]
+```
+
+In the TensorSensor visualization, notice that `input` is 3D and that the third dimension is shown on an angle, with an extra box to indicate more than two dimensions:
+
+<table>
+	<tr>
+			<th width="37%">Visualization
+				<th>Augmented exception message
+	<tr><td><img src="images/torch-batch.svg" width="100%">
+		<td><html>
+<div class=exception>RuntimeError: size mismatch, m1: [15280 x 10], m2: [764 x 100] at /tmp/pip-req-build-as628lz5/aten/src/TH/generic/THTensorMath.cpp:41
+Cause: @ on tensor operand self.W w/shape [100, 764] and operand input.T w/shape [764, 10, 20]</div>
+</html>
+</table>
+
+To demonstrate TensorSensor's visualization for tensors beyond 3D, consider input instances that are images containing red, green, blue values for each input pixel. A common representation would be a `1 x d x 3` matrix for each image (`d` would be with times height of the image). For `n` images, we have an `n x d x 3` matrix. Now, add batching to that and we get an `n_batches x batch_size x d x 3` matrix.  The goal here is to illustrate the 4D visualization, so let's create a 4D matrix and then perform an illegal operation. (The `[:]` in `X[:]` prevents silent broadcasting so we get an exception.)
+
+```
+W = torch.rand(n_neurons,d)
+b = torch.rand(n_neurons,1)
+batch_size = 10
+n_batches = n // batch_size
+X = torch.rand(n_batches,batch_size,d,3)
+
+with tsensor.explain():
+    Y = W @ X[:].T + b
+```
+
+<table>
+	<tr>
+			<th width="37%">Visualization
+				<th>Augmented exception message
+	<tr><td><img src="images/torch-4D.svg" width="83%">
+		<td><html>
+<div class=exception>RuntimeError: size mismatch, m1: [45840 x 10], m2: [764 x 100] at /tmp/pip-req-build-as628lz5/aten/src/TH/generic/THTensorMath.cpp:41
+Cause: @ on tensor operand W w/shape [100, 764] and operand X[:].T w/shape [3, 764, 10, 20]
+</div>
+</html>
+</table>
+
+For matrices with more than three dimensions, all dimensions are displayed at the bottom of the matrix box. In this case, the fourth dimension is displayed as "`...x3`".
+
+Row and column vectors are matrices with one row and one column, respectively. These are also shown as light green but as horizontal or vertical rectangles. For example, let's create a column vector and attempt a dot product:
+
+```
+b = torch.rand(n_neurons,1)
+with tsensor.clarify() as c:
+    torch.dot(b, b)
+```
+
+The PyTorch dot product expects 1D not 2D matrices (even though one of the dimensions has size 1), so we get an exception. TensorSensor highlights the function and appropriate arguments:
+
+<table>
+	<tr>
+			<th width="37%">Visualization
+				<th>Augmented exception message
+	<tr><td><img src="images/torch-1D.svg" width="53%">
+		<td><html>
+<div class=exception>RuntimeError: 1D tensors expected, got 2D, 2D tensors at /tmp/pip-req-build-as628lz5/aten/src/TH/generic/THTensorEvenMoreMath.cpp:83
+Cause: torch.dot(b,b) tensor arg b w/shape [100, 1], arg b w/shape [100, 1]
+</div>
+</html>
+</table>
+
+row vecs look like: ...
+
+1D looks like: ...
+
+show something about what I rejected, including relative sizing.
+
+<section title="Explaining non-erroneous tensor code">
+
+
+explain
+
+full AST
+
+<section title="TensorSensor implementation Kung Fu">
+
+
 	
