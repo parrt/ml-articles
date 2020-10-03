@@ -99,32 +99,49 @@ Cause: @ on tensor operand W w/shape [764, 100] and operand X.T w/shape [764, 20
 
 <td>
 <html>
-<img src="images/mm.svg" width="40%">
+<img src="images/tf-mm.svg" width="70%">
 <div class=exception>InvalidArgumentError: Matrix size-incompatible: In[0]: [764,100], In[1]: [764,200] [Op:MatMul]
-Cause: @ on tensor operand W w/shape [764, 100] and operand X.T w/shape [764, 200]</div>
+Cause: @ on tensor operand W w/shape (764, 100) and operand tf.transpose(X) w/shape (764, 200)</div>
 </html>
 </table>
 
-The PyTorch message does not identify which operation triggered the exception but TensorFlow's message does indicate matrix multiplication. Both show the operand dimensions.  These messages are probably good enough for this simple tensor expression for a linear layer, but such exceptions are not as helpful for, say, an expression pulled from a Gated Recurrent Unit (GRU) implementation. 
+The PyTorch message does not identify which operation triggered the exception, but TensorFlow's message does indicate matrix multiplication. Both show the operand dimensions. These default exception messages are probably good enough for this simple tensor expression for a linear layer.
 
-You might be wondering why NumPy doesn't generate an exception message identifying the Python variables involved.   It's not that the authors of the library simply didn't bother. The fundamental problem is that tensor exceptions are detected deep in the C or C++ implementations of the tensor libraries. The Python bits are usually just wrappers that call the highly-optimized C/C++, which has absolutely no access to the Python symbol spaces and call stack.
+You might be wondering, though, why tensor libraries don't generate a more helpful exception message that identified the names of the Python variables involved in the offending subexpression.  It's not that the library authors simply didn't bother. The fundamental issue is that Python tensor libraries are wrappers around extremely efficient cores written in C or C++. Python passes, say, the data for two tensors to a C++ function, but not the associated tensor variable names in Python space. An exception caught deep in C++ has no access to the local and global variable spaces in Python, so it just throws a generic exception back over the fence.  Because Python traps exceptions at the statement level, it also cannot isolate the subexpression within the statement.  (To learn how TensorSensor manages to generate such specific messages, check out the section below.)
 
-probably a new section here.  maybe we start talking about explain() vs clarify()
+This lack of specificity makes it hard to identify bad subexpressions within more complicated statements that contain lots of operators. For example, here's a statement pulled from the guts of a Gated Recurrent Unit (GRU) implementation:
 
-Quick! Where is the dimension mismatch in the following code using just the the fault exception message? (No peeking at the visualization or augmented error message!)
+```
+h_ = torch.tanh(Whh_ @ (r*h) + Uxh_ @ X.T + bh_)
+```
+
+It doesn't matter what it's computing or what the variables represent, just that they are tensor variables. The point is that there are two matrix multiplications, two vector additions, and even a vector element-wise modification (`r*h`).  Without augmented error messages or visualizations we wouldn't know which operator and operands caused an exception. To demonstrate how TensorSensor clarifies exceptions in this case, we need to give some fake definitions for the variables used in the statement (the assignment to `h_`):
 
 ```
 nhidden = 256
 Whh_ = torch.eye(nhidden, nhidden)
 Uxh_ = torch.randn(d, nhidden)
 bh_  = torch.zeros(nhidden, 1)
-X = torch.rand(n,d)             # fake input
+h = torch.randn(nhidden, 1)  # fake previous hidden state h
+r = torch.randn(nhidden, 1)  # fake this computation
+X = torch.rand(n,d)          # fake input
 
 with tsensor.clarify():
-    h = torch.randn(nhidden, 1) # fake previous hidden state h
-    r = torch.randn(nhidden, 1) # fake this computation
     h_ = torch.tanh(Whh_ @ (r*h) + Uxh_ @ X.T + bh_)
 ```
+
+Again, you can ignore the actual computation performed by the code to focus on the shape of the tensor variables.  
+
+For most of us, it's impossible to identify the problem just by looking at the tensor dimensions and the tensor code.  The default exception message is helpful of course, but most of us will still struggle to identify the problem.  Here are the key bits of the default exception message:
+
+
+<html>
+<div class=exception>---> 10     h_ = torch.tanh(Whh_ @ (r*h) + Uxh_ @ X.T + bh_)
+RuntimeError: size mismatch, m1: [764 x 256], m2: [764 x 200] at /tmp/pip-req-build-as628lz5/aten/src/TH/generic/THTensorMath.cpp:41
+</div>
+</html>
+
+What we need to know is which operator and operands failed, then we can look at the dimensions to identify the problem.  Here is TensorSensor's visualization and augmented exception message:
 
 <img src="images/torch-gru.svg" width="55%">
 <html>
@@ -134,7 +151,7 @@ Cause: @ on tensor operand Uxh_ w/shape [764, 256] and operand X.T w/shape [764,
 </div>
 </html>
 
-In this case, there are two matrix multiplications, two vector additions, and even a vector element-wise modification.  Without the augmented error message or visualization we wouldn't know which operator and operands caused the exception. TensorSensor's clarification makes it clear that `Uxh_` has its dimensions flipped; it should be:
+The human eye quickly latches onto the indicated operator and the dimensions on the matrix-matrix multiply. Ooops: The columns of `Uxh_` must match the rows of `X.T`. `Uxh_` has its dimensions flipped and should be:
 
 ```
 Uxh_ = torch.randn(nhidden, d)

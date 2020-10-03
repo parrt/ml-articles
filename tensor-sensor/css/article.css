@@ -45,11 +45,11 @@
 }
 .watermark {
     font-size: 100%;
-    right: 10px;
+    left: 10px;
     opacity: 0.4;
     color: BLACK;
     position: absolute;
-    top: 30px;
+    top: 0px;
 }
 .codeblk {
     font-family: "Consolas", "Monaco", "Lucida Console", "Lucida Sans Typewriter", monospace;
@@ -151,11 +151,11 @@ table td {
 	padding: 0px 5px;
 }
 body {
-	width: 80%;
+	width: 97%;
 	font-family: "Merriweather", serif;
     font-size: 11pt;
 	letter-spacing: 0.01rem;
-	line-height: 1.5em;
+	line-height: 1.45em;
 	color: #3A4145;
 	background: #FFFFFF;
 	max-width: 850px;
