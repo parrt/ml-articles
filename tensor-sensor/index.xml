@@ -109,7 +109,7 @@ Cause: @ on tensor operand W w/shape (764, 100) and operand tf.transpose(X) w/sh
 
 The PyTorch message does not identify which operation triggered the exception, but TensorFlow's message does indicate matrix multiplication. Both show the operand dimensions. These default exception messages are probably good enough for this simple tensor expression for a linear layer.
 
-You might be wondering, though, why tensor libraries don't generate a more helpful exception message that identified the names of the Python variables involved in the offending subexpression.  It's not that the library authors simply didn't bother. The fundamental issue is that Python tensor libraries are wrappers around extremely efficient cores written in C or C++. Python passes, say, the data for two tensors to a C++ function, but not the associated tensor variable names in Python space. An exception caught deep in C++ has no access to the local and global variable spaces in Python, so it just throws a generic exception back over the fence.  Because Python traps exceptions at the statement level, it also cannot isolate the subexpression within the statement.  (To learn how TensorSensor manages to generate such specific messages, check out the section below.)
+You might be wondering, though, why tensor libraries don't generate a more helpful exception message that identified the names of the Python variables involved in the offending subexpression.  It's not that the library authors couldn't be bothered. The fundamental issue is that Python tensor libraries are wrappers around extremely efficient cores written in C or C++. Python passes, say, the data for two tensors to a C++ function, but not the associated tensor variable names in Python space. An exception caught deep in C++ has no access to the local and global variable spaces in Python, so it just throws a generic exception back over the fence.  Because Python traps exceptions at the statement level, it also cannot isolate the subexpression within the statement.  (To learn how TensorSensor manages to generate such specific messages, check out the section below.)
 
 <subsection title="Debugging a complex tensor expression">
 	
@@ -236,7 +236,7 @@ So far we've focused on clarifying exceptions, but sometimes we simply want to e
 
 <section title="Explaining tensor code without triggering exceptions">
 
-TensorSensor's `clarify()` has no effect unless tensor code triggers an exception. To visualize tensor dimensionality within Python statements, TensorSensor provides a mechanism called `explain()` that is similar to `clarify()` except that it generates a visualization for each statement executed within the block. For example, here's our familiar linear layer computation again but wrapped in an `explain()` block and with resulting tensor shape visualization:
+TensorSensor's `clarify()` has no effect unless tensor code triggers an exception. To visualize tensor dimensionality within exception-free Python statements, TensorSensor provides a mechanism called `explain()` that is similar to `clarify()`, except that `explain()` generates a visualization for each statement executed within the block. For example, here's our familiar linear layer computation again but wrapped in an `explain()` block and with resulting tensor shape visualization:
 
 ```
 n = 200         # number of instances
@@ -251,7 +251,9 @@ with tsensor.explain():
     Y = W @ X.T + b
 ```
 
+<html>
 <img src="images/torch-mm-explain.svg" width="25%">
+</html>
 
 It's handy to see the shape of the resulting computation (for `Y`). Plus, 
 notice that column vector `b` is easily identified visually as a  vertical rectangle (a matrix with a single column). Row vectors are horizontal rectangles:
@@ -262,7 +264,9 @@ b = torch.rand(1,n_neurons) # 2D tensor 1 x n_neurons
 with tsensor.explain() as c:
     y = b @ b.T
 ```
+<html>
 <img src="images/torch-bb.svg" width="19%">
+</html>
 
 Column and row vectors are still 2D matrices, but we can also have 1D tensors:
 
@@ -271,7 +275,10 @@ b = torch.rand(n_neurons) # 1D tensor
 with tsensor.explain() as c:
     y = torch.dot(b, b)
 ```
+<html>
 <img src="images/torch-dot.svg" width="32%">
+</html>
+
 	
 The visualization for 1D tensors look like 2D row vectors but the yellow color (versus pale green) signals that it's 1D. (This is important because tensor libraries often treat 1D vectors and 2D row vectors differently.) The result (`y`) is a scalar and, hence, has no visualization component.
 
@@ -309,7 +316,7 @@ with tsensor.explain():
         Y = torch.relu(W @ batch.T + b)
 ```
 
-Here's how TensorSensor visualizes the two statements:
+Here's how TensorSensor visualizes the two statements (despite being in a loop, each visualization is given once):
 
 <html>
 <img src="images/torch-batch-1.svg" width="23%"><br>
@@ -317,74 +324,20 @@ Here's how TensorSensor visualizes the two statements:
 </html>
 
 To represent the shape of 3D tensors, such as `X`, TensorSensor draws an extra box to simulate a three-dimensional perspective, and gives the third dimension at 45 degrees.
- 
-Ollie on Y = L(X): would it really work if we did? dimensions still seem off just by looking at it, did not execute code, so not sure
 
-In the TensorSensor visualization, notice that `input` is 3D and that the third dimension is shown on an angle, with an extra box to indicate more than two dimensions:
-
-<table>
-	<tr>
-			<th width="37%">Visualization
-				<th>Augmented exception message
-	<tr><td><img src="images/torch-batch.svg" width="100%">
-		<td><html>
-<div class=exception>RuntimeError: size mismatch, m1: [15280 x 10], m2: [764 x 100] at /tmp/pip-req-build-as628lz5/aten/src/TH/generic/THTensorMath.cpp:41
-Cause: @ on tensor operand self.W w/shape [100, 764] and operand input.T w/shape [764, 10, 20]</div>
-</html>
-</table>
-
-To demonstrate TensorSensor's visualization for tensors beyond 3D, consider input instances that are images containing red, green, blue values for each input pixel. A common representation would be a `1 x d x 3` matrix for each image (`d` would be with times height of the image). For `n` images, we have an `n x d x 3` matrix. Now, add batching to that and we get an `n_batches x batch_size x d x 3` matrix.  The goal here is to illustrate the 4D visualization, so let's create a 4D matrix and then perform an illegal operation. (The `[:]` in `X[:]` prevents silent broadcasting so we get an exception.)
+To visualize tensors beyond 3D, Let's consider an example where input instances  are images containing red, green, blue values for each input pixel. A common representation would be a `1 x d x 3` matrix for each image (`d` is the width times height of the image). For `n` images, we have an `n x d x 3` matrix. Add batching to that and we get a 4D `n_batches x batch_size x d x 3` matrix:
 
 ```
-W = torch.rand(n_neurons,d)
-b = torch.rand(n_neurons,1)
-batch_size = 10
-n_batches = n // batch_size
 X = torch.rand(n_batches,batch_size,d,3)
-
 with tsensor.explain():
-    Y = W @ X[:].T + b
+    batch = X[i,:,:]
 ```
 
-<table>
-	<tr>
-			<th width="37%">Visualization
-				<th>Augmented exception message
-	<tr><td><img src="images/torch-4D.svg" width="83%">
-		<td><html>
-<div class=exception>RuntimeError: size mismatch, m1: [45840 x 10], m2: [764 x 100] at /tmp/pip-req-build-as628lz5/aten/src/TH/generic/THTensorMath.cpp:41
-Cause: @ on tensor operand W w/shape [100, 764] and operand X[:].T w/shape [3, 764, 10, 20]
-</div>
+<html>
+<img src="images/torch-4D.svg" width="23%">
 </html>
-</table>
 
-For matrices with more than three dimensions, all dimensions are displayed at the bottom of the matrix box. In this case, the fourth dimension is displayed as "`...x3`".
-
-Row and column vectors are matrices with one row and one column, respectively. These are also shown as light green but as horizontal or vertical rectangles. For example, let's create a column vector and attempt a dot product:
-
-```
-b = torch.rand(n_neurons,1)
-with tsensor.clarify() as c:
-    torch.dot(b, b)
-```
-
-The PyTorch dot product expects 1D not 2D matrices (even though one of the dimensions has size 1), so we get an exception. TensorSensor highlights the function and appropriate arguments:
-
-<table>
-	<tr>
-			<th width="37%">Visualization
-				<th>Augmented exception message
-	<tr><td><img src="images/torch-1D.svg" width="53%">
-		<td><html>
-<div class=exception>RuntimeError: 1D tensors expected, got 2D, 2D tensors at /tmp/pip-req-build-as628lz5/aten/src/TH/generic/THTensorEvenMoreMath.cpp:83
-Cause: torch.dot(b,b) tensor arg b w/shape [100, 1], arg b w/shape [100, 1]
-</div>
-</html>
-</table>
-
-row vecs look like: ...
-
-1D looks like: ...
+As you can see, dimensions beyond three are shown at the bottom of the 3D representation preceded by an ellipsis. In this case, the fourth dimension is displayed as "`...x3`".
 
 show something about what I rejected, including relative sizing.
 

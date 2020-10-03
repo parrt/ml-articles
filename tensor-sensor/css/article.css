@@ -53,7 +53,7 @@
 }
 .codeblk {
     font-family: "Consolas", "Monaco", "Lucida Console", "Lucida Sans Typewriter", monospace;
-        font-size: 9pt;
+        font-size: 10pt;
         box-sizing: border-box;
     margin: 0 0 1em 0;
     border: #E3EDF3 1px solid;
@@ -65,7 +65,7 @@
 }
 .exception {
     font-family: "Consolas", "Monaco", "Lucida Console", "Lucida Sans Typewriter", monospace;
-        font-size: 9pt;
+        font-size: 10pt;
         box-sizing: border-box;
     margin: 0 0 1em 0;
     text-align: left;
