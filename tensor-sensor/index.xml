@@ -14,6 +14,8 @@ I think the audience is really people doing tensor math code which is not people
 
 Even for experts, it can be hard to quickly identify the cause of an exception in a line of Python code performing tensor operations.  The debugging process usually involves adding a print statement in front of the offending line to emit the shape of each tensor operand.  That works but requires editing the code to create the debugging statement and rerunning the training process. Or, we can manually click or type commands to request all operand shapes using an interactive debugger. (This can be less practical in an IDE like PyCharm where executing code in debug mode is much slower.)
 
+<subsection title="Debugging a simple linear layer">
+	
 Let's look at a simple tensor computation to illustrate the less-than-optimal information provided by the default exception message. Consider the following simple NumPy implementation for a hardcoded single (linear) network layer that contains a tensor dimension error.
 
 ```
@@ -109,13 +111,15 @@ The PyTorch message does not identify which operation triggered the exception, b
 
 You might be wondering, though, why tensor libraries don't generate a more helpful exception message that identified the names of the Python variables involved in the offending subexpression.  It's not that the library authors simply didn't bother. The fundamental issue is that Python tensor libraries are wrappers around extremely efficient cores written in C or C++. Python passes, say, the data for two tensors to a C++ function, but not the associated tensor variable names in Python space. An exception caught deep in C++ has no access to the local and global variable spaces in Python, so it just throws a generic exception back over the fence.  Because Python traps exceptions at the statement level, it also cannot isolate the subexpression within the statement.  (To learn how TensorSensor manages to generate such specific messages, check out the section below.)
 
-This lack of specificity makes it hard to identify bad subexpressions within more complicated statements that contain lots of operators. For example, here's a statement pulled from the guts of a Gated Recurrent Unit (GRU) implementation:
+<subsection title="Debugging a complex tensor expression">
+	
+That lack of specificity makes it hard to identify bad subexpressions within more complicated statements that contain lots of operators. For example, here's a statement pulled from the guts of a Gated Recurrent Unit (GRU) implementation:
 
 ```
 h_ = torch.tanh(Whh_ @ (r*h) + Uxh_ @ X.T + bh_)
 ```
 
-It doesn't matter what it's computing or what the variables represent, just that they are tensor variables. The point is that there are two matrix multiplications, two vector additions, and even a vector element-wise modification (`r*h`).  Without augmented error messages or visualizations we wouldn't know which operator and operands caused an exception. To demonstrate how TensorSensor clarifies exceptions in this case, we need to give some fake definitions for the variables used in the statement (the assignment to `h_`):
+It doesn't matter what it's computing or what the variables represent, just that they are tensor variables. There are two matrix multiplications, two vector additions, and even a vector element-wise modification (`r*h`).  Without augmented error messages or visualizations we wouldn't know which operator and operands caused an exception. To demonstrate how TensorSensor clarifies exceptions in this case, we need to give some fake definitions for the variables used in the statement (the assignment to `h_`) to get executable code:
 
 ```
 nhidden = 256
@@ -132,8 +136,7 @@ with tsensor.clarify():
 
 Again, you can ignore the actual computation performed by the code to focus on the shape of the tensor variables.  
 
-For most of us, it's impossible to identify the problem just by looking at the tensor dimensions and the tensor code.  The default exception message is helpful of course, but most of us will still struggle to identify the problem.  Here are the key bits of the default exception message:
-
+For most of us, it's impossible to identify the problem just by looking at the tensor dimensions and the tensor code.  The default exception message is helpful of course, but most of us will still struggle to identify the problem.  Here are the key bits of the default exception message (note the less-than-helpful reference to the C++ code):
 
 <html>
 <div class=exception>---> 10     h_ = torch.tanh(Whh_ @ (r*h) + Uxh_ @ X.T + bh_)
@@ -143,8 +146,8 @@ RuntimeError: size mismatch, m1: [764 x 256], m2: [764 x 200] at /tmp/pip-req-bu
 
 What we need to know is which operator and operands failed, then we can look at the dimensions to identify the problem.  Here is TensorSensor's visualization and augmented exception message:
 
-<img src="images/torch-gru.svg" width="55%">
 <html>
+	<img src="images/torch-gru.svg" width="55%">
 <div class=exception>---> 10 h_ = torch.tanh(Whh_ @ (r*h) + Uxh_ @ X.T + bh_)
 RuntimeError: size mismatch, m1: [764 x 256], m2: [764 x 200] at /tmp/pip-req-build-as628lz5/aten/src/TH/generic/THTensorMath.cpp:41
 Cause: @ on tensor operand Uxh_ w/shape [764, 256] and operand X.T w/shape [764, 200]
