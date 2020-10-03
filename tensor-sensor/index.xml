@@ -123,12 +123,12 @@ It doesn't matter what it's computing or what the variables represent, just that
 
 ```
 nhidden = 256
-Whh_ = torch.eye(nhidden, nhidden)
+Whh_ = torch.eye(nhidden, nhidden)  # Identity matrix
 Uxh_ = torch.randn(d, nhidden)
 bh_  = torch.zeros(nhidden, 1)
-h = torch.randn(nhidden, 1)  # fake previous hidden state h
-r = torch.randn(nhidden, 1)  # fake this computation
-X = torch.rand(n,d)          # fake input
+h = torch.randn(nhidden, 1)         # fake previous hidden state h
+r = torch.randn(nhidden, 1)         # fake this computation
+X = torch.rand(n,d)                 # fake input
 
 with tsensor.clarify():
     h_ = torch.tanh(Whh_ @ (r*h) + Uxh_ @ X.T + bh_)
@@ -160,50 +160,9 @@ The human eye quickly latches onto the indicated operator and the dimensions on 
 Uxh_ = torch.randn(nhidden, d)
 ```
 
-<section title="Clarifying deeply-buried tensor code">
+At this point, we've only used our own tensor computations specified directly within the `with` code block. What about exceptions triggered within a tensor library's prebuilt network layer?
 
-TensorSensor traps and augments exceptions triggered in any of your code  initiated from within the `with` statement block. For example, let's wrap the simple linear layer code from above into an object:
-	
-```
-class Linear:
-    def __init__(self, d, n_neurons):
-        self.W = torch.randn(n_neurons, d)
-        self.b = torch.zeros(n_neurons, 1)
-    def __call__(self, input):
-        return self.W @ input + self.b
-```
-
-Then, we can create a layer as an object and perform a forward computation using fake input `X`:
-
-```
-L = Linear(d, n_neurons) # create a layer
-X = torch.rand(n, d)     # fake input
-with tsensor.clarify():
-    Y = L(X)
-```
-
-The `Linear` layer has the correct dimensionality on weights `W` and bias `b`, but the equation in `__call__()` references `input` rather than the transpose of that input matrix, triggering an exception:
- 	
-<img src="images/torch-linear.svg" width="35%">
-
-<html>
-<div class=exception>---------------------------------------------------------------------------
-RuntimeError                              Traceback (most recent call last)
-&lt;ipython-input-20-b6b1bd407c61> in &lt;module>
-      9 
-     10 with tsensor.clarify(hush_errors=False):
----> 11     Y = L(X)
-
-&lt;ipython-input-16-678a8372f1c2> in __call__(self, x)
-      4         self.b = torch.zeros(n_neurons, 1)
-      5     def __call__(self, x):
-----> 6         return self.W@x + self.b
-
-RuntimeError: size mismatch, m1: [100 x 764], m2: [200 x 764] at /tmp/pip-req-build-as628lz5/aten/src/TH/generic/THTensorMath.cpp:41
-Cause: @ on tensor operand self.W w/shape [100, 764] and operand x w/shape [200, 764]</div>
-</html>
-
-In other words, the offending line of code does not have to be within the `with` block proper; it can be in any code invoked from that block.
+<subsection title="Clarifying exceptions triggered within prebuilt layers">
 
 TensorSensor visualizes the last piece of code before it enters your chosen tensor library. For example, let's use the standard PyTorch `nn.Linear` linear layer but pass in an `X` matrix that is `n x n`, instead of the proper `n x d`:
 
@@ -225,21 +184,76 @@ Cause: L(X) tensor arg X w/shape [200, 200]</div>
 </html>
 </table>
 
-<section title="Visualizing tensors with a variety of dimensions">
+TensorSensor treats calls into tensor libraries as operators, whether the call is to a network layer or something simple like `torch.dot(a,b)`. Exceptions triggered within library functions yield messages that identify the function and dimensionality of any tensor arguments.
+
+<section title="Clarifying deeply-buried tensor code">
+
+When using a high-level library like Keras with pre-built layer objects, we get excellent error messages that indicate a mismatch in dimensionality between the layers of deep learning network. If you're building a custom layer, however, or just implementing your own to understand deep learning more thoroughly, you'll need to examine exceptions triggered inside your layer objects. TensorSensor descends into any code initiated from within the `with` statement block, stopping only when it reaches a tensor library function.
+
+As a demonstration, let's create our own linear network layer by wrapping the simple linear layer code from above in a class definition:
+	
+```
+class Linear:
+    def __init__(self, d, n_neurons):
+        self.W = torch.randn(n_neurons, d)
+        self.b = torch.zeros(n_neurons, 1)
+    def __call__(self, input):
+        return self.W @ input + self.b
+```
+
+Then, we can create a layer as an object and perform a forward computation using some fake input `X`:
+
+```
+L = Linear(d, n_neurons) # create a layer
+X = torch.rand(n, d)     # fake input
+with tsensor.clarify():
+    Y = L(X)             # L(X) invokes L.__call__()
+```
+
+The `Linear` layer has the correct dimensionality on weights `W` and bias `b`, but the equation in `__call__()` incorrectly references `input` rather than the transpose of that input matrix, triggering an exception:
+ 	
+<html>
+<img src="images/torch-linear.svg" width="35%">
+<div class=exception>---------------------------------------------------------------------------
+RuntimeError                              Traceback (most recent call last)
+&lt;ipython-input-20-b6b1bd407c61> in &lt;module>
+      9 
+     10 with tsensor.clarify(hush_errors=False):
+---> 11     Y = L(X)
+
+&lt;ipython-input-16-678a8372f1c2> in __call__(self, x)
+      4         self.b = torch.zeros(n_neurons, 1)
+      5     def __call__(self, x):
+----> 6         return self.W@x + self.b    # L(X) invokes L.__call__()
+
+RuntimeError: size mismatch, m1: [100 x 764], m2: [200 x 764] at /tmp/pip-req-build-as628lz5/aten/src/TH/generic/THTensorMath.cpp:41
+Cause: @ on tensor operand self.W w/shape [100, 764] and operand x w/shape [200, 764]</div>
+</html>
+
+Because `L(X)` invokes our own code, not a tensor library function, TensorSensor clarifies the offending statement in `__call__()` rather than the `Y=L(X)` statement within the `with` block.
+
+So far we've focused on clarifying exceptions, but sometimes we simply want to explain some correct tensor code to others or to make it easier to read. It's also the case that not all erroneous code triggers an exception; sometimes, we simply get the wrong answer. If that wrong answer has the wrong shape, TensorSensor can help.  Next, we introduce TensorSensor's `explain()` functionality.
+
+<section title="Visualizing tensor code without triggering exceptions">
 
 Debugging tensor code that uses matrices beyond two dimensions can be even more challenging. For example, it's very common to train deep learning networks in batches for performance reasons.  That means reshaping the input matrix, `X`, into `n_batches x batch_size x d` rather than `n x d`. The following code simulates passing multiple batches through a linear layer but incorrectly passes the entire 3D `X` instead of 2D batches.
 
 ```
-L = Linear(d,n_neurons) # Assume this is correct
-
-batch_size = 10
+n = 200                          # number of instances
+d = 764                          # number of instance features
+n_neurons = 100                  # how many neurons in this layer?
+batch_size = 10                  # how many records per batch?
 n_batches = n // batch_size
+
+L = Linear(d,n_neurons) # Assume this is correct
 X = torch.rand(n_batches,batch_size,d)
 
 with tsensor.clarify():
     for b in range(n_batches):
         Y = L(X) # Oops! Should pass batch X[b]
 ```
+
+Ollie on Y = L(X): would it really work if we did? dimensions still seem off just by looking at it, did not execute code, so not sure
 
 In the TensorSensor visualization, notice that `input` is 3D and that the third dimension is shown on an angle, with an extra box to indicate more than two dimensions:
 
