@@ -234,9 +234,63 @@ Because `L(X)` invokes our own code, not a tensor library function, TensorSensor
 
 So far we've focused on clarifying exceptions, but sometimes we simply want to explain some correct tensor code to others or to make it easier to read. It's also the case that not all erroneous code triggers an exception; sometimes, we simply get the wrong answer. If that wrong answer has the wrong shape, TensorSensor can help.  Next, we introduce TensorSensor's `explain()` functionality.
 
-<section title="Visualizing tensor code without triggering exceptions">
+<section title="Explaining tensor code without triggering exceptions">
 
-Debugging tensor code that uses matrices beyond two dimensions can be even more challenging. For example, it's very common to train deep learning networks in batches for performance reasons.  That means reshaping the input matrix, `X`, into `n_batches x batch_size x d` rather than `n x d`. The following code simulates passing multiple batches through a linear layer but incorrectly passes the entire 3D `X` instead of 2D batches.
+TensorSensor's `clarify()` has no effect unless tensor code triggers an exception. To visualize tensor dimensionality within Python statements, TensorSensor provides a mechanism called `explain()` that is similar to `clarify()` except that it generates a visualization for each statement executed within the block. For example, here's our familiar linear layer computation again but wrapped in an `explain()` block and with resulting tensor shape visualization:
+
+```
+n = 200         # number of instances
+d = 764         # number of instance features
+n_neurons = 100 # how many neurons in this layer?
+
+W = torch.rand(n_neurons,d)
+b = torch.rand(n_neurons,1)
+X = torch.rand(n,d)
+
+with tsensor.explain():
+    Y = W @ X.T + b
+```
+
+<img src="images/torch-mm-explain.svg" width="25%">
+
+It's handy to see the shape of the resulting computation (for `Y`). Plus, 
+notice that column vector `b` is easily identified visually as a  vertical rectangle (a matrix with a single column). Row vectors are horizontal rectangles:
+
+```
+n_neurons = 100
+b = torch.rand(1,n_neurons) # 2D tensor 1 x n_neurons
+with tsensor.explain() as c:
+    y = b @ b.T
+```
+<img src="images/torch-bb.svg" width="19%">
+
+Column and row vectors are still 2D matrices, but we can also have 1D tensors:
+
+```
+b = torch.rand(n_neurons) # 1D tensor
+with tsensor.explain() as c:
+    y = torch.dot(b, b)
+```
+<img src="images/torch-dot.svg" width="32%">
+	
+The visualization for 1D tensors look like 2D row vectors but the yellow color (versus pale green) signals that it's 1D. (This is important because tensor libraries often treat 1D vectors and 2D row vectors differently.) The result (`y`) is a scalar and, hence, has no visualization component.
+
+Before moving on to 3D+ tensor visualizations, there are some important characteristics of `explain()` to highlight.  First, unlike `clarify()`, `explain()` does not descend into code invoked from the statements in the `with` block.  It only visualizes statements within the `with` block proper. Every execution of the `with` block statement(s) generates a new image and at most one image. In other words, if the `with` code is in a loop, you  won't see multiple visualizations for the same statement.
+
+and so, but if it's in a loop, you'll see multiple visualizations. 
+
+Second, both `clarify()` and `explain()` cause tensor statements to execute twice, so beware of side effects. For example, the following code prints "hi" twice, once by TensorSensor and once during normal program execution. Most tensor expressions are side-effect free, so it's usually not a problem, but keep it in mind. (See the implementation section below for more details.)
+
+```
+with tsensor.explain():
+    print("hi")
+```
+
+Finally, because `explain()` creates a visualization for every statement in the `with` block, "explained" code will run significantly slower. 
+
+<section title="Visualizing 3D tensors and beyond">
+		
+Understanding and debugging code that uses tensors beyond two dimensions can be really challenging.  Unfortunately, this comes up a lot. For example, it's very common to train deep learning networks in batches for performance reasons.  That means reshaping the input matrix, `X`, into `n_batches x batch_size x d` rather than `n x d`. The following code simulates passing multiple batches through a linear layer.
 
 ```
 n = 200                          # number of instances
@@ -245,14 +299,25 @@ n_neurons = 100                  # how many neurons in this layer?
 batch_size = 10                  # how many records per batch?
 n_batches = n // batch_size
 
-L = Linear(d,n_neurons) # Assume this is correct
+W = torch.rand(n_neurons,d)
+b = torch.rand(n_neurons,1)
 X = torch.rand(n_batches,batch_size,d)
 
-with tsensor.clarify():
-    for b in range(n_batches):
-        Y = L(X) # Oops! Should pass batch X[b]
+with tsensor.explain():
+    for i in range(n_batches):
+        batch = X[i,:,:]
+        Y = torch.relu(W @ batch.T + b)
 ```
 
+Here's how TensorSensor visualizes the two statements:
+
+<html>
+<img src="images/torch-batch-1.svg" width="23%"><br>
+<img src="images/torch-batch-2.svg" width="45%">
+</html>
+
+To represent the shape of 3D tensors, such as `X`, TensorSensor draws an extra box to simulate a three-dimensional perspective, and gives the third dimension at 45 degrees.
+ 
 Ollie on Y = L(X): would it really work if we did? dimensions still seem off just by looking at it, did not execute code, so not sure
 
 In the TensorSensor visualization, notice that `input` is 3D and that the third dimension is shown on an angle, with an extra box to indicate more than two dimensions:
@@ -323,8 +388,7 @@ row vecs look like: ...
 
 show something about what I rejected, including relative sizing.
 
-<section title="Explaining non-erroneous tensor code">
-
+<section title="full AST">
 
 explain
 
