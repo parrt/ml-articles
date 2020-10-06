@@ -344,7 +344,7 @@ Finally, because `explain()` creates a visualization for every statement in the 
 
 <section title="Visualizing subexpression tensor shapes">
 	
-Most of the time, knowing the shape of the tensor variables referenced in an expression is sufficient to debug a Python statement. Sometimes, however, and operator combining the results of other operators is the source of the problem.  We need a way to visualize the shape of all partial results, which we can do with and upside down tree that shows the data flow and shape of all subexpressions. In the language world, we call that an abstract syntax tree or AST. For example, here is the fake GRU computation set up from above (with a proper `Uxh_` definition):
+Most of the time, knowing the shape of the tensor variables referenced in an expression is sufficient to debug a Python statement. Sometimes, however, an operator combining the results of other operators is the source of the problem.  We need a way to visualize the shape of all partial results, which we can do with and upside down tree that shows the data flow and shape of all subexpressions. In the language world, we call that an abstract syntax tree or AST. For example, here is the fake GRU computation set up from above (with a proper `Uxh_` definition):
 
 ```
 nhidden = 256
