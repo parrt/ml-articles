@@ -316,7 +316,7 @@ As you can see, dimensions beyond three are shown at the bottom of the 3D repres
 
 <section title="Warnings and limitations">
 	
-There are some important characteristics of TensorSensor to highlight. First, unlike `clarify()`, `explain()` does not descend into code invoked from the statements in the `with` block.  It only visualizes statements within the `with` block proper. Every execution of the `with` block statement(s) generates a new image and at most one image. In other words, if the `with` code is in a loop, you  won't see multiple visualizations for the same statement.
+There are some important characteristics of TensorSensor to highlight. First, unlike `clarify()`, `explain()` does not descend into code invoked from the statements in the `with` block.  It only visualizes statements within the `with` block proper. Every execution of the `with` block statement(s) generates a new image and at most one image. In other words, if the `with` code surrounds a loop, you won't see multiple visualizations for the same statement in the loop.
 
 Second, both `clarify()` and `explain()` cause tensor statements to execute twice, so beware of **side effects**. For example, the following code prints "hi" twice, once by TensorSensor and once during normal program execution. Most tensor expressions are side-effect free, so it's usually not a problem, but keep it in mind. (See the implementation section below for more details.)
 
