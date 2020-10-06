@@ -11,8 +11,8 @@
 </copyright>
 
 <metadata title="Clarifying exceptions and visualizing tensor operations in deep learning code"
-	imageurl=""
-	description=""
+	imageurl="https://explained.ai/tensor-sensor/images/teaser.png"
+	description="One of the biggest challenges when writing code to implement deep learning networks is getting all of the tensor (matrix and vector) dimensions to line up properly. This article describes a new library called TensorSensor that clarifies exceptions by augmenting messages and visualizing Python code to indicate the shape of tensor variables. It works with Tensorflow, PyTorch, and Numpy, as well as higher-level libraries like Keras and fastai."
 	url="http://explained.ai/tensor-sensor/index.html"
 	pagetype="article"
 	twitterhandle="@the_antlr_guy"
