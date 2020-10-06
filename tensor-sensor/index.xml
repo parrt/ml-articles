@@ -105,7 +105,7 @@ Cause: @ on tensor operand W w/shape (764, 100) and operand tf.transpose(X) w/sh
 
 The PyTorch message does not identify which operation triggered the exception, but TensorFlow's message does indicate matrix multiplication. Both show the operand dimensions. These default exception messages are probably good enough for this simple tensor expression for a linear layer. Still, it's easier to see the problem with the TensorSensor visualization.
 
-You might be wondering, though, why tensor libraries don't generate a more helpful exception message that identified the names of the Python variables involved in the offending subexpression.  It's not that the library authors couldn't be bothered. The fundamental issue is that Python tensor libraries are wrappers around extremely efficient cores written in C or C++. Python passes, say, the data for two tensors to a C++ function, but not the associated tensor variable names in Python space. An exception caught deep in C++ has no access to the local and global variable spaces in Python, so it just throws a generic exception back over the fence.  Because Python traps exceptions at the statement level, it also cannot isolate the subexpression within the statement.  (To learn how TensorSensor manages to generate such specific messages, check out the section below.)
+You might be wondering, though, why tensor libraries don't generate a more helpful exception message that identified the names of the Python variables involved in the offending subexpression.  It's not that the library authors couldn't be bothered. The fundamental issue is that Python tensor libraries are wrappers around extremely efficient cores written in C or C++. Python passes, say, the data for two tensors to a C++ function, but not the associated tensor variable names in Python space. An exception caught deep in C++ has no access to the local and global variable spaces in Python, so it just throws a generic exception back over the fence.  Because Python traps exceptions at the statement level, it also cannot isolate the subexpression within the statement.  (To learn how TensorSensor manages to generate such specific messages, check out [impl] below.)
 
 <subsection title="Debugging a complex tensor expression">
 	
@@ -367,7 +367,7 @@ If you'd like to see just the AST and don't want the statement or expression to 
 
 I'd to finish up this article by describing a little bit about how TensorSensor works.  If language implementation isn't your thing, feel free to ignore the next section, but please do check out the [TensorSensor library](https://github.com/parrt/tensor-sensor) if you do lots of tensor computations.
 
-<section title="Key TensorSensor implementation Kung Fu">
+<section label="impl" title="Key TensorSensor implementation Kung Fu">
 
 *And now for something completely different...*
 	
