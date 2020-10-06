@@ -1,6 +1,7 @@
 <article
       googletracking="UA-118361649-1"
-      watermark="Brought to you by <a href='http://explained.ai'>explained.ai</a>">
+      watermark="Brought to you by <a href='http://explained.ai'>explained.ai</a>"
+      numbering="false">
 
 <include file="index.xml">
 
