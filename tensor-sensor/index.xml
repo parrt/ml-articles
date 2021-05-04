@@ -370,8 +370,9 @@ I'd to finish up this article by describing a little bit about how TensorSensor 
 <section label="impl" title="Key TensorSensor implementation Kung Fu">
 
 *And now for something completely different...*
+
+The implementation of TensorSensor leveraged my experience as a language implementor, which came in surprisingly handy in my new world as a machine learning droid.  If you have similar experience, most of the details will be clear to you in the code, but it's worth exploring the key trick to making everything you see in this article work: incrementally parsing and evaluating bits of Python statements and expressions, recording their partial results. (It's also the case that I abused `matplotlib` horribly to generate the visualizations, but you can check out the code to see how that works.) See also the [implementation slides](https://github.com/parrt/tensor-sensor/raw/master/talks/tensor-sensor.pdf) (PDF).
 	
-The implementation of TensorSensor leveraged my experience as a language implementor, which came in surprisingly handy in my new world as a machine learning droid.  If you have similar experience, most of the details will be clear to you in the code, but it's worth exploring the key trick to making everything you see in this article work: incrementally parsing and evaluating bits of Python statements and expressions, recording their partial results. (It's also the case that I abused `matplotlib` horribly to generate the visualizations, but you can check out the code to see how that works.)
 
 As I pointed out earlier, Python traps exceptions at the statement level. For example, if you get an `IndexError` in `a[i] + b[j]`, Python doesn't tell you  which index operation caused the exception. The same is true for tensor computations and calls to tensor libraries; only the entire statement is flagged. At first, I thought I would have to process the Python bytecode and inject code to track subexpression evaluation, but realized I could do the same thing using `eval()` on various substrings of the Python statement.
 
