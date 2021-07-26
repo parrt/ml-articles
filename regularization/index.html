@@ -1,0 +1,183 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-118361649-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-118361649-1');
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+<link rel="stylesheet" type="text/css" href="css/article.css"/>
+<title>A visual explanation for regularization of linear models</title>
+<!-- META -->
+<!-- LinkedIn meta -->
+<meta property='og:title' content="A visual explanation for regularization of linear models"/>
+<meta property='og:image' content="http://explained.ai/regularization/images/reg3D.svg">
+<meta property='og:description' content="A deep dive into exactly how regularization works, using visualizations rather than (just) mathematics. This article also dispels some myths and answer some important questions about Lasso and Ridge regression."/>
+<meta property='og:url' content="http://explained.ai/regularization/index.html"/>
+
+<!-- Facebook meta -->
+<meta property="og:type" content="article" />
+
+<!-- Twitter meta -->
+<meta name="twitter:title" content="A visual explanation for regularization of linear models">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@the_antlr_guy">
+<meta name="twitter:creator" content="@the_antlr_guy">
+<meta name="twitter:description" content="A deep dive into exactly how regularization works, using visualizations rather than (just) mathematics. This article also dispels some myths and answer some important questions about Lasso and Ridge regression.">
+<meta name="twitter:image" content="http://explained.ai/regularization/images/reg3D.svg">
+<!-- END META -->
+</head>
+<body>
+<div class="watermark">
+<i><a href='http://explained.ai/regularization/index.html'>Main article</a><br>Brought to you by <a href='http://explained.ai'>explained.ai</a></i><br>
+</div>
+
+<h1>A visual explanation for regularization of linear models</h1>
+
+<p><a href="http://parrt.cs.usfca.edu">Terence Parr</a><br><span style="font-size: 85%">Terence teaches in <a href="https://www.usfca.edu/arts-sciences/graduate-programs/data-science">University of San Francisco's MS in Data Science program</a> and you might know him as the creator of the ANTLR parser generator.</span></p>
+
+<p>Linear and logistic regression models are important because they are interpretable, fast, and form the basis of deep learning neural networks.  They are also extremely simple; we're just fitting lines (or hyperplanes) through training data. Unfortunately, linear models have a tendency to chase outliers in the training data, which often leads to models that don't generalize well to new data. To produce models that generalize better, we all know to <i>regularize</i> our models.  There are many forms of regularization, such as <i>early stopping</i> and <i>drop out</i> for deep learning, but for isolated linear models, <i>Lasso</i> (L1) and <i>Ridge</i> (L2) regularization are most common. The mathematics behind fitting linear models and regularization are well described elsewhere, such as in the excellent book <i>The Elements of Statistical Learning</i> (ESL) by Hastie, Tibshirani, and Friedman. The world certainly doesn't need yet another article on the mechanics of regularized linear models, so I'm going to assume that you're familiar with basics.</p>
+
+<p>
+What's lacking is a simple and intuitive explanation for what exactly is going on during regularization. The goal of this article is to explain how regularization behaves visually, dispelling some myths and answering important questions along the way.  This article has exploded way beyond my initial intentions, so let me start out by summarizing the key elements; that way you can quickly get back to watching YouTube or playing Animal Crossing.
+</p>
+
+<h2>TL;DR &nbsp;&nbsp;The key nuggets </h2>
+
+<ol>
+	<li>
+		<p>
+Personally, my biggest initial stumbling block was this: <i>The math used to implement regularization does not correspond to  pictures commonly used to explain regularization</i>. Take a look at the oft-copied picture (shown below left) from page 71 of ESL in the section on &ldquo;Shrinkage Methods.&rdquo; Students see this multiple times in their careers but have trouble mapping that to the relatively straightforward mathematics used to regularize linear model training. The simple reason is that that illustration shows how we regularize models conceptually, with <i>hard constraints</i>, not how we actually implement regularization, with <i>soft constraints</i>! The math actually corresponds to the picture on the right, with the loss function in blue-red (blue = lower, red = higher loss) and the regularization penalty term in orange, emanating from the (0,0).
+</p>
+
+<table border=0>
+	<tr>
+	<td width=30%><img src="images/ESL_reg.png" width="80%">
+	<td width=50%><img  src="images/constraint3D.svg" width="80%">
+	</tr>
+	<tr>
+	<td><font size="1"><b>Hard constraint</b> illustration from ESL page 71.</font>
+	<td><font size="1"><b>Soft constraint</b> with non-regularized loss function (blue-red) term and penalty term (orange).</font>
+	</tr>
+</table>
+<p>
+	<img align=right src="images/lagrange-animation.gif" width="35%">
+	Regularization conceptually uses a hard constraint to prevent coefficients from getting too large (the cyan circles from the ESL picture). For implementation purposes, however, we convert that “subject to” hard constraint to a soft constraint by adding the constraint as a term to the loss function. The hard constraint in the regularized loss function,
+	<img src="images/blkeqn-C88982E2F09DF954CA92411206E7FCA8.svg" width="40%"  style="vertical-align: -2.9pt;">, 
+	becomes a term in the equation and with a new constant that controls regularization:
+	<img src="images/blkeqn-113998805CE4E44C1877B8A1E563B4F3.svg" width="30%"style="vertical-align: -2.9pt;">.	The penalty term is a soft constraint because there is no threshold or clipping; larger coefficients are simply more expensive. The effect is to shift the ordinary loss function “bowl” upwards and the loss function minimum towards the origin, as shown to the right; that bowl is the addition of the loss and penalty bowls. The only thing changing in that picture is lambda; the  training data remains the same. The moving bowl is the nonregulated loss function plus the penalty L2 term.</p>
+	
+</li>
+
+<li> Here's a key question about L1 Lasso: <i>Does L1 encourage coefficients to shrink to zero or does it simply not discourage zeroes</i>? It encourages zeros, which I verified by running lots of simulations of random loss functions (different minima locations and shape).  In the following images, green dots indicate the location of a loss function minimum that results in a zero regularized coefficient. Blue indicates a loss function that does not result in a zero coefficient and orange indicates a near miss. L1 tends not to give near misses and so the simulation on the left is just blue/green.
+	<center>
+	<table width="60%">
+	<tr>
+	<td valign="top" width="50%">
+	<img src="images/l1-cloud.png" width="100%">
+	</td>
+	<td valign="top" width="50%">
+	<img src="images/l2-cloud.png" width="100%">
+	</td>
+	</tr>
+	</table>
+</center>
+
+<p>The L1 diamond hard constraint on the left tends to zero coefficients for any loss function whose minimum is in the zone perpendicular to the diamond edges. The L2 circular constraint tends to zero coefficients for loss function minimums sitting really close to or on one of the axes.</p>
+</li>
+
+<li><p><img src="images/L1L2contour.png" width="40%" align=right style="padding: 5pt;">If L1 encourages zero coefficients, <b>why</b> does it do that?! Why doesn't L2 encourages zero coefficients? Imagine we have some training data where the variable associated with <img style="vertical-align: -3.0765pt;" src="images/eqn-B4CEEC2C4656F5C1E7FC76C59C4F80F3-depth002.93.svg"> is very predictive but the other variable is not. In that case, we would see a loss function with contour lines kind of like the following where the big black dot is the non-regularized loss function minimum.
+
+<p>For the L1 case, the optimal <img style="vertical-align: -3.4125pt;" src="images/eqn-0A759A3F5F6C618F914BA43BA1D51535-depth003.25.svg"> location is the purple dot at the diamond tip.  This is true because any movement of <img style="vertical-align: -3.4125pt;" src="images/eqn-0A759A3F5F6C618F914BA43BA1D51535-depth003.25.svg"> away from that spot increases the loss. Take a look at the contour line emanating from the L1 purple dot. The associated ellipse has the same loss value at all locations. Any <img style="vertical-align: -3.4125pt;" src="images/eqn-0A759A3F5F6C618F914BA43BA1D51535-depth003.25.svg"> position outside of that ellipse, away from the black dot, has higher loss; any inside that ellipse have lower loss.  Any movement in either direction along the diamond edge, away from the purple dot, increases the loss because <img style="vertical-align: -3.4125pt;" src="images/eqn-0A759A3F5F6C618F914BA43BA1D51535-depth003.25.svg"> immediately moves outside of the contour associated with the L1 purple dot. Moving the black dot up and to the left, however, would start to make nonzero L1 coefficients more likely.</p>
+
+<p>For the L2 case, the optimal <img style="vertical-align: -3.4125pt;" src="images/eqn-0A759A3F5F6C618F914BA43BA1D51535-depth003.25.svg"> location is at the other purple dot location, and not on the axis like the L1 case.   Because the L2 purple dot is inside the contour line that meets the L1 dot on the axis, it has lower loss value than that contour line. Moving the purple dot along the circular constraint line in any direction would increase the loss. The optimal L2 coefficients are nonzero, despite the fact that the non-regularized loss function minimum (black dot) is very close to the <img style="vertical-align: -3.0765pt;" src="images/eqn-B4CEEC2C4656F5C1E7FC76C59C4F80F3-depth002.93.svg"> axis.</p>
+
+</ol>
+
+<h2 id="overview">Deep dive for those lured in by my cool visualizations</h3>
+
+The text and visualizations from the summary above were pulled from the following subsections that go into much more detail. There are also many more simulations, so I recommend checking it out if a hazy regularization understanding has been bugging the crap out of you for years!
+
+<ul>
+	<li><a href="intro.html">1. A quick review of linear regression</a>
+	<ul>
+	<li><a href="intro.html#sec:1.1">Motivation  for regularization</a>
+	</li>
+	<li><a href="intro.html#sec:1.2">The premise and trade-off of regularization</a>
+	</li>
+	</ul>
+	<li><a href="constraints.html">2. How regularization works conceptually</a>
+	<ul>
+		<li><a href="constraints.html#sec:2.1">Single-variable regularization</a>
+	<li><a href="constraints.html#sec:2.2">L2 Ridge regularization</a>
+	</li>
+	<li><a href="constraints.html#sec:2.3">L1 Lasso regularization</a>
+	</li>
+	</ul>
+	<li><a href="L1vsL2.html">3. The difference between L1 and L2 regularization</a>
+	<ul>
+		<li><a href="L1vsL2.html#sec:3.1">L1 regularization encourages zero coefficients</a>
+		</li>
+		<li><a href="L1vsL2.html#sec:3.2">L1 and L2 regularization encourage zero coefficients for less predictive features</a>
+		<li><a href="L1vsL2.html#why">Why is L1 more likely to zero coefficients than L2?</a>
+	</ul>
+	</li>
+	<li><a href="impl.html">4. How we express regularization in practice</a>	
+		<ul>
+			<li><a href="impl.html#sec:4.1">A quick hard constraint regularization recap</a>
+			<li><a href="impl.html#sec:4.2">Recasting hard constraints as soft constraints</a>
+			<li><a href="impl.html#sec:4.3">Wrapping up</a>
+		</ul>
+</ul>
+
+
+<h2>Acknowledgements</h2>
+
+I'd like to thank mathematicians Steve Devlin, David Uminsky, and Jeff Hamrick, also faculty in <a href="https://www.usfca.edu/arts-sciences/graduate-programs/data-science">University of San Francisco's MS in Data Science program</a>, for helping me understand the mathematics and why L1 regularization encourages zero coefficients.</p>
+
+<h2>Resources</h2>
+
+Here is the <a href="https://github.com/parrt/website-explained.ai/tree/master/regularization/code">code to generate all images</a> from this article.
+
+<p>Here are the original papers on Ridge and Lasso regression:</p>
+ 
+<ul>
+ <li><a href="https://www.math.arizona.edu/~hzhang/math574m/Read/RidgeRegressionBiasedEstimationForNonorthogonalProblems.pdf">Ridge Regression: Biased Estimation for Nonorthogonal Problems</a> by <i>Hoerl and Kennard, Journal Technometrics, 1970</i>.
+
+	<li><a href="http://www-stat.stanford.edu/~tibs/lasso/lasso.pdf">Regression Shrinkage and Selection via the Lasso</a> by <i>Tibshirani</i> in Journal of the Royal Statistical Society, 1996.
+</ul>
+
+Here are some in-depth articles:
+  
+<ul>
+	<li>My MSDS621 project could prove useful for those interested in the implementation of regularization by gradient descent: <a href="https://github.com/parrt/msds621/raw/master/projects/linreg/linreg.pdf">Using gradient descent to fit regularized linear models</a>
+
+<li><a href="https://arxiv.org/pdf/1509.09169.pdf">Lecture notes on ridge regression</a> by <i>Wessel N. van Wieringen</i>.
+
+<li>	<a href="https://www.cs.princeton.edu/courses/archive/spring16/cos495/slides/DL_lecture3_regularization_I.pdf">Deep Learning Basics Lecture 3: Regularization I (slides)</a> by <i>Yingyu Liang</i> at  Princeton University.
+
+<li><a href="https://uc-r.github.io/regularized_regression">Regularized Regression</a> from <i>@bradleyboehmke</i> at University of Cincinnati.
+</ul>
+
+<b>Deep Learning related links</b>
+
+<p>If you are new to deep learning, check out Jeremy Howard's full course called <a href="https://course.fast.ai/">Practical Deep Learning for Coders</a>. Then you might be interested in some articles that relate the regularization described in this article to deep learning.
+
+<ul>
+	<li><a href="https://www.fast.ai/2018/07/02/adam-weight-decay/#understanding-adamw-weight-decay-or-l2-regularization">Understanding AdamW: Weight decay or L2 regularization?</a> <i>Sylvain Gugger and Jeremy Howard</i>
+
+<li><a href="https://arxiv.org/abs/1810.12281">Three Mechanisms of Weight Decay Regularization</a> by <i>Guodong Zhang, Chaoqi Wang, Bowen Xu, Roger Grosse</i>
+</ul>	
+
+
+
+
+
+</body>
+</html>

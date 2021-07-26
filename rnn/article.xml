@@ -1,0 +1,20 @@
+<article
+      googletracking="UA-118361649-1"
+      watermark="<a href='http://explained.ai/rnn/index.html'>Main article</a><br>Brought to you by <a href='http://explained.ai'>explained.ai</a>">
+
+<include file="implementation.xml">
+<include file="minibatch.xml">
+
+<css file="css/article.css">
+
+<copyright>
+(Terence teaches in [University of San Francisco's MS in Data Science program](https://www.usfca.edu/arts-sciences/graduate-programs/data-science). You might know Terence as the creator of the ANTLR parser generator.)
+</copyright>
+
+<metadata title="Explaining RNNs without neural networks"
+	imageurl="http://explained.ai/rnn/images/vid-fast.gif"
+	description="This article explains how recurrent neural networks (RNN's) work without using the neural network metaphor. It uses a visually-focused data-transformation perspective to show how RNNs encode variable-length input vectors as fixed-length embeddings."
+	url="http://explained.ai/rnn/index.html"
+	pagetype="article"
+	twitterhandle="@the_antlr_guy"
+>

@@ -1,0 +1,20 @@
+<article
+      googletracking="UA-118361649-1"
+      watermark="Brought to you by <a href='http://explained.ai'>explained.ai</a>"
+      numbering="false">
+
+<include file="index.xml">
+
+<css file="css/article.css">
+
+<copyright>
+(Terence teaches in [University of San Francisco's MS in Data Science program](https://www.usfca.edu/arts-sciences/graduate-programs/data-science). You might know Terence as the creator of the ANTLR parser generator.)
+</copyright>
+
+<metadata title="Clarifying exceptions and visualizing tensor operations in deep learning code"
+	imageurl="https://explained.ai/tensor-sensor/images/teaser.png"
+	description="One of the biggest challenges when writing code to implement deep learning networks is getting all of the tensor (matrix and vector) dimensions to line up properly. This article describes a new library called TensorSensor that clarifies exceptions by augmenting messages and visualizing Python code to indicate the shape of tensor variables. It works with Tensorflow, PyTorch, and Numpy, as well as higher-level libraries like Keras and fastai."
+	url="http://explained.ai/tensor-sensor/index.html"
+	pagetype="article"
+	twitterhandle="@the_antlr_guy"
+>

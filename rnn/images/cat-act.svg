@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xl="http://www.w3.org/1999/xlink" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="549.5 290.13228 96.41406 89.183" width="96.41406" height="89.183">
+  <defs>
+    <font-face font-family="Courier New" font-size="16" panose-1="2 7 6 9 2 2 5 2 4 4" units-per-em="1000" underline-position="-232.91016" underline-thickness="100.09766" slope="0" x-height="443.3594" cap-height="591.7969" ascent="832.5195" descent="-300.29297" font-weight="700">
+      <font-face-src>
+        <font-face-name name="CourierNewPS-BoldMT"/>
+      </font-face-src>
+    </font-face>
+    <font-face font-family="Courier New" font-size="16" panose-1="2 7 3 9 2 2 5 2 4 4" units-per-em="1000" underline-position="-232.91016" underline-thickness="41.015625" slope="0" x-height="422.85156" cap-height="571.28906" ascent="832.5195" descent="-300.29297" font-weight="400">
+      <font-face-src>
+        <font-face-name name="CourierNewPSMT"/>
+      </font-face-src>
+    </font-face>
+  </defs>
+  <metadata> Produced by OmniGraffle 7.11.5 
+    <dc:date>2020-06-27 18:39:27 +0000</dc:date>
+  </metadata>
+  <g id="chars" fill="none" stroke-dasharray="none" stroke-opacity="1" stroke="none" fill-opacity="1">
+    <title>chars</title>
+    <g id="chars: fff">
+      <title>fff</title>
+      <g id="Graphic_53">
+        <text transform="translate(554.5 338.31528)" fill="black">
+          <tspan font-family="Courier New" font-size="16" font-weight="700" fill="black" x="19.203125" y="13">a c t</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="31">  0+1+5=</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="700" fill="#d83027" y="31">6</tspan>
+        </text>
+      </g>
+      <g id="Graphic_54">
+        <text transform="translate(554.5 295.13228)" fill="black">
+          <tspan font-family="Courier New" font-size="16" font-weight="700" fill="black" x="19.203125" y="13">c a t</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="31">  1+0+5=</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="700" fill="#d83027" y="31">6</tspan>
+        </text>
+      </g>
+    </g>
+  </g>
+</svg>

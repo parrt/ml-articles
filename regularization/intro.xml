@@ -1,0 +1,150 @@
+<chapter title="A quick review of linear regression"
+	 author={[Terence Parr](http://parrt.cs.usfca.edu)}>
+
+	 I'm assuming that readers are more or less familiar with the mathematics of linear models and how we find optimal model coefficients to fit lines, but let's take a minute to review the important equations so we're all on the same page.[assume]
+	 
+	 <sidenote label="assume">My plan is to keep mathematics notation to a minimum in this article though. Also, regularization for linear and logistic regression is done through the same penalty term in the loss function and so I will focus on just linear regression in this article.</sidenote>
+
+<sidefig caption="Best fit line through 10 sample data points with ordinary least squares regression." label="xyplot">	
+<img src="images/ols.svg" width="80%">
+</sidefig>
+
+A single-variable linear regression model is familiar to us from high school algebra: $y = \beta_0 + \beta_1 x$, where (coefficient) $\beta_0$ is the $y$-intercept and $\beta_1$ is the slope of the line.  For example, let's say we have the following 10 training records and want to draw the *best fit* line through the points, as shown in [xyplot]. 	 (The [code to generate all images](https://github.com/parrt/website-explained.ai/tree/master/regularization/code) is available.)
+
+<pyeval label=reg hide=true output="df">
+import numpy as np
+import pandas as pd
+from matplotlib import pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import cm
+from matplotlib.patches import Circle
+import mpl_toolkits.mplot3d.art3d as art3d
+from sklearn.linear_model import LinearRegression, Ridge, Lasso, LogisticRegression
+np.set_printoptions(precision=2, suppress=True, linewidth=80)
+
+df = pd.DataFrame(data=[[0.0,1.053880874257158],
+[1.1111111111111112,1.6930723862524246],
+[2.2222222222222223,-0.04867559455082526],
+[3.3333333333333335,2.5201150366216343],
+[4.444444444444445,4.978339964087746],
+[5.555555555555555,5.78858680886268],
+[6.666666666666667,7.023970174897514],
+[7.777777777777779,6.026499123031133],
+[8.88888888888889,9.58117222322382],
+[10.0,10.762637572334718]], columns=['x','y'])
+x = df['x'].values.reshape(-1,1)
+y = df['y']
+</pyeval>
+
+The best fit line is $\hat{y} = -0.17 + 1.022x$, where we use $\hat{y}$ to indicate it is an approximation of the true underlying relationship between $x$ and $y$. Using Python and `sklearn`, it's trivial to fit a linear model to this data:
+
+<pyeval label=reg>
+lm = LinearRegression()        # Create a linear model
+lm.fit(x, y)                   # Fit to x,y training data
+</pyeval>
+
+and get those optimal coefficients:
+
+<pyeval label=reg>
+optimal_beta0 = lm.intercept_
+optimal_beta1 = lm.coef_[0]
+y_pred = lm.predict(x)         # What does model predict for x? (orange line)
+</pyeval>
+
+<pyeval label=reg hide=true>
+print(f"optimal_beta0 = {optimal_beta0:.3f}, optimal_beta1 = {optimal_beta1:.3f}")
+print("y_pred", y_pred)
+</pyeval>
+
+The notion of *best fit* means choosing $\beta_0$ and $\beta_1$ to minimize the average error, the average difference between the known true $y^{(i)}$ values and the model predictions, $\hat{y}^{(i)}$.  To make things nice mathematically, and to avoid needing an absolute value operator, linear regression optimizes the average (mean) squared error.  That's where the term *Ordinary Least Squares* (OLS) comes from. The MSE function is a quadratic that always gives us a bowl shaped loss function, for 2 coefficients anyway, as shown in [ols3D].  For all $n$ training records $(x^{(i)},y^{(i)})$, we find $\beta_0,\beta_1$ to minimize:
+
+\[
+MSE(\beta_0,\beta_1) = \frac{1}{n} \sum_{i=1}^{n} (y^{(i)} - \hat{y}^{(i)})^2
+\]
+
+(If you're a `numpy` junkie, that is just `np.mean(y - m.predict(x))` for vectors `y` and `x`.) Plugging the model, our line equation, into that MSE we get:
+
+\[
+MSE(\beta_0,\beta_1) = \frac{1}{n} \sum_{i=1}^{n} (y^{(i)} - (\beta_0 + \beta_1 x^{(i)}))^2
+\]
+
+The loss function goes up as $\beta_0$ and $\beta_1$ move away from the bottom of the bowl. The big black dot represents the minimum loss location, $(\beta_0, \beta_1)$ = (-0.17, 1.022). (See [code/loss3d.py](code/loss3d.py) for the code.) Three-dimensional plots are sometimes hard to interpret on a two-dimensional screen, so you will often see the loss function projected down onto the $\beta_0$, $\beta_1$ plane, as shown in [ols2D] ([code/loss2d.py](code/loss2d.py)).
+
+It's important to see the relationship between [xyplot] and [ols3D]. So, just to be clear, shifting $\beta_0$ and $\beta_1$ in [ols3D] causes the orange line in [xyplot] to tilt or move up and down, away from the best fit.
+
+
+
+<sidefig caption="Loss function in 3D where the black dot shows the smallest loss, the bottom of the bowl." label="ols3D">	
+	<img src="images/ols_loss_3D.svg" width="80%">
+</sidefig>
+
+
+<sidefig caption="Loss function contour projected onto 2D plane, as if we were looking from above." label="ols2D">	
+	<img src="images/ols_loss_2D.svg" width="70%">
+</sidefig>
+	
+
+
+<section title="Motivation for regularization">
+
+So far so good.  Given some data, we can fit a best fit line through the data where "best fit" means the line that minimizes the average squared between true $y$ values and those predicted by the model. Now, let's tweak the last $y$ value to be about 10 times as big: 
+
+<pyeval label=reg>
+y.iloc[-1] = 100        # Make last y be an outlier 10x as big
+lm = LinearRegression()
+lm.fit(x, y)
+y_pred = lm.predict(x)  # Get orange line points again
+</pyeval>
+
+<pyeval label=reg hide=true>
+optimal_beta0 = lm.intercept_
+optimal_beta1 = lm.coef_[0]
+y_pred = lm.predict(x)         # What does model predict for x? (orange line)
+print(f"optimal_beta0 = {optimal_beta0:.3f}, optimal_beta1 = {optimal_beta1:.3f}")
+print("y_pred", y_pred)
+</pyeval>
+
+Look what happens to the best (orange) fit line, as shown in [outlier]!  It has tilted substantially upwards towards the outlier. Because the loss function squares the error, an outlier can seriously distort the shape of the "bowl" and, hence, the minimum location of the optimal $\beta_0$ and $\beta_1$ coefficients.  Instead of $\beta_0=-0.170$ and $\beta_1 = 1.022$, the coefficients are $\beta_0=-13.150$ and $\beta_0=5.402$. All real data is noisy and sometimes outliers are common, which provides us with the motivation to regularize our linear models.
+
+Let's try Ridge regularization. Using `sklearn` again, we can fit a new line through the data using Ridge regression:
+
+<pyeval label=reg>
+lm = Ridge(alpha=300)
+lm.fit(x, y)
+y_pred = lm.predict(x)
+</pyeval>
+
+<pyeval label=reg hide=true>
+optimal_beta0 = lm.intercept_
+optimal_beta1 = lm.coef_[0]
+y_pred = lm.predict(x)         # What does model predict for x? (orange line)
+print(f"optimal_beta0 = {optimal_beta0:.3f}, optimal_beta1 = {optimal_beta1:.3f}")
+print("y_pred", y_pred)
+</pyeval>
+
+The `alpha=300` hyper parameter controls how much regularization we need, in this case a lot. (For those using TensorFlow's `keras` interface, you might use something like `activity_regularizer=regularizers.l2(300)` in one of your layers.)  While `sklearn` uses `alpha`, we will use $\lambda$ as the regularization hyper parameter as we get into the regularization penalty term of the loss function. Notice that the regularized slope, $\beta_1 = 1.369$, is very close to the unregularized $\beta_1 = 1.022$ without the outlier. With regularization, the orange fitted line is held back to an appropriate angle, as shown in [ridge].  Using Lasso regularization, `Lasso(alpha=45).fit(x, y)`, we'd get similar results.
+
+The price we pay for keeping the angle sane, is a less accurate (biased) overall result than we saw for the unregularized model for non-outlier data.  The regularized $y$-intercept is larger, $\beta_0 = 7.02$, compared to unregularized $\beta_0=-0.17$ for the data without the outlier. You can see that the orange line rests above the majority of the data points instead of going through them. The outlier is still pulling the best fit line upward a little bit.
+
+<sidefig caption="." label="outlier">	
+	<img src="images/ols_outlier.svg" width="70%">
+</sidefig>
+
+<sidefig caption="." label="ridge">	
+	<img src="images/ridge.svg" width="70%">
+</sidefig>
+
+<section title="The premise and trade-off of regularization">
+
+We've motivated the need for regularization by showing how even a single outlier can seriously skew our model, but we still have no idea how regularization works.  Let's look at a real but small data set called [Ames housing price data](http://jse.amstat.org/v19n3/decock.pdf) ([ames.csv](code/ames.csv)) because it will point in the direction of the solution. [ames_ols] shows a bar chart with one bar per coefficient using unregularized linear regression (with normalized explanatory variables and dummy-encoded categorical variables). Wow. Those are some big coefficients and, in fact, I had to clip them to slope magnitudes less than 1e8!  Contrast that with the Ridge-regularized coefficients in [ames_L2], which are in a much more reasonable range. The accuracy of the unregularized model is ridiculously bad, with an error of $9.1^{12}$ dollars on a 20% validation set. Using Ridge regression, however, the error is only about \$18k per house. With an average house price of about \$180k, that's only 10% error on the same validation set. (If you're an R^2 fan, the regularized validation R^2 is 0.84.)
+
+That gives us the clue we need to arrive at the premise of regularization: **extreme coefficients are unlikely to yield models that generalize well.** The solution, therefore, is simply to constrain the magnitude of linear model coefficients so they don't get too big.  Constraining the coefficients means not allowing them to reach their optimal position, at the minimum loss location.  That means we pay a price for improved generality in the form of decreased accuracy (increase in bias). Recall what we observed in [ridge] where the orange line sat a bit above the majority of the data. This is a worthwhile trade because, as we can see from this example, unregulated models on real data sets don't generalize well (they have terrible accuracy on validation sets).
+
+<sidefig caption="OLS regression coefficients; data was normalized, dummy-encoded categorical variables." label="ames_ols">	
+	<img src="images/ames_ols.svg" width="100%">
+</sidefig>
+
+<sidefig caption="Ridge regression coefficients; data was  normalized, dummy-encoded categorical variables. 5-fold cross validation grid search used to identify best alpha value." label="ames_L2">	
+	<img src="images/ames_L2.svg" width="100%">
+</sidefig>
+

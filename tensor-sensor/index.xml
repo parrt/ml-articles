@@ -1,0 +1,399 @@
+<chapter title="Clarifying exceptions and visualizing tensor operations in deep learning code" author={[Terence Parr](http://parrt.cs.usfca.edu)}>
+
+	Most people solve deep learning problems using high-level libraries such as [Keras](https://keras.io/) or [fastai](https://www.fast.ai/),  which makes sense. These libraries hide a lot of implementation details that we either don't care about or can learn later.  To truly understand deep learning, however, I think it's important at some point to implement your own network layers and training loops. For example, see my recent article called [Explaining RNNs without neural networks](https://explained.ai/rnn/index.html). If you're comfortable building deep learning models while leaving some of the details a bit fuzzy, then this article is not for you.  In my quirky case, I care more about learning something deeply than actually applying it to something useful, so I go straight for the details. (I guess that's why I work at a university, not in industry 😀.)  This article is in response to a pain point I experienced during an obsessive coding and learning burn through the fundamentals of deep learning in the isolation of Covid summer 2020.
+
+<img src="images/teaser.png" width="40%" align="right">One of the biggest challenges when writing code to implement deep learning networks, particularly for us newbies, is getting all of the tensor (matrix and vector) dimensions to line up properly. It's really easy to lose track of tensor dimensionality in complicated expressions involving multiple tensors and tensor operations.  Even when just feeding data into predefined [Tensorflow](https://www.tensorflow.org/) network layers, we still need to get the dimensions right. When you ask for improper computations, you're going to run into some less than helpful exception messages.  To help myself and other programmers debug tensor code, I built a new library called [TensorSensor](https://github.com/parrt/tensor-sensor) (`pip install tensor-sensor`).  TensorSensor clarifies exceptions by augmenting messages and visualizing Python code to indicate the shape of tensor variables (see figure to the right for a teaser). It works with [Tensorflow](https://www.tensorflow.org/), [PyTorch](https://pytorch.org/), [JAX](https://github.com/google/jax) (as of 0.1 December 2020), and [Numpy](https://numpy.org/), as well as higher-level libraries like [Keras](https://keras.io/) and [fastai](https://www.fast.ai/).
+
+*TensorSensor is currently at 0.1 so I'm happy to receive issues created at the* [repo](https://github.com/parrt/tensor-sensor) *or direct email*.
+	
+<section title="Isolating issues in tensor code is maddening!">
+
+Even for experts, it can be hard to quickly identify the cause of an exception in a line of Python code performing tensor operations.  The debugging process usually involves adding a print statement in front of the offending line to emit the shape of each tensor operand.  That requires editing the code to create the debugging statement and rerunning the training process. Or, we can manually click or type commands to request all operand shapes using an interactive debugger. (This can be less practical in an IDE like PyCharm where executing code in debug mode seems to be much slower.)  The following subsections illustrate the anemic default exception messages and my proposed TensorSensor approach, rather than a debugger or print statements.
+
+<subsection title="Debugging a simple linear layer">
+	
+Let's look at a simple tensor computation to illustrate the less-than-optimal information provided by the default exception message. Consider the following simple NumPy implementation for a hardcoded single (linear) network layer that contains a tensor dimension error.
+
+```
+import numpy as np
+
+n = 200                          # number of instances
+d = 764                          # number of instance features
+n_neurons = 100                  # how many neurons in this layer?
+
+W = np.random.rand(d,n_neurons)  # Ooops! Should be (n_neurons,d) <=======
+b = np.random.rand(n_neurons,1)
+X = np.random.rand(n,d)          # fake input matrix with n rows of d-dimensions
+
+Y = W @ X.T + b                  # pass all X instances through layer
+```
+
+Executing that code triggers an exception whose important elements are:
+
+<html>
+<div class=exception>...
+---> 10 Y = W @ X.T + b
+	
+ValueError: matmul: Input operand 1 has a mismatch in its core dimension 0, with gufunc signature (n?,k),(k,m?)->(n?,m?) (size 764 is different from 100)</div>
+</html>
+
+The exception identifies the offending line and which operation (`matmul`: matrix multiply) but would be more useful if it gave the complete tensor dimensions. Also, the exception would be unable to distinguish between multiple matrix multiplications occurring in one line of Python.
+
+Next, let's see how TensorSensor makes debugging that statement much easier. If we wrap the statement using a Python `with` statement and `tsensor`'s `clarify()`, we get a visualization and an augmented error message. 
+
+```
+import tsensor
+with tsensor.clarify():
+    Y = W @ X.T + b
+```
+
+<img src="images/numpy-mm-py.svg" nocenter="true">
+
+<html>
+<div class=exception>...
+ValueError: matmul: Input operand ...
+Cause: @ on tensor operand W w/shape (764, 100) and operand X.T w/shape (764, 200)</div>
+</html>
+
+It's clear from the visualization that `W`'s dimensions should be flipped to be `n_neurons x d`; the columns of `W` must match the rows of `X.T`. You can also checkout a [complete side-by-side image](images/numpy-mm.png) with and without `clarify()` to see what it looks like in a notebook.
+
+The `clarify()` functionality incurs no overhead on the executing program until an exception occurs. Upon exception, `clarify()`:
+
+<ol>
+	<li> Augments the exception object's message created by the underlying tensor library.
+	<li> Gives a visual representation of the tensor sizes involved in the offending operation; only the operands and operator involved in the exception are highlighted, while the other Python elements are de-highlighted.
+</ol>
+
+TensorSensor also clarifies tensor-related exceptions raised by PyTorch and TensorFlow. Here are the equivalent code snippets and resulting augmented exception error messages (`Cause: @ on tensor ...`) and visualization from TensorSensor:
+	
+<table>
+	<tr>
+			<th width="50%">PyTorch
+				<th>TensorFlow
+	<tr>
+<td align="left">
+```
+import torch
+W = torch.rand(d,n_neurons)
+b = torch.rand(n_neurons,1)
+X = torch.rand(n,d)
+with tsensor.clarify():
+    Y = W @ X.T + b
+```
+<td align="left">
+```
+import tensorflow as tf
+W = tf.random.uniform((d,n_neurons))
+b = tf.random.uniform((n_neurons,1))
+X = tf.random.uniform((n,d))
+with tsensor.clarify():
+    Y = W @ tf.transpose(X) + b
+```
+<tr>
+<td align="left"><img src="images/mm.svg" nocenter="true">
+<html>
+<div class=exception>RuntimeError: size mismatch, m1: [764 x 100], m2: [764 x 200] at /tmp/pip-req-build-as628lz5/aten/src/TH/generic/THTensorMath.cpp:41
+Cause: @ on tensor operand W w/shape [764, 100] and operand X.T w/shape [764, 200]</div>
+
+<td>
+<img src="images/tf-mm.svg" nocenter="true">
+<html>
+<div class=exception>InvalidArgumentError: Matrix size-incompatible: In[0]: [764,100], In[1]: [764,200] [Op:MatMul]
+Cause: @ on tensor operand W w/shape (764, 100) and operand tf.transpose(X) w/shape (764, 200)</div>
+</html>
+</table>
+
+The PyTorch message does not identify which operation triggered the exception, but TensorFlow's message does indicate matrix multiplication. Both show the operand dimensions. These default exception messages are probably good enough for this simple tensor expression for a linear layer. Still, it's easier to see the problem with the TensorSensor visualization.
+
+You might be wondering, though, why tensor libraries don't generate a more helpful exception message that identified the names of the Python variables involved in the offending subexpression.  It's not that the library authors couldn't be bothered. The fundamental issue is that Python tensor libraries are wrappers around extremely efficient cores written in C or C++. Python passes, say, the data for two tensors to a C++ function, but not the associated tensor variable names in Python space. An exception caught deep in C++ has no access to the local and global variable spaces in Python, so it just throws a generic exception back over the fence.  Because Python traps exceptions at the statement level, it also cannot isolate the subexpression within the statement.  (To learn how TensorSensor manages to generate such specific messages, check out [impl] below.)
+
+<subsection title="Debugging a complex tensor expression">
+	
+That lack of specificity in default messages makes it hard to identify bad subexpressions within more complicated statements that contain lots of operators. For example, here's a statement pulled from the guts of a Gated Recurrent Unit (GRU) implementation:
+
+```
+h_ = torch.tanh(Whh_ @ (r*h) + Uxh_ @ X.T + bh_)
+```
+
+It doesn't matter what it's computing or what the variables represent, just that they are tensor variables. There are two matrix multiplications, two vector additions, and even a vector element-wise modification (`r*h`).  Without augmented error messages or visualizations we wouldn't know which operator and operands caused an exception. To demonstrate how TensorSensor clarifies exceptions in this case, we need to give some fake definitions for the variables used in the statement (the assignment to `h_`) to get executable code:
+
+```
+nhidden = 256
+Whh_ = torch.eye(nhidden, nhidden)  # Identity matrix
+Uxh_ = torch.randn(d, nhidden)
+bh_  = torch.zeros(nhidden, 1)
+h = torch.randn(nhidden, 1)         # fake previous hidden state h
+r = torch.randn(nhidden, 1)         # fake this computation
+X = torch.rand(n,d)                 # fake input
+
+with tsensor.clarify():
+    h_ = torch.tanh(Whh_ @ (r*h) + Uxh_ @ X.T + bh_)
+```
+
+Again, you can ignore the actual computation performed by the code to focus on the shape of the tensor variables.  
+
+For most of us, it's impossible to identify the problem just by looking at the tensor dimensions and the tensor code.  The default exception message is helpful of course, but most of us will still struggle to identify the problem.  Here are the key bits of the default exception message (note the less-than-helpful reference to the C++ code):
+
+<html>
+<div class=exception>---> 10     h_ = torch.tanh(Whh_ @ (r*h) + Uxh_ @ X.T + bh_)
+RuntimeError: size mismatch, m1: [764 x 256], m2: [764 x 200] at /tmp/pip-req-build-as628lz5/aten/src/TH/generic/THTensorMath.cpp:41
+</div>
+</html>
+
+What we need to know is which operator and operands failed, then we can look at the dimensions to identify the problem.  Here is TensorSensor's visualization and augmented exception message:
+
+<img src="images/torch-gru.svg" nocenter="true">
+<html>
+<div class=exception>---> 10 h_ = torch.tanh(Whh_ @ (r*h) + Uxh_ @ X.T + bh_)
+RuntimeError: size mismatch, m1: [764 x 256], m2: [764 x 200] at /tmp/pip-req-build-as628lz5/aten/src/TH/generic/THTensorMath.cpp:41
+Cause: @ on tensor operand Uxh_ w/shape [764, 256] and operand X.T w/shape [764, 200]
+</div>
+</html>
+
+The human eye quickly latches onto the indicated operator and the dimensions on the matrix-matrix multiply. Ooops: The columns of `Uxh_` must match the rows of `X.T`. `Uxh_` has its dimensions flipped and should be:
+
+```
+Uxh_ = torch.randn(nhidden, d)
+```
+
+At this point, we've only used our own tensor computations specified directly within the `with` code block. What about exceptions triggered within a tensor library's prebuilt network layer?
+
+<subsection title="Clarifying exceptions triggered within prebuilt layers">
+
+TensorSensor visualizes the last piece of code before it enters your chosen tensor library. For example, let's use the standard PyTorch `nn.Linear` linear layer but pass in an `X` matrix that is `n x n`, instead of the proper `n x d`:
+
+```
+L = torch.nn.Linear(d, n_neurons)
+X = torch.rand(n,n) # oops! Should be n x d
+with tsensor.clarify():
+    Y = L(X)
+```
+
+<table>
+	<tr>
+			<th width="30%">Visualization
+				<th>Augmented exception message
+	<tr><td><img src="images/torch-nn-linear.svg" nocenter="true">
+		<td><html>
+<div class=exception>RuntimeError: size mismatch, m1: [200 x 200], m2: [764 x 100] at /tmp/pip-req-build-as628lz5/aten/src/TH/generic/THTensorMath.cpp:41
+Cause: L(X) tensor arg X w/shape [200, 200]</div>
+</html>
+</table>
+
+TensorSensor treats calls into tensor libraries as operators, whether the call is to a network layer or something simple like `torch.dot(a,b)`. Exceptions triggered within library functions yield messages that identify the function and dimensionality of any tensor arguments.
+
+<section title="Clarifying deeply-buried tensor code">
+
+When using a high-level library like Keras with pre-built layer objects, we get excellent error messages that indicate a mismatch in dimensionality between the layers of deep learning network. If you're building a custom layer, however, or just implementing your own to understand deep learning more thoroughly, you'll need to examine exceptions triggered inside your layer objects. TensorSensor descends into any code initiated from within the `with` statement block, stopping only when it reaches a tensor library function.
+
+As a demonstration, let's create our own linear network layer by wrapping the simple linear layer code from above in a class definition:
+	
+```
+class Linear:
+    def __init__(self, d, n_neurons):
+        self.W = torch.randn(n_neurons, d)
+        self.b = torch.zeros(n_neurons, 1)
+    def __call__(self, input):
+        return self.W @ input + self.b
+```
+
+Then, we can create a layer as an object and perform a forward computation using some fake input `X`:
+
+```
+L = Linear(d, n_neurons) # create a layer
+X = torch.rand(n, d)     # fake input
+with tsensor.clarify():
+    Y = L(X)             # L(X) invokes L.__call__()
+```
+
+The `Linear` layer has the correct dimensionality on weights `W` and bias `b`, but the equation in `__call__()` incorrectly references `input` rather than the transpose of that input matrix, triggering an exception:
+ 	
+<img src="images/torch-linear.svg" nocenter="true">
+<html>
+<div class=exception>---------------------------------------------------------------------------
+RuntimeError                              Traceback (most recent call last)
+&lt;ipython-input-20-b6b1bd407c61> in &lt;module>
+      9 
+     10 with tsensor.clarify(hush_errors=False):
+---> 11     Y = L(X)
+
+&lt;ipython-input-16-678a8372f1c2> in __call__(self, x)
+      4         self.b = torch.zeros(n_neurons, 1)
+      5     def __call__(self, x):
+----> 6         return self.W@x + self.b    # L(X) invokes L.__call__()
+
+RuntimeError: size mismatch, m1: [100 x 764], m2: [200 x 764] at /tmp/pip-req-build-as628lz5/aten/src/TH/generic/THTensorMath.cpp:41
+Cause: @ on tensor operand self.W w/shape [100, 764] and operand x w/shape [200, 764]</div>
+</html>
+
+Because `L(X)` invokes our own code, not a tensor library function, TensorSensor clarifies the offending statement in `__call__()` rather than the `Y=L(X)` statement within the `with` block.
+
+So far we've focused on clarifying exceptions, but sometimes we simply want to explain some correct tensor code to others or to make it easier to read. It's also the case that not all erroneous code triggers an exception; sometimes, we simply get the wrong answer. If that wrong answer has the wrong shape, TensorSensor can help.  Next, let's look at TensorSensor's `explain()` functionality.
+
+<section title="Explaining tensor code without triggering exceptions">
+
+TensorSensor's `clarify()` has no effect unless tensor code triggers an exception. To visualize tensor dimensionality within exception-free Python statements, TensorSensor provides a mechanism called `explain()` that is similar to `clarify()`, except that `explain()` generates a visualization for each statement executed within the block. For example, here's our familiar linear layer computation again but wrapped in an `explain()` block and with resulting tensor shape visualization:
+
+```
+n = 200         # number of instances
+d = 764         # number of instance features
+n_neurons = 100 # how many neurons in this layer?
+
+W = torch.rand(n_neurons,d)
+b = torch.rand(n_neurons,1)
+X = torch.rand(n,d)
+
+with tsensor.explain():
+    Y = W @ X.T + b
+```
+
+<img src="images/torch-mm-explain.svg" nocenter="true">
+
+It's handy to see the shape of the resulting computation (for `Y`). Plus, 
+notice that column vector `b` is easily identified visually as a  vertical rectangle (a matrix with a single column). Row vectors are horizontal rectangles:
+
+```
+n_neurons = 100
+b = torch.rand(1,n_neurons) # 2D tensor 1 x n_neurons
+with tsensor.explain():
+    y = b @ b.T
+```
+<img src="images/torch-bb.svg" nocenter="true">
+
+Column and row vectors are still 2D matrices, but we can also have 1D tensors:
+
+```
+b = torch.rand(n_neurons) # 1D tensor
+with tsensor.explain():
+    y = torch.dot(b, b)
+```
+
+<img src="images/torch-dot.svg" nocenter="true">
+
+	
+The visualization for 1D tensors look like 2D row vectors but the yellow color (versus pale green) signals that it's 1D. (This is important because tensor libraries often treat 1D vectors and 2D row vectors differently.) The result (`y`) is a scalar and, hence, has no visualization component.
+
+<section title="Visualizing 3D tensors and beyond">
+		
+Understanding and debugging code that uses tensors beyond two dimensions can be really challenging.  Unfortunately, this comes up a lot. For example, it's very common to train deep learning networks in batches for performance reasons.  That means reshaping the input matrix, `X`, into `n_batches x batch_size x d` rather than `n x d`. The following code simulates passing multiple batches through a linear layer.
+
+```
+n = 200                          # number of instances
+d = 764                          # number of instance features
+n_neurons = 100                  # how many neurons in this layer?
+batch_size = 10                  # how many records per batch?
+n_batches = n // batch_size
+
+W = torch.rand(n_neurons,d)
+b = torch.rand(n_neurons,1)
+X = torch.rand(n_batches,batch_size,d)
+
+with tsensor.explain():
+    for i in range(n_batches):
+        batch = X[i,:,:]
+        Y = torch.relu(W @ batch.T + b)
+```
+
+Here's how TensorSensor visualizes the two statements (despite being in a loop, each visualization is given once):
+
+<img src="images/torch-batch-1.svg" nocenter="true">
+
+<img src="images/torch-batch-2.svg" nocenter="true">
+
+To represent the shape of 3D tensors, such as `X`, TensorSensor draws an extra box to simulate a three-dimensional perspective, and gives the third dimension at 45 degrees.
+
+To visualize tensors beyond 3D, let's consider an example where input instances  are images containing red, green, blue values for each input pixel. A common representation would be a `1 x d x 3` matrix for each image (`d` is the width times height of the image). For `n` images, we have an `n x d x 3` matrix. Add batching to that and we get a 4D `n_batches x batch_size x d x 3` matrix:
+
+```
+X = torch.rand(n_batches,batch_size,d,3)
+with tsensor.explain():
+    batch = X[i,:,:]
+```
+
+<img src="images/torch-4D.svg" nocenter="true">
+
+As you can see, dimensions beyond three are shown at the bottom of the 3D representation preceded by an ellipsis. In this case, the fourth dimension is displayed as "`...x3`".
+
+<section title="Warnings and limitations">
+	
+There are some important characteristics of TensorSensor to highlight. First, unlike `clarify()`, `explain()` does not descend into code invoked from the statements in the `with` block.  It only visualizes statements within the `with` block proper. Every execution of the `with` block statement(s) generates a new image and at most one image. In other words, if the `with` code surrounds a loop, you won't see multiple visualizations for the same statement in the loop.
+
+Second, both `clarify()` and `explain()` cause tensor statements to execute twice, so beware of **side effects**. For example, the following code prints "hi" twice, once by TensorSensor and once during normal program execution. Most tensor expressions are side-effect free, so it's usually not a problem, but keep it in mind. (See the implementation section below for more details.)
+
+```
+with tsensor.explain():
+    print("hi")
+```
+
+Third, TensorSensor doesn't handle all statements/expressions and all Python code structures. The parser ignores lines starting with keywords other than `return`, so the clarify and explain routines do not handle methods expressed like:
+
+```
+def bar(): y = x * 3 + b
+```
+
+Instead, use:
+
+```
+def bar():
+    y = x * 3 + b
+```
+
+The statements in a clarify or explain `with` block must also be on lines by themselves.
+
+Finally, because `explain()` creates a visualization for every statement in the `with` block, "explained" code will run significantly slower. 
+
+<section title="Visualizing subexpression tensor shapes">
+	
+Most of the time, knowing the shape of the tensor variables referenced in an expression is sufficient to debug a Python statement. Sometimes, however, an operator combining the results of other operators is the source of the problem.  We need a way to visualize the shape of all partial results, which we can do with and upside down tree that shows the data flow and shape of all subexpressions. In the language world, we call that an abstract syntax tree or AST. For example, here is the fake GRU computation set up from above (with a proper `Uxh_` definition):
+
+```
+nhidden = 256
+Whh_ = torch.eye(nhidden, nhidden)
+Uxh_ = torch.randn(nhidden, d)  # corrected definition
+bh_  = torch.zeros(nhidden, 1)
+h = torch.randn(nhidden, 1)     # fake previous hidden state h
+r = torch.randn(nhidden, 1)     # fake this computation
+X = torch.rand(n,d)             # fake input
+```
+
+To visualize the AST for the tensor computation, we can use `astviz()` with a string representing the code to visualize, which will execute in the current execution frame:
+
+```
+tsensor.astviz("h_ = torch.tanh(Whh_ @ (r*h) + Uxh_ @ X.T + bh_)")
+```
+<img src="images/torch-gru-ast-shapes.svg" width="45%" nocenter="true">
+
+If you'd like to see just the AST and don't want the statement or expression to be evaluated, pass `frame=None` to `astviz()`. (Side note: ASTs are generated with `graphviz` but the code visualizations use `matplotlib`.)
+
+I'd to finish up this article by describing a little bit about how TensorSensor works.  If language implementation isn't your thing, feel free to ignore the next section, but please do check out the [TensorSensor library](https://github.com/parrt/tensor-sensor) if you do lots of tensor computations.
+
+<section label="impl" title="Key TensorSensor implementation Kung Fu">
+
+*And now for something completely different...*
+
+The implementation of TensorSensor leveraged my experience as a language implementor, which came in surprisingly handy in my new world as a machine learning droid.  If you have similar experience, most of the details will be clear to you in the code, but it's worth exploring the key trick to making everything you see in this article work: incrementally parsing and evaluating bits of Python statements and expressions, recording their partial results. (It's also the case that I abused `matplotlib` horribly to generate the visualizations, but you can check out the code to see how that works.) See also the [implementation slides](https://github.com/parrt/tensor-sensor/raw/master/talks/tensor-sensor.pdf) (PDF).
+	
+
+As I pointed out earlier, Python traps exceptions at the statement level. For example, if you get an `IndexError` in `a[i] + b[j]`, Python doesn't tell you  which index operation caused the exception. The same is true for tensor computations and calls to tensor libraries; only the entire statement is flagged. At first, I thought I would have to process the Python bytecode and inject code to track subexpression evaluation, but realized I could do the same thing using `eval()` on various substrings of the Python statement.
+
+To identify the individual operator and operands that triggered an exception, we literally have to reevaluate each operation in the Python line, in the proper order, piece-by-piece and wait for an exception to occur. That, in turn, means parsing the statement to build an appropriate AST with operators as subtree roots. For example, the parser converts 
+
+```
+h_ = torch.tanh(Whh_ @ (r*h) + Uxh_ @ X.T + bh_)
+```
+
+into this AST:
+
+<img src="images/torch-gru-ast.svg" width="45%" nocenter="true">
+
+I used the built-in Python tokenizer, but built my own parser for the subset of statements (assignments, `return`) and operations supported by TensorSensor. There is a built-in Python parser, but it generates a different AST than I wanted; plus, filtering the built-in tree structure for just the parts I care about would be about the same amount of work as writing the parser.  I built the parser using simple recursive descent, rather than adding another dependency (my friend [antlr](http://www.antlr.org)) to TensorSensor. (See module `tsensor.parser`.)
+
+Next, we need to augment the AST with the values of all subexpressions so it looks like the AST from the previous section.  This is a straightforward bottom-up walk of the AST calling `eval()` on each subexpression, saving the result in the associated node. In order to execute the various bits of the expression in the proper context after an exception, though, TensorSensor has to walk the call stack back down to the specific context that directly invoked the tensor library.  The trick is not chasing the call stack too far, down into the tensor library. (See `tsensor.analysis.deepest_frame()`.)
+
+Once the AST is augmented with partial values, we need to find the smallest subexpressions that evaluate to tensors for visualization purposes. That corresponds to the deepest subtrees that evaluate to tensors, which is the role of `tsensor.analysis.smallest_matrix_subexpr()`.
+
+Both `clarify()` and `explain()` use the `with`-statement functions `__enter__()` and `__exit__()`. To initiate `clarify()`, we just need to remember the execution context and, while exiting, we check for an exception (`is_interesting_exception()`). If there is an exception, `clarify()` passes the offending Python source line to  `tsensor.viz.pyviz()`, which reevaluates the line piece-by-piece to find the operation that triggered the exception. Then it visualizes the line of code with matplotlib.
+
+To visualize each line of Python code as it executes, `explain()`'s `__enter__()` function creates a `ExplainTensorTracer` object and passes it to `sys.settrace()`. Python then notifies the tracer right before each line of code is executed. The tracer parses the line and, if there's no syntax error, the tracer calls `tsensor.viz.pyviz()` to visualize the statement. The `__exit__()` function turns off tracing but also checks for an exception like `clarify()` does.
+
+Those are the key ideas, which combined with the source code, should complete the picture of TensorSensor's implementation. Feel free to contact me with questions.

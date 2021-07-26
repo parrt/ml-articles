@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xl="http://www.w3.org/1999/xlink" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="126 105.625 307.52354 194.0625" width="307.52354" height="194.0625">
+  <defs>
+    <font-face font-family="Courier New" font-size="16" panose-1="2 7 6 9 2 2 5 2 4 4" units-per-em="1000" underline-position="-232.91016" underline-thickness="100.09766" slope="0" x-height="443.3594" cap-height="591.7969" ascent="832.5195" descent="-300.29297" font-weight="700">
+      <font-face-src>
+        <font-face-name name="CourierNewPS-BoldMT"/>
+      </font-face-src>
+    </font-face>
+    <font-face font-family="Courier New" font-size="16" panose-1="2 7 3 9 2 2 5 2 4 4" units-per-em="1000" underline-position="-232.91016" underline-thickness="41.015625" slope="0" x-height="422.85156" cap-height="571.28906" ascent="832.5195" descent="-300.29297" font-weight="400">
+      <font-face-src>
+        <font-face-name name="CourierNewPSMT"/>
+      </font-face-src>
+    </font-face>
+    <font-face font-family="Helvetica Neue" font-size="16" panose-1="2 0 5 3 0 0 0 2 0 4" units-per-em="1000" underline-position="-100" underline-thickness="50" slope="0" x-height="517" cap-height="714" ascent="951.9958" descent="-212.99744" font-weight="400">
+      <font-face-src>
+        <font-face-name name="HelveticaNeue"/>
+      </font-face-src>
+    </font-face>
+    <font-face font-family="Helvetica Neue" font-size="12" panose-1="2 0 5 3 0 0 0 2 0 4" units-per-em="1000" underline-position="-100" underline-thickness="50" slope="0" x-height="517" cap-height="714" ascent="951.9958" descent="-212.99744" font-weight="400">
+      <font-face-src>
+        <font-face-name name="HelveticaNeue"/>
+      </font-face-src>
+    </font-face>
+    <linearGradient x1="0" x2="1" id="Gradient" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fffd78"/>
+      <stop offset=".45238096" stop-color="#ffe979"/>
+      <stop offset="1" stop-color="#ffd579"/>
+    </linearGradient>
+    <linearGradient id="Obj_Gradient" xl:href="#Gradient" gradientTransform="translate(280.58955 215.7235) rotate(90) scale(28)"/>
+    <filter id="Shadow" filterUnits="userSpaceOnUse" x="126" y="105.625">
+      <feGaussianBlur in="SourceAlpha" result="blur" stdDeviation="2.2616883"/>
+      <feOffset in="blur" result="offset" dx="0" dy="2"/>
+      <feFlood flood-color="#d6d6d6" result="flood"/>
+      <feComposite in="flood" in2="offset" operator="in" result="color"/>
+      <feMerge>
+        <feMergeNode in="color"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <font-face font-family="Helvetica" font-size="12" units-per-em="1000" underline-position="-75.68359" underline-thickness="49.316406" slope="0" x-height="522.9492" cap-height="717.28516" ascent="770.0195" descent="-229.98047" font-weight="400">
+      <font-face-src>
+        <font-face-name name="Helvetica"/>
+      </font-face-src>
+    </font-face>
+  </defs>
+  <metadata> Produced by OmniGraffle 7.11.5 
+    <dc:date>2020-06-27 19:57:58 +0000</dc:date>
+  </metadata>
+  <g id="char_vectors" fill="none" stroke-dasharray="none" stroke-opacity="1" stroke="none" fill-opacity="1">
+    <title>char vectors</title>
+    <g id="char_vectors: Layer 1">
+      <title>Layer 1</title>
+      <g id="Graphic_3">
+        <text transform="translate(171.13325 148.4375)" fill="black">
+          <tspan font-family="Courier New" font-size="16" font-weight="700" fill="black" x="0" y="13">c</tspan>
+        </text>
+      </g>
+      <g id="Graphic_4">
+        <rect x="163.27778" y="167.0625" width="25.3125" height="126" fill="white"/>
+        <rect x="163.27778" y="167.0625" width="25.3125" height="126" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
+      </g>
+      <g id="Graphic_5">
+        <rect x="195.14714" y="167.0625" width="25.3125" height="126" fill="white"/>
+        <rect x="195.14714" y="167.0625" width="25.3125" height="126" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
+      </g>
+      <g id="Graphic_6">
+        <rect x="227.329" y="167.0625" width="25.3125" height="126" fill="white"/>
+        <rect x="227.329" y="167.0625" width="25.3125" height="126" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
+      </g>
+      <g id="Graphic_10">
+        <text transform="translate(146.76389 168.4375)" fill="black">
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="13">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="31">1</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="49">2</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="67">3</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="85">4</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="103">5</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="121">6</tspan>
+        </text>
+      </g>
+      <g id="Graphic_12">
+        <text transform="translate(131 167.9375)" fill="black">
+          <tspan font-family="Courier New" font-size="16" font-weight="700" fill="black" x="0" y="13">a</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="700" fill="black" x="0" y="31">c</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="700" fill="black" x="0" y="49">e</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="700" fill="black" x="0" y="67">h</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="700" fill="black" x="0" y="85">k</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="700" fill="black" x="0" y="103">t</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="700" fill="black" x="0" y="121">z</tspan>
+        </text>
+      </g>
+      <g id="Graphic_15">
+        <text transform="translate(234.8264 168.125)" fill="black">
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="13">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="31">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="49">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="67">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="85">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="103">1</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="121">0</tspan>
+        </text>
+      </g>
+      <g id="Graphic_16">
+        <text transform="translate(203.05556 168.6875)" fill="black">
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="13">1</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="31">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="49">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="67">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="85">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="103">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="121">0</tspan>
+        </text>
+      </g>
+      <g id="Graphic_17">
+        <text transform="translate(170.84722 168.125)" fill="black">
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="13">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="31">1</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="49">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="67">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="85">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="103">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="121">0</tspan>
+        </text>
+      </g>
+      <g id="Graphic_74">
+        <text transform="translate(201.73112 148.4375)" fill="black">
+          <tspan font-family="Courier New" font-size="16" font-weight="700" fill="black" x="0" y="13">a</tspan>
+        </text>
+      </g>
+      <g id="Graphic_75">
+        <text transform="translate(233.04167 148.4375)" fill="black">
+          <tspan font-family="Courier New" font-size="16" font-weight="700" fill="black" x="0" y="13">t</tspan>
+        </text>
+      </g>
+      <g id="Graphic_124">
+        <rect x="305.7043" y="166.7235" width="25.3125" height="126" fill="white"/>
+        <rect x="305.7043" y="166.7235" width="25.3125" height="126" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
+      </g>
+      <g id="Graphic_125">
+        <text transform="translate(313.55976 167.9375)" fill="black">
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="13">1</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="31">1</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="49">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="67">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="85">0</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="103">1</tspan>
+          <tspan font-family="Courier New" font-size="16" font-weight="400" fill="black" x="0" y="121">0</tspan>
+        </text>
+      </g>
+      <g id="Graphic_127">
+        <text transform="translate(334.68732 212.46191)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" font-weight="400" fill="black" x="0" y="15">BOW</tspan>
+          <tspan font-family="Helvetica Neue" font-size="12" font-weight="400" fill="black" x="0" y="29.447998">(bag of words)</tspan>
+        </text>
+      </g>
+      <g id="Graphic_130">
+        <path d="M 263.6378 236.32962 L 263.6378 223.11737 L 275.40853 223.11737 L 275.40853 215.7235 L 297.5413 229.7235 L 275.40853 243.7235 L 275.40853 236.32962 Z" fill="url(#Obj_Gradient)"/>
+        <path d="M 263.6378 236.32962 L 263.6378 223.11737 L 275.40853 223.11737 L 275.40853 215.7235 L 297.5413 229.7235 L 275.40853 243.7235 L 275.40853 236.32962 Z" stroke="#ef8e00" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_136" filter="url(#Shadow)">
+        <path d="M 276.28072 109.125 L 211.2665 109.125 C 208.50507 109.125 206.2665 111.36358 206.2665 114.125 L 206.2665 142.58388 C 206.2665 145.3453 208.50507 147.58388 211.2665 147.58388 L 255.43074 147.58388 C 255.43074 147.58388 255.43067 152.92995 255.43067 152.93004 C 255.43074 152.92995 266.12702 147.44616 266.12702 147.44637 C 266.12702 147.44616 281.28072 147.58388 281.28072 147.58388 L 281.28072 114.125 C 281.28072 111.36358 279.04214 109.125 276.28072 109.125 Z" fill="#c0edff"/>
+        <path d="M 276.28072 109.125 L 211.2665 109.125 C 208.50507 109.125 206.2665 111.36358 206.2665 114.125 L 206.2665 142.58388 C 206.2665 145.3453 208.50507 147.58388 211.2665 147.58388 L 255.43074 147.58388 C 255.43074 147.58388 255.43067 152.92995 255.43067 152.93004 C 255.43074 152.92995 266.12702 147.44616 266.12702 147.44637 C 266.12702 147.44616 281.28072 147.58388 281.28072 147.58388 L 281.28072 114.125 C 281.28072 111.36358 279.04214 109.125 276.28072 109.125 Z" stroke="#7dd2ff" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <text transform="translate(211.2665 114.125)" fill="#304864">
+          <tspan font-family="Helvetica" font-size="12" font-weight="400" fill="#304864" x="2.823517" y="11">I’m one hot</tspan>
+          <tspan font-family="Helvetica" font-size="12" font-weight="400" fill="#304864" x="16.168243" y="25">vector</tspan>
+        </text>
+      </g>
+    </g>
+  </g>
+</svg>
