@@ -160,6 +160,7 @@ body {
 	background: #FFFFFF;
 	max-width: 850px;
 	-webkit-text-size-adjust: 100%;
+        margin: 8px !important;
 }
 .scrollbar_wrapper {
 	overflow: auto;
