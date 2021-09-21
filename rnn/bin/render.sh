@@ -12,7 +12,7 @@ do
            test $I/minibatch.xml -nt $O/minibatch.html
 	then
 		cp $I/index.html $O
-		java -jar /Users/parrt/github/bookish/target/bookish-1.0-SNAPSHOT.jar -target html -o $O $I/article.xml
+		java -jar /Users/parrt/.m2/repository/us/parr/bookish/1.0-SNAPSHOT/bookish-1.0-SNAPSHOT.jar -target html -o $O $I/article.xml
 	fi
 	sleep .2s
 done
