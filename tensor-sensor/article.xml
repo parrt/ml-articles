@@ -8,7 +8,7 @@
 <css file="css/article.css">
 
 <copyright>
-(Terence teaches in [University of San Francisco's MS in Data Science program](https://www.usfca.edu/arts-sciences/graduate-programs/data-science). You might know Terence as the creator of the ANTLR parser generator.)
+(Terence is a tech lead at Google and ex-Professor of computer/data science in [University of San Francisco's MS in Data Science program](https://www.usfca.edu/arts-sciences/graduate-programs/data-science). You might know Terence as the creator of the ANTLR parser generator.)
 </copyright>
 
 <metadata title="Clarifying exceptions and visualizing tensor operations in deep learning code"
