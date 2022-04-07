@@ -1,5 +1,5 @@
 <chapter title="Gradient boosting: Heading in the right direction"
-         author={[Terence Parr](http://parrt.cs.usfca.edu) and [Jeremy Howard](http://www.fast.ai/about/#jeremy)}>
+         author={[Terence Parr](https://www.linkedin.com/in/terence-parr/) and [Jeremy Howard](http://www.fast.ai/about/#jeremy)}>
 
 In our previous article, [Gradient boosting: Distance to target](L2-loss.html), our weak models trained regression tree stumps on the residual vector, $\vec y-F_{m-1}(X)$, which includes the magnitude not just the direction of $\vec y$ from our the previous composite model's prediction, $F_{m-1}(X)$.  Unfortunately, training the weak models on a direction vector that includes the residual magnitude makes the composite model chase outliers.   This occurs because mean computations are easily skewed by outliers and our regression tree stumps yield predictions using the mean of the target values in a leaf.  For noisy target variables, it makes more sense to focus on the *direction* of $\vec y$ from $F_{m-1}$ rather than the magnitude and direction. 
 

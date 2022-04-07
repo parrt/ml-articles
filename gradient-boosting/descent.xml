@@ -1,5 +1,5 @@
 <chapter title="Gradient boosting performs gradient descent"
-	 author={[Terence Parr](http://parrt.cs.usfca.edu) and [Jeremy Howard](http://www.fast.ai/about/#jeremy)}>
+	 author={[Terence Parr](https://www.linkedin.com/in/terence-parr/) and [Jeremy Howard](http://www.fast.ai/about/#jeremy)}>
 
 
 So far we've looked at GBMs that use two different direction vectors, the residual vector ([Gradient boosting: Distance to target](L2-loss.html)) and the sign vector ([Gradient boosting: Heading in the right direction](L1-loss.html)). It's natural to ask whether there are other direction vectors we can use and what effect they have on the final $F_M(X)$ predictions.  Your intuition probably told you that nudging the intermediate $\hat{\vec y}$ prediction towards target $\vec y$ gradually improves model performance, but would $\hat{\vec y}$ ever stop if we kept increasing $M$? If so, where would it stop? Is there something special or interesting about the sequence of vectors that $\hat{\vec y}$ passes through? Moreover, we know that training a model on observations ($\vec x$, $y$) is a matter of finding a function, $F(\vec x)$, that optimizes some cost or loss function indicating how well $F$ performs. (The procedure is to tweak model $F$'s model parameters until we minimize the loss function.) What loss function then is a GBM optimizing and what is the relationship with the choice of direction vector?
@@ -22,7 +22,7 @@ which would indicate a step to the left and forward. To actually move downhill, 
 
 The sign vector works well but does not take into consideration the steepness of the slope in each axis. If the slope is gradual to the left ($x$) but steep to the front ($y$), we might prefer a direction vector of $[-1, 4]$. The idea is to take big steps along an axis when the slope is steep but small steps when the slope is shallow. As we approach the bottom of the mountain, we should take really small steps to avoid overshooting and going back up the other side.  Updating the current position with a direction vector containing magnitude information, proportional to the slope, automatically takes smaller steps as the slope flattens out.
 
-Mathematically, we don't move our foot around to learn about the slope of $f(x,y)$, we  compute the direction vector from the [partial derivatives](http://parrt.cs.usfca.edu/doc/matrix-calculus/index.html#sec3) of $f(x,y)$ with respect to the $x$ and $y$ dimensions. Such derivatives use notation $\frac{\partial f(x,y)}{\partial x}$ and $\frac{\partial f(x,y)}{\partial y}$. If we stack those partial derivatives into a vector, it's called a *gradient* and is written:
+Mathematically, we don't move our foot around to learn about the slope of $f(x,y)$, we  compute the direction vector from the [partial derivatives](https://explained.ai/matrix-calculus/index.html#sec3) of $f(x,y)$ with respect to the $x$ and $y$ dimensions. Such derivatives use notation $\frac{\partial f(x,y)}{\partial x}$ and $\frac{\partial f(x,y)}{\partial y}$. If we stack those partial derivatives into a vector, it's called a *gradient* and is written:
 
 \[
 \nabla f(x,y) = \begin{bmatrix}

@@ -1,5 +1,5 @@
 <chapter title="How we express regularization in practice"
-	 author={[Terence Parr](http://parrt.cs.usfca.edu)}>
+	 author={[Terence Parr](https://www.linkedin.com/in/terence-parr/)}>
 
 
 If we think about regularization as just constraining how close we can get to the true loss function minimum, regularization is not that hard to understand (assuming you understand linear models, of course). Conceptually, regularization uses a circle (L2) or diamond (L1) as a hard constraint. If the loss function minimum location is outside the constraint region, the regularized coefficients will appear somewhere on the boundary of the constraint region. We saw this earlier, and depicted the constraint region as a simple gray circle for L2 regularization:

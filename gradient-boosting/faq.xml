@@ -1,5 +1,5 @@
 <chapter title="Gradient boosting: frequently asked questions"
-	 author={[Terence Parr](http://parrt.cs.usfca.edu) and [Jeremy Howard](http://www.fast.ai/about/#jeremy)}>
+	 author={[Terence Parr](https://www.linkedin.com/in/terence-parr/) and [Jeremy Howard](http://www.fast.ai/about/#jeremy)}>
 	 
 We tried to collect a number of common questions on this page. Please note that we focus on gradient boosting for regression not classification.  We assume that you've read the main articles associated with this FAQ.
 
@@ -94,5 +94,5 @@ Getting a GBM's $\hat{\vec y}$ approximation to $\vec y$ is easy mathematically.
 
 <section title="Can you point me at a learning resource for gradients and matrix calculus?">
 	
-Sure, check out [The Matrix Calculus You Need For Deep Learning](http://parrt.cs.usfca.edu/doc/matrix-calculus/index.html).
+Sure, check out [The Matrix Calculus You Need For Deep Learning](https://explained.ai/matrix-calculus/index.html).
 

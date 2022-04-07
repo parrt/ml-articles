@@ -3,7 +3,7 @@
       watermark="<a href='http://explained.ai/gradient-boosting/index.html'>Main article</a><br>Brought to you by <a href='http://explained.ai'>explained.ai</a>">
 <!--
 <article title="How to explain gradient boosting"
-      author={[Terence Parr](http://parrt.cs.usfca.edu) and [Jeremy Howard](http://www.fast.ai/about/#jeremy)}>
+      author={[Terence Parr](https://www.linkedin.com/in/terence-parr/) and [Jeremy Howard](http://www.fast.ai/about/#jeremy)}>
 -->
 
 <include file="L1-loss.xml">
@@ -16,7 +16,7 @@
 <notebook-support file="notebooks/support.py">
 
 <copyright>
-Please send comments, suggestions, or fixes to [Terence](mailto:parrt@cs.usfca.edu).
+Please send comments, suggestions, or fixes to [Terence](mailto:terence@parr.us).
 </copyright>
 
 <metadata title="How to explain gradient boosting"
